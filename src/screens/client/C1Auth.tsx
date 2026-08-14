@@ -1,0 +1,1511 @@
+import { useState, useRef, useEffect, type ChangeEvent } from "react"
+import { motion } from "motion/react"
+import { API_BASE_URL } from "../../config"
+import FadeIn from "../../components/animations/FadeIn"
+import Stagger from "../../components/animations/Stagger"
+import StaggerItem from "../../components/animations/StaggerItem"
+import { useI18n } from "../../i18n"
+import {
+  sanitizeText,
+  sanitizeMultiline,
+  sanitizeLetters,
+  sanitizeDigits,
+  isValidEmail,
+  validateFields,
+  MAX_NAME_LENGTH,
+  MAX_TEXT_LENGTH,
+  MAX_MULTILINE_LENGTH,
+  MAX_PASSWORD_LENGTH,
+} from "../../utils/validation"
+
+type BackendProfile = {
+  username?: string
+  firstName?: string
+  lastName?: string
+  role?: "client" | "technician" | "admin"
+  domain?: string
+  city?: string
+  location?: string
+  photoUrl?: string
+}
+
+interface Props {
+  onNext: () => void
+  onAuthComplete?: (
+    role: "client" | "technician" | "admin",
+    profile: {
+      username: string
+      firstName: string
+      lastName: string
+      role: "client" | "technician" | "admin"
+      domain: string
+      city: string
+      location: string
+      photoUrl?: string
+    },
+  ) => void
+}
+
+const cameroonCities = [
+  "Bafoussam",
+  "Bamenda",
+  "Bertoua",
+  "Buea",
+  "Douala",
+  "Ebolowa",
+  "Edéa",
+  "Garoua",
+  "Kaélé",
+  "Kousséri",
+  "Limbe",
+  "Maroua",
+  "Ngaoundéré",
+  "Nkongsamba",
+  "Sa'a",
+  "Tiko",
+  "Yaoundé",
+  "Autre",
+].sort((a, b) => a.localeCompare(b))
+
+const professions = [
+  "Électricien",
+  "Plombier",
+  "Menuisier",
+  "Peintre",
+  "Carreleur",
+  "Climatiseur",
+  "Mécanicien",
+  "Maçon",
+  "Couvreur",
+  "Jardinier",
+  "Déménageur",
+  "Informaticien",
+  "Autre",
+].sort((a, b) => a.localeCompare(b))
+
+export default function C1Auth({ onNext, onAuthComplete }: Props) {
+  const { t, locale } = useI18n()
+  const [step, setStep] = useState<"choice" | "credentials" | "profile" | "phone" | "otp">("choice")
+  const [credentials, setCredentials] = useState({
+    email: "",
+    password: "",
+  })
+  const [profile, setProfile] = useState({
+    firstName: "",
+    lastName: "",
+    gender: "",
+    email: "",
+    role: "client" as "client" | "technician" | "admin",
+    domain: "",
+    city: "",
+    location: "",
+    photoUrl: "",
+    bio: "",
+    specialties: "",
+    hourlyRate: "",
+    experienceYears: "",
+  })
+  const [customCity, setCustomCity] = useState("")
+  const [customDomain, setCustomDomain] = useState("")
+  const [phone, setPhone] = useState("")
+  const [otp, setOtp] = useState(["", "", "", ""])
+  const [timer, setTimer] = useState(59)
+  const [error, setError] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  useEffect(() => {
+    if (step !== "otp") return
+    const id = setInterval(() => setTimer((t) => (t > 0 ? t - 1 : 0)), 1000)
+    return () => clearInterval(id)
+  }, [step])
+
+  const registerUser = async () => {
+    const url = `${API_BASE_URL}/api/register`
+    const firstName = sanitizeText(profile.firstName, MAX_NAME_LENGTH)
+    const lastName = sanitizeText(profile.lastName, MAX_NAME_LENGTH)
+    const email = sanitizeText(profile.email, 254)
+    const city = sanitizeText(
+      profile.city === "Autre" ? customCity : profile.city,
+      MAX_TEXT_LENGTH,
+    )
+    const location = sanitizeText(profile.location, MAX_TEXT_LENGTH)
+    const domain = sanitizeText(
+      profile.domain === "Autre" ? customDomain : profile.domain,
+      MAX_TEXT_LENGTH,
+    )
+    const bio = sanitizeMultiline(profile.bio, MAX_MULTILINE_LENGTH)
+    const specialties = sanitizeMultiline(profile.specialties, MAX_MULTILINE_LENGTH)
+    const password = sanitizeText(credentials.password, MAX_PASSWORD_LENGTH)
+    const generatedUsername = `${firstName.toLowerCase()}${lastName.toLowerCase()}`.replace(
+      /\s+/g,
+      "",
+    )
+
+    const body = {
+      username: generatedUsername,
+      email,
+      password,
+      firstName,
+      lastName,
+      role: profile.role,
+      city,
+      location,
+      domain,
+      bio,
+      specialties,
+      hourlyRate: profile.hourlyRate ? Number(profile.hourlyRate) : null,
+      experienceYears: profile.experienceYears ? Number(profile.experienceYears) : null,
+    }
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(text || t("Erreur ") + response.status)
+    }
+
+    return generatedUsername
+  }
+
+  const loginUser = async (email?: string) => {
+    const emailToUse = email || credentials.email
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: emailToUse,
+        password: credentials.password,
+      }),
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(text || t("Identifiants invalides."))
+    }
+
+    const data = ((await response.json()) ?? {}) as {
+      role?: string
+      username?: string
+      email?: string
+      firstName?: string
+      lastName?: string
+      domain?: string
+      city?: string
+      location?: string
+      photoUrl?: string
+      token?: string
+      accessToken?: string
+      jwt?: string
+      authToken?: string
+    }
+
+    const token = data.token ?? data.accessToken ?? data.jwt ?? data.authToken
+    if (token) {
+      localStorage.removeItem("mboaTechUser")
+      localStorage.setItem("mboaTechToken", token)
+    }
+
+    const authHeader =
+      response.headers.get("Authorization") ||
+      response.headers.get("X-Auth-Token") ||
+      response.headers.get("x-auth-token")
+    if (authHeader) {
+      const bearer = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader
+      localStorage.removeItem("mboaTechUser")
+      localStorage.setItem("mboaTechToken", bearer)
+    }
+
+    return data
+  }
+
+  const handleProfileNext = async () => {
+    if (!profile.firstName.trim()) {
+      setError(t("Veuillez renseigner votre prénom."))
+      return
+    }
+
+    if (!profile.lastName.trim()) {
+      setError(t("Veuillez renseigner votre nom."))
+      return
+    }
+
+    if (!profile.gender.trim()) {
+      setError(t("Veuillez sélectionner votre sexe."))
+      return
+    }
+
+    if (!credentials.password.trim()) {
+      setError(t("Veuillez renseigner un mot de passe."))
+      return
+    }
+
+    if (credentials.password.length < 6) {
+      setError(t("Votre mot de passe doit contenir au moins 6 caractères."))
+      return
+    }
+
+    if (!/^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]+$/.test(credentials.password)) {
+      setError(
+        t("Votre mot de passe doit être composé uniquement de lettres et de chiffres, avec au moins une lettre et un chiffre."),
+      )
+      return
+    }
+
+    if (!profile.email.trim()) {
+      setError(t("Veuillez renseigner votre email."))
+      return
+    }
+    if (!isValidEmail(profile.email)) {
+      setError(t("Veuillez renseigner un email valide."))
+      return
+    }
+    if (!profile.city.trim()) {
+      setError(t("Veuillez renseigner votre ville."))
+      return
+    }
+    if (profile.city === "Autre" && !customCity.trim()) {
+      setError(t("Veuillez préciser votre ville."))
+      return
+    }
+    if (!profile.location.trim()) {
+      setError(t("Veuillez renseigner votre quartier ou localisation."))
+      return
+    }
+    if (profile.role === "technician" && !profile.domain.trim()) {
+      setError(t("Veuillez préciser votre domaine d'expertise."))
+      return
+    }
+    if (profile.role === "technician" && profile.domain === "Autre" && !customDomain.trim()) {
+      setError(t("Veuillez préciser votre métier."))
+      return
+    }
+    if (profile.role === "technician") {
+      const hourly = profile.hourlyRate.trim()
+        ? Number(profile.hourlyRate)
+        : 0
+      const experience = profile.experienceYears.trim()
+        ? Number(profile.experienceYears)
+        : 0
+      if (profile.hourlyRate.trim() && (isNaN(hourly) || hourly < 0 || hourly > 100000000)) {
+        setError(t("Veuillez renseigner un tarif horaire valide (en FCFA, entre 0 et 100 000 000)."))
+        return
+      }
+      if (
+        profile.experienceYears.trim() &&
+        (isNaN(experience) || experience < 0 || experience > 200 || !Number.isInteger(experience))
+      ) {
+        setError(t("Veuillez renseigner une expérience valide (0 à 200 ans, nombre entier)."))
+        return
+      }
+    }
+
+    const fieldsValidation = validateFields([
+      {
+        key: "firstName",
+        label: "prénom",
+        value: profile.firstName,
+        maxLength: MAX_NAME_LENGTH,
+        required: true,
+      },
+      {
+        key: "lastName",
+        label: "nom",
+        value: profile.lastName,
+        maxLength: MAX_NAME_LENGTH,
+        required: true,
+      },
+      {
+        key: "email",
+        label: "email",
+        value: profile.email,
+        maxLength: 254,
+        required: true,
+      },
+      {
+        key: "city",
+        label: "ville",
+        value: profile.city,
+        maxLength: MAX_TEXT_LENGTH,
+        required: true,
+      },
+      {
+        key: "location",
+        label: "quartier",
+        value: profile.location,
+        maxLength: MAX_TEXT_LENGTH,
+        required: true,
+      },
+      {
+        key: "domain",
+        label: "domaine",
+        value: profile.domain,
+        maxLength: MAX_TEXT_LENGTH,
+      },
+      {
+        key: "bio",
+        label: "bio",
+        value: profile.bio,
+        maxLength: MAX_MULTILINE_LENGTH,
+      },
+      {
+        key: "specialties",
+        label: "spécialités",
+        value: profile.specialties,
+        maxLength: MAX_MULTILINE_LENGTH,
+      },
+    ])
+    if (!fieldsValidation.valid) {
+      setError(fieldsValidation.message ?? t("Des caractères non autorisés ont été détectés."))
+      return
+    }
+
+    setError("")
+
+    let fetchedProfile: BackendProfile | null = null
+    let registeredUsername: string = ""
+    try {
+      registeredUsername = await registerUser()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t("Erreur lors de l'inscription.")
+      setError(message)
+      return
+    }
+    try {
+      fetchedProfile = (await loginUser(profile.email)) as BackendProfile
+    } catch {
+      setError(t("Compte créé, mais connexion automatique impossible. Veuillez vous connecter."))
+      setStep("credentials")
+      return
+    }
+
+    const resolvedRole: "client" | "technician" | "admin" =
+      (fetchedProfile?.role as "client" | "technician" | "admin") ?? profile.role
+    const resolvedFirstName = (
+      fetchedProfile?.firstName ||
+      profile.firstName ||
+      t("Utilisateur")
+    ).trim()
+    const resolvedLastName = (
+      fetchedProfile?.lastName ||
+      profile.lastName ||
+      (profile.role === "technician" ? t("Technicien") : t("Client"))
+    ).trim()
+    const resolvedDomain = fetchedProfile?.domain ?? profile.domain
+    const resolvedCity = fetchedProfile?.city ?? profile.city
+    const resolvedLocation = fetchedProfile?.location ?? profile.location
+    const resolvedPhotoUrl = fetchedProfile?.photoUrl ?? profile.photoUrl
+
+    if (onAuthComplete) {
+      onAuthComplete(resolvedRole, {
+        username: registeredUsername || credentials.email,
+        firstName: resolvedFirstName,
+        lastName: resolvedLastName,
+        role: resolvedRole,
+        domain: resolvedDomain,
+        city: resolvedCity,
+        location: resolvedLocation,
+        photoUrl: resolvedPhotoUrl,
+      })
+    }
+
+    if (typeof onNext === "function") {
+      onNext()
+    }
+  }
+
+  const handleCredentialsNext = async () => {
+    if (!credentials.email.trim()) {
+      setError(t("Veuillez renseigner votre email."))
+      return
+    }
+
+    if (!isValidEmail(credentials.email)) {
+      setError(t("Veuillez renseigner un email valide."))
+      return
+    }
+
+    if (!credentials.password.trim()) {
+      setError(t("Veuillez renseigner votre mot de passe."))
+      return
+    }
+
+    const loginProfile = await loginUser().catch(() => null)
+    const email = credentials.email
+
+    if (!loginProfile) {
+      setError(t("Connexion impossible : vérifiez votre email et votre mot de passe."))
+      return
+    }
+
+    const sourceProfile = loginProfile
+    const resolvedRole =
+      sourceProfile.role === "technician"
+        ? "technician"
+        : sourceProfile.role === "admin"
+          ? "admin"
+          : "client"
+    const resolvedDomain = sourceProfile.domain ?? ""
+
+    setProfile((prev) => ({
+      ...prev,
+      firstName: sourceProfile.firstName ?? prev.firstName,
+      lastName: sourceProfile.lastName ?? prev.lastName,
+      role: resolvedRole,
+      domain: resolvedDomain,
+      city: sourceProfile.city ?? prev.city,
+      location: sourceProfile.location ?? prev.location,
+    }))
+
+    if (onAuthComplete) {
+      onAuthComplete(resolvedRole, {
+        username: sourceProfile.username ?? email,
+        firstName: sourceProfile.firstName ?? t("Utilisateur"),
+        lastName: sourceProfile.lastName ?? "",
+        role: resolvedRole,
+        domain: resolvedDomain,
+        city: sourceProfile.city ?? "",
+        location: sourceProfile.location ?? "",
+        photoUrl: sourceProfile.photoUrl,
+      })
+    }
+
+    setError("")
+    if (typeof onNext === "function") {
+      onNext()
+    }
+  }
+
+  const handleChoice = (selectedMode: "signup" | "login") => {
+    if (selectedMode === "login") {
+      setStep("credentials")
+    } else {
+      setStep("profile")
+    }
+  }
+
+  const handleSend = () => {
+    if (phone.length >= 8) {
+      setStep("otp")
+      setTimer(59)
+    }
+  }
+
+  const handleOtp = (val: string, i: number) => {
+    if (!/^\d?$/.test(val)) return
+    const next = [...otp]
+    next[i] = val
+    setOtp(next)
+    if (val && i < 3) inputRefs.current[i + 1]?.focus()
+    if (next.every((d) => d !== "")) setTimeout(() => onNext(), 300)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent, i: number) => {
+    if (e.key === "Backspace" && !otp[i] && i > 0) inputRefs.current[i - 1]?.focus()
+  }
+
+  const updateProfile = (field: keyof typeof profile, value: string) => {
+    setProfile((prev) => ({ ...prev, [field]: value }))
+    if (error) setError("")
+  }
+
+  const updateCredentials = (field: "email" | "password", value: string) => {
+    setCredentials((prev) => ({ ...prev, [field]: value }))
+    if (error) setError("")
+  }
+
+  return (
+    <div className="flex min-h-screen overflow-hidden" style={{ background: "#0B1120" }}>
+      {/* Left panel — branding */}
+      <div
+        className="flex flex-col justify-between p-10 h-screen overflow-hidden"
+        style={{
+          flex: "0 0 70%",
+          background: "linear-gradient(160deg, #0F1E3D 0%, #0B1120 100%)",
+          borderRight: "1px solid rgba(255,255,255,0.05)",
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, #2563EB, #1D4ED8)" }}
+          >
+            <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+              <path
+                d="M8 24V14l8-6 8 6v10"
+                stroke="white"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M13 24v-5h6v5"
+                stroke="white"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle cx="24" cy="10" r="4" fill="#059669" />
+              <path
+                d="M22.5 10l1.2 1.2L25.5 8.5"
+                stroke="white"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+          <span
+            className="font-bold text-lg"
+            style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+          >
+            MboaTech
+          </span>
+        </div>
+
+        <div className="flex-1 flex flex-col justify-between">
+          <FadeIn delay={0.15}>
+            <div>
+              <h1
+                className="text-4xl font-bold leading-tight mb-4 max-w-[90%]"
+                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+              >
+                {t("Votre artisan de confiance,")}
+                <br />
+                <span style={{ color: "#059669" }}>{t("en toute sérénité.")}</span>
+              </h1>
+              <p
+                className="text-base leading-relaxed"
+                style={{
+                  color: "#64748B",
+                  width: "80%",
+                  maxWidth: "340px",
+                  marginTop: "0.5rem",
+                }}
+              >
+                {t("Trouvez, évaluez et payez votre artisan en toute sérénité — vos fonds sont gardés jusqu'à validation.")}
+              </p>
+            </div>
+          </FadeIn>
+
+          <Stagger className="grid gap-3 mt-8" staggerDelay={0.12}>
+            {[
+              {
+                text: "Paiement en garde sécurisé",
+                accent: "from-[#0ea5e9] to-[#22c55e]",
+              },
+              {
+                text: "Artisans vérifiés & certifiés par leurs pairs",
+                accent: "from-[#f59e0b] to-[#ef4444]",
+              },
+              {
+                text: "Notes objectives et transparentes",
+                accent: "from-[#8b5cf6] to-[#2563eb]",
+              },
+            ].map((item) => (
+              <StaggerItem
+                key={item.text}
+                hoverY={-4}
+                className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#111827] p-3 shadow-[0_18px_60px_-42px_rgba(0,0,0,0.8)] transition duration-300"
+              >
+                <div
+                  className={`absolute left-0 top-1/2 h-12 w-12 -translate-y-1/2 rounded-r-full bg-gradient-to-br ${item.accent} opacity-90 blur-sm animate-[pulse_2.5s_ease-in-out_infinite]`}
+                />
+                <div className="relative flex items-center gap-2">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-950/80 text-sm font-semibold text-white ring-1 ring-white/10">
+                    <span className="text-base">✓</span>
+                  </div>
+                  <span className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
+                    {t(item.text)}
+                  </span>
+                </div>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </div>
+
+        <div className="mt-auto">
+          <p className="text-xs" style={{ color: "#1E2A42" }}>
+            {t("© 2026 MboaTech · Cameroun")}
+          </p>
+        </div>
+      </div>
+
+      {/* Right panel — form */}
+      <div
+        className="flex flex-col justify-center overflow-y-auto bg-[#0B1120] px-4 py-8"
+        style={{ flex: "0 0 30%", minWidth: "320px", height: "100vh" }}
+      >
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          style={{ width: "100%", margin: "0 auto" }}
+        >
+          {step === "choice" ? (
+            <>
+              <h2
+                className="text-2xl font-bold mb-2"
+                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+              >
+                {t("Bienvenue")}
+              </h2>
+              <p className="text-sm mb-8" style={{ color: "#64748B" }}>
+                {t("Choisissez ce que vous souhaitez faire pour commencer.")}
+              </p>
+
+              <div className="grid gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleChoice("signup")}
+                  className="rounded-xl border px-4 py-4 text-left"
+                  style={{
+                    background: "#141C2F",
+                    borderColor: "rgba(255,255,255,0.1)",
+                    color: "#E8EDF5",
+                  }}
+                >
+                  <div className="font-semibold">{t("Créer un compte")}</div>
+                  <div className="mt-1 text-sm" style={{ color: "#64748B" }}>
+                    {t("Pour rejoindre MboaTech en tant que client ou technicien.")}
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleChoice("login")}
+                  className="rounded-xl border px-4 py-4 text-left"
+                  style={{
+                    background: "#141C2F",
+                    borderColor: "rgba(255,255,255,0.1)",
+                    color: "#E8EDF5",
+                  }}
+                >
+                  <div className="font-semibold">{t("Se connecter")}</div>
+                  <div className="mt-1 text-sm" style={{ color: "#64748B" }}>
+                    {t("Si vous avez déjà un compte, accédez directement à votre espace.")}
+                  </div>
+                </button>
+              </div>
+            </>
+          ) : step === "credentials" ? (
+            <>
+              <h2
+                className="text-2xl font-bold mb-2"
+                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+              >
+                {t("Connexion à votre espace")}
+              </h2>
+              <p className="text-sm mb-6" style={{ color: "#64748B" }}>
+                {t("Saisissez vos identifiants puis poursuivez la vérification.")}
+              </p>
+
+              <div className="mb-4">
+                <p
+                  className="text-xs font-medium mb-2"
+                  style={{
+                    color: "#94A3B8",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t("Email")}
+                </p>
+                <input
+                  type="email"
+                  value={credentials.email}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    updateCredentials("email", e.target.value)
+                  }
+                  placeholder={t("Votre adresse email")}
+                  className="w-full rounded-xl border px-4 py-3 outline-none"
+                  style={{
+                    background: "#141C2F",
+                    borderColor: "rgba(255,255,255,0.1)",
+                    color: "#E8EDF5",
+                  }}
+                  autoFocus
+                />
+              </div>
+
+              <div className="mb-4">
+                <p
+                  className="text-xs font-medium mb-2"
+                  style={{
+                    color: "#94A3B8",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t("Mot de passe")}
+                </p>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={credentials.password}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      updateCredentials("password", e.target.value)
+                    }
+                    placeholder={t("Votre mot de passe")}
+                    className="w-full rounded-xl border px-4 py-3 pr-12 outline-none"
+                    style={{
+                      background: "#141C2F",
+                      borderColor: "rgba(255,255,255,0.1)",
+                      color: "#E8EDF5",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? t("Masquer le mot de passe") : t("Afficher le mot de passe")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-lg"
+                    style={{ color: showPassword ? "#2563EB" : "#64748B" }}
+                  >
+                    {showPassword ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M3 3l18 18"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M10.6 5.1A9.7 9.7 0 0 1 12 5c4.9 0 8.6 4 9.6 5.1.3.4.3 1 0 1.4-.4.5-1 1.2-1.8 2"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M6.6 6.9C4.5 8.3 3 10 2.4 11.1c-.3.4-.3 1 0 1.4C3.4 13.6 7.1 17.6 12 17.6c1.5 0 2.9-.4 4.1-1"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M9.5 9.7a3 3 0 0 0 4.2 4.2"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M2.4 12.5C3.4 11.4 7.1 7.4 12 7.4s8.6 4 9.6 5.1c.3.4.3 1 0 1.4C20.6 15 16.9 19 12 19s-8.6-4-9.6-5.1c-.3-.4-.3-1 0-1.4Z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                        <circle cx="12" cy="12.5" r="3" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <label
+                  className="mt-2 flex items-center gap-2 text-xs select-none"
+                  style={{ color: "#94A3B8", cursor: "pointer" }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={showPassword}
+                    onChange={(e) => setShowPassword(e.target.checked)}
+                    className="w-4 h-4 rounded"
+                    style={{ accentColor: "#2563EB" }}
+                  />
+                  {t("Afficher le mot de passe")}
+                </label>
+              </div>
+
+              {error && (
+                <p className="mb-4 text-sm" style={{ color: "#F59E0B" }}>
+                  {error}
+                </p>
+              )}
+
+              <button
+                onClick={handleCredentialsNext}
+                className="w-full py-4 rounded-xl font-semibold text-base text-white mb-4"
+                style={{
+                  background: "linear-gradient(135deg, #2563EB, #1D4ED8)",
+                  fontFamily: "Poppins, sans-serif",
+                  boxShadow: "0 4px 20px rgba(37,99,235,0.35)",
+                }}
+              >
+                {t("Continuer")}
+              </button>
+
+              <button
+                onClick={() => setStep("choice")}
+                className="w-full text-sm text-center py-2"
+                style={{ color: "#64748B" }}
+              >
+                {t("← Retour au choix")}
+              </button>
+            </>
+          ) : step === "profile" ? (
+            <>
+              <h2
+                className="text-2xl font-bold mb-2"
+                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+              >
+                {t("Créer votre compte")}
+              </h2>
+              <p className="text-sm mb-6" style={{ color: "#64748B" }}>
+                {t("Quelques informations pour commencer votre aventure MboaTech.")}
+              </p>
+
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <p
+                    className="text-xs font-medium mb-2"
+                    style={{
+                      color: "#94A3B8",
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {t("Prénom")}
+                  </p>
+                  <input
+                    type="text"
+                    value={profile.firstName}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      updateProfile("firstName", sanitizeLetters(e.target.value))
+                    }
+                    placeholder={t("Votre prénom")}
+                    className="w-full rounded-xl border px-4 py-3 outline-none"
+                    style={{
+                      background: "#141C2F",
+                      borderColor: "rgba(255,255,255,0.1)",
+                      color: "#E8EDF5",
+                    }}
+                  />
+                </div>
+                <div>
+                  <p
+                    className="text-xs font-medium mb-2"
+                    style={{
+                      color: "#94A3B8",
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {t("Nom")}
+                  </p>
+                  <input
+                    type="text"
+                    value={profile.lastName}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      updateProfile("lastName", sanitizeLetters(e.target.value))
+                    }
+                    placeholder={t("Votre nom")}
+                    className="w-full rounded-xl border px-4 py-3 outline-none"
+                    style={{
+                      background: "#141C2F",
+                      borderColor: "rgba(255,255,255,0.1)",
+                      color: "#E8EDF5",
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <p
+                  className="text-xs font-medium mb-2"
+                  style={{
+                    color: "#94A3B8",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t("Sexe")}
+                </p>
+                <select
+                  value={profile.gender}
+                  onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                    updateProfile("gender", e.target.value)
+                  }
+                  className="w-full rounded-xl border px-4 py-3 outline-none"
+                  style={{
+                    background: "#141C2F",
+                    borderColor: "rgba(255,255,255,0.1)",
+                    color: "#E8EDF5",
+                  }}
+                >
+                  <option value="" style={{ background: "#141C2F", color: "#E8EDF5" }}>
+                    {t("Sélectionner votre sexe")}
+                  </option>
+                  <option value="masculin" style={{ background: "#141C2F", color: "#E8EDF5" }}>
+                    {t("Masculin")}
+                  </option>
+                  <option value="feminin" style={{ background: "#141C2F", color: "#E8EDF5" }}>
+                    {t("Féminin")}
+                  </option>
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <p
+                  className="text-xs font-medium mb-2"
+                  style={{
+                    color: "#94A3B8",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t("Mot de passe")}
+                </p>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={credentials.password}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      updateCredentials("password", e.target.value)
+                    }
+                    placeholder={t("Créez un mot de passe sécurisé")}
+                    className="w-full rounded-xl border px-4 py-3 pr-12 outline-none"
+                    style={{
+                      background: "#141C2F",
+                      borderColor: "rgba(255,255,255,0.1)",
+                      color: "#E8EDF5",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? t("Masquer le mot de passe") : t("Afficher le mot de passe")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-lg"
+                    style={{ color: showPassword ? "#2563EB" : "#64748B" }}
+                  >
+                    {showPassword ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M3 3l18 18"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M10.6 5.1A9.7 9.7 0 0 1 12 5c4.9 0 8.6 4 9.6 5.1.3.4.3 1 0 1.4-.4.5-1 1.2-1.8 2"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M6.6 6.9C4.5 8.3 3 10 2.4 11.1c-.3.4-.3 1 0 1.4C3.4 13.6 7.1 17.6 12 17.6c1.5 0 2.9-.4 4.1-1"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M9.5 9.7a3 3 0 0 0 4.2 4.2"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M2.4 12.5C3.4 11.4 7.1 7.4 12 7.4s8.6 4 9.6 5.1c.3.4.3 1 0 1.4C20.6 15 16.9 19 12 19s-8.6-4-9.6-5.1c-.3-.4-.3-1 0-1.4Z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                        <circle cx="12" cy="12.5" r="3" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <label
+                  className="mt-2 flex items-center gap-2 text-xs select-none"
+                  style={{ color: "#94A3B8", cursor: "pointer" }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={showPassword}
+                    onChange={(e) => setShowPassword(e.target.checked)}
+                    className="w-4 h-4 rounded"
+                    style={{ accentColor: "#2563EB" }}
+                  />
+                  {t("Afficher le mot de passe")}
+                </label>
+                <p
+                  className="text-[11px] mt-1.5"
+                  style={{
+                    color: credentials.password.length > 0 ? "#94A3B8" : "#64748B",
+                  }}
+                >
+                  {t("Au moins 6 caractères, composé de lettres et de chiffres (ex : ")}
+                  <span style={{ color: "#94A3B8", fontFamily: "monospace" }}>maison2026</span>
+                  {t(").")}
+                </p>
+              </div>
+
+              <div className="mb-4">
+                <p
+                  className="text-xs font-medium mb-2"
+                  style={{
+                    color: "#94A3B8",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t("Email")}
+                </p>
+                <input
+                  type="email"
+                  value={profile.email}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    updateProfile("email", e.target.value)
+                  }
+                  placeholder={t("Votre email")}
+                  className="w-full rounded-xl border px-4 py-3 outline-none"
+                  style={{
+                    background: "#141C2F",
+                    borderColor: "rgba(255,255,255,0.1)",
+                    color: "#E8EDF5",
+                  }}
+                />
+              </div>
+
+              <div className="mb-4">
+                <p
+                  className="text-xs font-medium mb-2"
+                  style={{
+                    color: "#94A3B8",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t("Ville")}
+                </p>
+                <select
+                  value={
+                    profile.city === "" || cameroonCities.includes(profile.city)
+                      ? profile.city
+                      : "Autre"
+                  }
+                  onChange={(e: ChangeEvent<HTMLSelectElement>) => {
+                    const value = e.target.value
+                    updateProfile("city", value === "Autre" ? "Autre" : value)
+                  }}
+                  className="w-full rounded-xl border px-4 py-3 outline-none"
+                  style={{
+                    background: "#141C2F",
+                    borderColor: "rgba(255,255,255,0.1)",
+                    color: "#E8EDF5",
+                  }}
+                >
+                  <option value="" style={{ background: "#141C2F", color: "#E8EDF5" }}>
+                    {t("Sélectionner une ville")}
+                  </option>
+                  {cameroonCities.map((city) => (
+                    <option
+                      key={city}
+                      value={city}
+                      style={{ background: "#141C2F", color: "#E8EDF5" }}
+                    >
+                      {city}
+                    </option>
+                  ))}
+                </select>
+                {profile.city === "Autre" && (
+                  <input
+                    type="text"
+                    value={customCity}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setCustomCity(sanitizeLetters(e.target.value))
+                    }
+                    placeholder={t("Précisez votre ville")}
+                    className="mt-3 w-full rounded-xl border px-4 py-3 outline-none"
+                    style={{
+                      background: "#141C2F",
+                      borderColor: "rgba(255,255,255,0.1)",
+                      color: "#E8EDF5",
+                    }}
+                  />
+                )}
+              </div>
+
+              <div className="mb-4">
+                <p
+                  className="text-xs font-medium mb-2"
+                  style={{
+                    color: "#94A3B8",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t("Quartier / localisation")}
+                </p>
+                <input
+                  type="text"
+                  value={profile.location}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    updateProfile("location", sanitizeLetters(e.target.value))
+                  }
+                  placeholder={t("Ex : Bastos, Mokolo, Bonanjo")}
+                  className="w-full rounded-xl border px-4 py-3 outline-none"
+                  style={{
+                    background: "#141C2F",
+                    borderColor: "rgba(255,255,255,0.1)",
+                    color: "#E8EDF5",
+                  }}
+                />
+              </div>
+
+              <div className="mb-4">
+                <p
+                  className="text-xs font-medium mb-2"
+                  style={{
+                    color: "#94A3B8",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t("Vous êtes")}
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => updateProfile("role", "client")}
+                    className="rounded-xl border px-4 py-3 text-sm font-medium"
+                    style={{
+                      background: profile.role === "client" ? "#1E3A6A" : "#141C2F",
+                      borderColor:
+                        profile.role === "client"
+                          ? "rgba(37,99,235,0.35)"
+                          : "rgba(255,255,255,0.1)",
+                      color: profile.role === "client" ? "#fff" : "#94A3B8",
+                    }}
+                  >
+                    {t("Client")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateProfile("role", "technician")}
+                    className="rounded-xl border px-4 py-3 text-sm font-medium"
+                    style={{
+                      background: profile.role === "technician" ? "#1E3A6A" : "#141C2F",
+                      borderColor:
+                        profile.role === "technician"
+                          ? "rgba(37,99,235,0.35)"
+                          : "rgba(255,255,255,0.1)",
+                      color: profile.role === "technician" ? "#fff" : "#94A3B8",
+                    }}
+                  >
+                    {t("Technicien")}
+                  </button>
+                </div>
+              </div>
+
+              {profile.role === "technician" && (
+                <div className="mb-4">
+                  <p
+                    className="text-xs font-medium mb-2"
+                    style={{
+                      color: "#94A3B8",
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {t("Métier")}
+                  </p>
+                  <select
+                    value={
+                      profile.domain === "" || professions.includes(profile.domain)
+                        ? profile.domain
+                        : "Autre"
+                    }
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) => {
+                      const value = e.target.value
+                      updateProfile("domain", value === "Autre" ? "Autre" : value)
+                    }}
+                    className="w-full rounded-xl border px-4 py-3 outline-none"
+                    style={{
+                      background: "#141C2F",
+                      borderColor: "rgba(255,255,255,0.1)",
+                      color: "#E8EDF5",
+                    }}
+                  >
+                    <option value="" style={{ background: "#141C2F", color: "#E8EDF5" }}>
+                      {t("Sélectionner un métier")}
+                    </option>
+                    {professions.map((profession) => (
+                      <option
+                        key={profession}
+                        value={profession}
+                        style={{ background: "#141C2F", color: "#E8EDF5" }}
+                      >
+                        {profession}
+                      </option>
+                    ))}
+                  </select>
+                  {profile.domain === "Autre" && (
+                    <input
+                      type="text"
+                      value={customDomain}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setCustomDomain(sanitizeLetters(e.target.value))
+                      }
+                      placeholder={t("Précisez votre métier")}
+                      className="mt-3 w-full rounded-xl border px-4 py-3 outline-none"
+                      style={{
+                        background: "#141C2F",
+                        borderColor: "rgba(255,255,255,0.1)",
+                        color: "#E8EDF5",
+                      }}
+                    />
+                  )}
+                </div>
+              )}
+
+              {profile.role === "technician" && (
+                <div className="mb-4 grid grid-cols-2 gap-3">
+                  <div>
+                    <p
+                      className="text-xs font-medium mb-2"
+                      style={{
+                        color: "#94A3B8",
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {t("Tarif horaire (FCFA)")}
+                    </p>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      value={profile.hourlyRate}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        updateProfile("hourlyRate", sanitizeDigits(e.target.value).slice(0, 9))
+                      }
+                      placeholder={t("Ex : 5000")}
+                      className="w-full rounded-xl border px-4 py-3 outline-none"
+                      style={{
+                        background: "#141C2F",
+                        borderColor: "rgba(255,255,255,0.1)",
+                        color: "#E8EDF5",
+                      }}
+                    />
+                    <p className="text-[11px] mt-1.5" style={{ color: "#64748B" }}>
+                      {t("Optionnel · visible dans le catalogue")}
+                    </p>
+                  </div>
+                  <div>
+                    <p
+                      className="text-xs font-medium mb-2"
+                      style={{
+                        color: "#94A3B8",
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {t("Années d'expérience")}
+                    </p>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      value={profile.experienceYears}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        updateProfile("experienceYears", sanitizeDigits(e.target.value).slice(0, 3))
+                      }
+                      placeholder={t("Ex : 5")}
+                      className="w-full rounded-xl border px-4 py-3 outline-none"
+                      style={{
+                        background: "#141C2F",
+                        borderColor: "rgba(255,255,255,0.1)",
+                        color: "#E8EDF5",
+                      }}
+                    />
+                    <p className="text-[11px] mt-1.5" style={{ color: "#64748B" }}>
+                      {t("Optionnel")}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <p className="mb-4 text-sm" style={{ color: "#F59E0B" }}>
+                  {error}
+                </p>
+              )}
+
+              <button
+                onClick={handleProfileNext}
+                className="w-full py-4 rounded-xl font-semibold text-base text-white"
+                style={{
+                  background: "linear-gradient(135deg, #2563EB, #1D4ED8)",
+                  fontFamily: "Poppins, sans-serif",
+                  boxShadow: "0 4px 20px rgba(37,99,235,0.35)",
+                }}
+              >
+                {t("Suivant")}
+              </button>
+
+              <p className="mt-4 text-center text-sm" style={{ color: "#64748B" }}>
+                {t("Déjà un compte ?")}{" "}
+                <button
+                  type="button"
+                  onClick={() => setStep("credentials")}
+                  className="font-medium"
+                  style={{ color: "#2563EB" }}
+                >
+                  {t("Se connecter")}
+                </button>
+              </p>
+            </>
+          ) : step === "phone" ? (
+            <>
+              <h2
+                className="text-2xl font-bold mb-2"
+                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+              >
+                {t("Vérification de compte")}
+              </h2>
+              <p className="text-sm mb-8" style={{ color: "#64748B" }}>
+                {t("Entrez votre numéro pour recevoir un code de sécurité")}
+              </p>
+
+              <div className="mb-6">
+                <p
+                  className="text-xs font-medium mb-2"
+                  style={{
+                    color: "#94A3B8",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t("Numéro de téléphone")}
+                </p>
+                <div
+                  className="flex items-center gap-3 rounded-xl px-4 py-4 border"
+                  style={{
+                    background: "#141C2F",
+                    borderColor: "rgba(255,255,255,0.1)",
+                  }}
+                >
+                  <span className="text-lg">🇨🇲</span>
+                  <span className="text-sm font-medium" style={{ color: "#64748B" }}>
+                    +237
+                  </span>
+                  <div className="w-px h-5" style={{ background: "rgba(255,255,255,0.1)" }} />
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(sanitizeDigits(e.target.value))}
+                    placeholder="6 XX XX XX XX"
+                    className="flex-1 bg-transparent outline-none text-base"
+                    style={{
+                      color: "#E8EDF5",
+                      fontFamily: "Inter, sans-serif",
+                    }}
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={handleSend}
+                className="w-full py-4 rounded-xl font-semibold text-base text-white mb-4"
+                style={{
+                  background:
+                    phone.length >= 8 ? "linear-gradient(135deg, #2563EB, #1D4ED8)" : "#1E2A42",
+                  fontFamily: "Poppins, sans-serif",
+                  boxShadow: phone.length >= 8 ? "0 4px 20px rgba(37,99,235,0.35)" : "none",
+                  cursor: phone.length >= 8 ? "pointer" : "not-allowed",
+                }}
+              >
+                {t("Recevoir mon code de sécurité")}
+              </button>
+
+              <button
+                onClick={() => setStep("choice")}
+                className="w-full text-sm text-center py-2"
+                style={{ color: "#64748B" }}
+              >
+                {t("← Retour au choix")}
+              </button>
+            </>
+          ) : (
+            <>
+              <h2
+                className="text-2xl font-bold mb-2"
+                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+              >
+                {t("Code de vérification")}
+              </h2>
+              <p className="text-sm mb-8" style={{ color: "#64748B" }}>
+                {t("Code envoyé au ")}<strong style={{ color: "#E8EDF5" }}>+237 {phone}</strong>
+              </p>
+
+              <div className="flex justify-between gap-3 mb-6">
+                {otp.map((d, i) => (
+                  <input
+                    key={i}
+                    ref={(el) => {
+                      inputRefs.current[i] = el
+                    }}
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={d}
+                    onChange={(e) => handleOtp(e.target.value, i)}
+                    onKeyDown={(e) => handleKeyDown(e, i)}
+                    className="flex-1 h-16 text-center text-2xl font-bold rounded-xl border-2 outline-none"
+                    style={{
+                      background: "#141C2F",
+                      borderColor: d ? "#2563EB" : "rgba(255,255,255,0.1)",
+                      color: "#E8EDF5",
+                      fontFamily: "JetBrains Mono, monospace",
+                      boxShadow: d ? "0 0 0 3px rgba(37,99,235,0.2)" : "none",
+                    }}
+                    autoFocus={i === 0}
+                  />
+                ))}
+              </div>
+
+              <div className="text-center mb-6">
+                {timer > 0 ? (
+                  <p className="text-sm font-medium" style={{ color: "#EF4444" }}>
+                    {t("Renvoyer dans ")}
+                    <span style={{ fontFamily: "JetBrains Mono, monospace" }}>
+                      00:{String(timer).padStart(2, "0")}
+                    </span>
+                  </p>
+                ) : (
+                  <button
+                    onClick={() => setTimer(59)}
+                    className="text-sm font-semibold"
+                    style={{ color: "#2563EB" }}
+                  >
+                    {t("Renvoyer le code")}
+                  </button>
+                )}
+              </div>
+
+              <button
+                onClick={() => setStep("phone")}
+                className="w-full text-sm text-center py-2"
+                style={{ color: "#64748B" }}
+              >
+                {t("← Modifier le numéro")}
+              </button>
+            </>
+          )}
+        </motion.div>
+      </div>
+    </div>
+  )
+}

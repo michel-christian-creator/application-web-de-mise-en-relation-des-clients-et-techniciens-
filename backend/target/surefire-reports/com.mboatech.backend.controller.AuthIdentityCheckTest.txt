@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.mboatech.backend.controller.AuthIdentityCheckTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.30 s -- in com.mboatech.backend.controller.AuthIdentityCheckTest
