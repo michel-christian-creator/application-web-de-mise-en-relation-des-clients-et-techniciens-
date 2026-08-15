@@ -81,7 +81,7 @@ public class TechDashboardController {
     @GetMapping("/dashboard")
     @Transactional(readOnly = true)
     public ResponseEntity<?> dashboard(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -316,7 +316,7 @@ public class TechDashboardController {
     }
 
     private Optional<TechnicianProfile> currentTechnician(String authorizationHeader) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty() || optionalUser.get().getRole() != Role.technician) {
             return Optional.empty();
         }

@@ -3,6 +3,15 @@ import { API_BASE_URL } from "../../config"
 import { resolvePhotoUrl } from "../../utils/photoUrl"
 import { useI18n } from "../../i18n"
 
+const resolveKycUrl = (url: string): string => {
+  const resolved = resolvePhotoUrl(url)
+  if (resolved.includes("/api/kyc/file/")) {
+    const token = localStorage.getItem("mboaTechToken")
+    if (token) return `${resolved}${resolved.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`
+  }
+  return resolved
+}
+
 type Person = { name: string; username: string; photoUrl: string; city: string }
 
 type DisputeSummary = {
@@ -506,7 +515,7 @@ export default function S1Console() {
                             >
                               {doc.fileUrl && /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.fileUrl) ? (
                                 <img
-                                  src={resolvePhotoUrl(doc.fileUrl)}
+                                  src={resolveKycUrl(doc.fileUrl)}
                                   alt={docTypeLabel(doc.docType, t)}
                                   className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
                                   style={{
@@ -544,7 +553,7 @@ export default function S1Console() {
                               <div className="flex gap-2 flex-shrink-0">
                                 {doc.fileUrl && (
                                   <a
-                                    href={resolvePhotoUrl(doc.fileUrl)}
+                                    href={resolveKycUrl(doc.fileUrl)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-[11px] px-2.5 py-1.5 rounded-lg whitespace-nowrap"
@@ -936,15 +945,15 @@ export default function S1Console() {
                     </h2>
                     {proofMessages.length === 0 ? (
                       <p className="text-xs" style={{ color: "#64748B" }}>
-                        Aucune pièce jointe dans la discussion.
+                        {t("Aucune pièce jointe dans la discussion.")}
                       </p>
                     ) : (
                       proofMessages.slice(0, 4).map((m, i) => (
                         <div key={m.id} className="mb-3">
                           <p className="text-xs mb-2" style={{ color: "#94A3B8" }}>
                             {m.senderName === detail?.client?.name || m.senderRole === "client"
-                              ? "Preuve client"
-                              : "Preuve technicien"}{" "}
+                              ? t("Preuve client")
+                              : t("Preuve technicien")}{" "}
                             · {formatDay(m.time, locale)}
                           </p>
                           <img
@@ -977,7 +986,7 @@ export default function S1Console() {
                           textTransform: "uppercase",
                         }}
                       >
-                        Décision financière
+                        {t("Décision financière")}
                       </h2>
                       <button
                         onClick={() => decide("client")}
@@ -989,8 +998,8 @@ export default function S1Console() {
                         }}
                       >
                         {deciding === "client"
-                          ? "Traitement…"
-                          : "Rembourser intégralement le client"}
+                          ? t("Traitement…")
+                          : t("Rembourser intégralement le client")}
                       </button>
                       <button
                         onClick={() => decide("tech")}
@@ -1001,7 +1010,7 @@ export default function S1Console() {
                           boxShadow: "0 2px 12px rgba(5,150,105,0.3)",
                         }}
                       >
-                        {deciding === "tech" ? "Traitement…" : "Verser les fonds au technicien"}
+                        {deciding === "tech" ? t("Traitement…") : t("Verser les fonds au technicien")}
                       </button>
                       <button
                         onClick={() => decide("split")}
@@ -1013,7 +1022,7 @@ export default function S1Console() {
                           border: "1px solid rgba(255,255,255,0.1)",
                         }}
                       >
-                        {deciding === "split" ? "Traitement…" : "Partager les fonds (50/50)"}
+                        {deciding === "split" ? t("Traitement…") : t("Partager les fonds (50/50)")}
                       </button>
                     </div>
                   ) : (
@@ -1048,13 +1057,13 @@ export default function S1Console() {
                         }}
                       >
                         {decisionDone === "client"
-                          ? "✓ Remboursement déclenché"
+                          ? t("✓ Remboursement déclenché")
                           : decisionDone === "tech"
-                            ? "✓ Fonds versés au technicien"
-                            : "✓ Partage 50/50 déclenché"}
+                            ? t("✓ Fonds versés au technicien")
+                            : t("✓ Partage 50/50 déclenché")}
                       </p>
                       <p className="text-xs" style={{ color: "#64748B" }}>
-                        Litige clôturé · notifications envoyées aux parties.
+                        {t("Litige clôturé · notifications envoyées aux parties.")}
                       </p>
                     </div>
                   )}

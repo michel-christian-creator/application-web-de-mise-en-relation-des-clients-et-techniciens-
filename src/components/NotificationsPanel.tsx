@@ -1,5 +1,6 @@
 import React from "react"
 import type { Notification } from "../hooks/useNotifications"
+import { useI18n } from "../i18n"
 
 interface Props {
   notifications: Notification[]
@@ -65,6 +66,7 @@ export default function NotificationsPanel({
   onClearAll,
   onNavigate,
 }: Props) {
+  const { t } = useI18n()
   const handleClick = (n: Notification) => {
     if (n.read !== true) {
       onMarkAsRead(n.id)
@@ -96,16 +98,16 @@ export default function NotificationsPanel({
             className="text-xs px-2 py-1 rounded-md"
             style={{ background: "#1E2A42", color: "#94A3B8" }}
           >
-            Tout marquer lu
+            {t("Tout marquer lu")}
           </button>
           {onClearAll && (
             <button
               onClick={onClearAll}
               className="text-xs px-2 py-1 rounded-md"
               style={{ background: "transparent", color: "#64748B" }}
-              title="Vider les notifications"
+              title={t("Vider les notifications")}
             >
-              Vider
+              {t("Vider")}
             </button>
           )}
         </div>
@@ -132,10 +134,10 @@ export default function NotificationsPanel({
               </svg>
             </div>
             <p className="text-sm" style={{ color: "#94A3B8" }}>
-              Aucune notification
+              {t("Aucune notification")}
             </p>
             <p className="text-xs" style={{ color: "#64748B" }}>
-              Les nouveaux événements apparaîtront ici en temps réel.
+              {t("Les nouveaux événements apparaîtront ici en temps réel.")}
             </p>
           </div>
         ) : (

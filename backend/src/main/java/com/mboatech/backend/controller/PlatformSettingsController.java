@@ -39,7 +39,7 @@ public class PlatformSettingsController {
     @Transactional
     public ResponseEntity<?> setPayments(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
                                          @RequestBody(required = false) Map<String, Object> body) {
-        Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (user.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }

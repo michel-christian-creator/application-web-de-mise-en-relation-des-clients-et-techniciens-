@@ -61,7 +61,7 @@ public class PortfolioController {
     @GetMapping("/portfolio/me")
     @Transactional(readOnly = true)
     public ResponseEntity<?> getMyPortfolio(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -85,7 +85,7 @@ public class PortfolioController {
             @RequestParam(value = "before", required = false) MultipartFile before,
             @RequestParam(value = "after", required = false) MultipartFile after,
             @RequestParam(value = "label", required = false) String label) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -116,7 +116,7 @@ public class PortfolioController {
     public ResponseEntity<?> deletePortfolioItem(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @PathVariable("itemId") Long itemId) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }

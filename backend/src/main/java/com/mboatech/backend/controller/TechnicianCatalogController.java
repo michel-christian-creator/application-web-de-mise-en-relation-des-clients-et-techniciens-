@@ -8,6 +8,7 @@ import com.mboatech.backend.repository.ClientProfileRepository;
 import com.mboatech.backend.repository.ClientRequestRepository;
 import com.mboatech.backend.repository.TechnicianProfileRepository;
 import com.mboatech.backend.repository.TechnicianRecommendationRepository;
+import com.mboatech.backend.repository.TechnicianRecommendationRepository.RecommendationStats;
 import com.mboatech.backend.repository.UserRepository;
 import com.mboatech.backend.service.NotificationService;
 import com.mboatech.backend.service.TechnicianEventService;
@@ -103,9 +104,16 @@ public class TechnicianCatalogController {
 
         logger.debug("Found {} profiles matching domain='{}'", filteredProfiles.size(), selectedDomain);
 
+        Map<Long, RecommendationStats> statsById = filteredProfiles.isEmpty()
+                ? Map.of()
+                : technicianRecommendationRepository.findStatsGroupedByTechnician().stream()
+                        .collect(Collectors.toMap(RecommendationStats::getTechnicianId, s -> s, (a, b) -> a));
+
         List<Map<String, Object>> response;
         try {
-            response = filteredProfiles.stream().map(this::mapToDto).collect(Collectors.toList());
+            response = filteredProfiles.stream()
+                    .map(profile -> mapToDto(profile, statsById.get(profile.getId())))
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             logger.error("Failed to map technician profiles", e);
             response = List.of();
@@ -114,7 +122,7 @@ public class TechnicianCatalogController {
         return ResponseEntity.ok(response);
     }
 
-    private Map<String, Object> mapToDto(TechnicianProfile profile) {
+    private Map<String, Object> mapToDto(TechnicianProfile profile, RecommendationStats stats) {
         var user = profile.getUser();
         String firstName = "";
         String lastName = "";
@@ -135,16 +143,10 @@ public class TechnicianCatalogController {
         data.put("specialties", profile.getSpecialties());
         data.put("photoUrl", user != null ? user.getPhotoUrl() : null);
 
-        List<TechnicianRecommendation> ratedReviews = technicianRecommendationRepository
-                .findByTechnicianIdAndRatingNotNullOrderByCreatedAtDesc(profile.getId());
-        int ratingCount = ratedReviews.size();
+        long ratingCount = stats != null ? stats.getRatedCount() : 0L;
         double ratingAvg = 0.0;
-        if (ratingCount > 0) {
-            ratingAvg = ratedReviews.stream()
-                    .mapToInt(r -> r.getRating() == null ? 0 : r.getRating())
-                    .average()
-                    .orElse(0.0);
-            ratingAvg = Math.round(ratingAvg * 10.0) / 10.0;
+        if (ratingCount > 0 && stats != null && stats.getAvgRating() != null) {
+            ratingAvg = Math.round(stats.getAvgRating() * 10.0) / 10.0;
         }
         data.put("ratingAvg", ratingAvg);
         data.put("ratingCount", ratingCount);
@@ -154,7 +156,7 @@ public class TechnicianCatalogController {
         data.put("hourlyRate", profile.getHourlyRate() != null ? profile.getHourlyRate() : 0.0);
         data.put("successRate", profile.getSuccessRate() != null ? profile.getSuccessRate() : 0.0);
         data.put("avgResponseTimeSec", profile.getAvgResponseTimeSec() != null ? profile.getAvgResponseTimeSec() : 0);
-        data.put("recommendationsCount", technicianRecommendationRepository.countByTechnicianId(profile.getId()));
+        data.put("recommendationsCount", stats != null ? stats.getCount() : 0L);
         return data;
     }
 
@@ -195,13 +197,13 @@ public class TechnicianCatalogController {
                 return ResponseEntity.badRequest().body(Map.of("message", "La note doit être comprise entre 1 et 5."));
             }
         }
-        Long recommenderUserId = null;
+        Optional<User> authenticatedUser = AuthController.authenticateToken(authorizationHeader, userRepository);
+        if (authenticatedUser.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("message", "Authentification requise pour noter un technicien."));
+        }
+        Long recommenderUserId = authenticatedUser.get().getId();
         if (rating != null) {
             // La notation est réservée aux clients authentifiés ayant terminé une intervention avec ce technicien.
-            Optional<User> authenticatedUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
-            if (authenticatedUser.isEmpty()) {
-                return ResponseEntity.status(401).body(Map.of("message", "Authentification requise pour noter un technicien."));
-            }
             Long clientProfileId = clientProfileRepository.findByUserId(authenticatedUser.get().getId())
                     .map(ClientProfile::getId)
                     .orElse(null);
@@ -209,13 +211,6 @@ public class TechnicianCatalogController {
                     || !clientRequestRepository.existsByClientIdAndTechnicianIdAndStatus(clientProfileId, id, COMPLETED_REQUEST_STATUS)) {
                 return ResponseEntity.status(403).body(Map.of("message",
                         "La notation est réservée aux clients ayant terminé une intervention avec ce technicien."));
-            }
-            recommenderUserId = authenticatedUser.get().getId();
-        } else if (body != null && body.get("recommenderUserId") != null) {
-            try {
-                recommenderUserId = Long.valueOf(body.get("recommenderUserId").toString());
-            } catch (NumberFormatException ignored) {
-                // ignore invalid recommender id
             }
         }
 

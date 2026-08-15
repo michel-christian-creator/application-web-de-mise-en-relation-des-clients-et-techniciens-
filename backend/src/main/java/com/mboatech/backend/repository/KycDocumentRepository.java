@@ -9,5 +9,6 @@ import java.util.Optional;
 public interface KycDocumentRepository extends JpaRepository<KycDocument, Long> {
     List<KycDocument> findByUserIdOrderByCreatedAtDesc(Long userId);
     Optional<KycDocument> findByUserIdAndDocType(Long userId, String docType);
+    Optional<KycDocument> findByFileUrl(String fileUrl);
     List<KycDocument> findAllByOrderByCreatedAtDesc();
 }

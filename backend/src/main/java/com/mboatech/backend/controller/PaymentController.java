@@ -87,7 +87,7 @@ public class PaymentController {
 
     @GetMapping("/history")
     public ResponseEntity<?> history(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (user.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -106,7 +106,7 @@ public class PaymentController {
     @PostMapping("/deposit")
     public ResponseEntity<?> deposit(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
                                      @RequestBody(required = false) Map<String, Object> body) {
-        Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (user.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -138,7 +138,7 @@ public class PaymentController {
     @PostMapping("/release")
     public ResponseEntity<?> release(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
                                      @RequestBody(required = false) Map<String, Object> body) {
-        Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (user.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }

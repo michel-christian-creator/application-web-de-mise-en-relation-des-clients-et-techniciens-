@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mboatech.backend.controller.ChatController;
 import com.mboatech.backend.model.ChatMessage;
+import com.mboatech.backend.model.User;
+import com.mboatech.backend.service.ChatAccessService;
 import com.mboatech.backend.service.ChatEventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -24,19 +27,23 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private final ChatEventService chatEventService;
     private final ChatController chatController;
+    private final ChatAccessService chatAccessService;
     private final ObjectMapper objectMapper;
 
-    public ChatWebSocketHandler(ChatEventService chatEventService, ChatController chatController, ObjectMapper objectMapper) {
+    public ChatWebSocketHandler(ChatEventService chatEventService, ChatController chatController,
+                                ChatAccessService chatAccessService, ObjectMapper objectMapper) {
         this.chatEventService = chatEventService;
         this.chatController = chatController;
+        this.chatAccessService = chatAccessService;
         this.objectMapper = objectMapper;
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         Long requestId = requestIdFrom(session);
-        if (requestId == null) {
-            session.close(CloseStatus.BAD_DATA);
+        User user = authenticatedUser(session);
+        if (requestId == null || user == null || !chatAccessService.isConversationAccessible(user, requestId)) {
+            session.close(CloseStatus.POLICY_VIOLATION);
             return;
         }
         chatEventService.addSession(session, requestId);
@@ -46,6 +53,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         Long requestId = requestIdFrom(session);
+        User user = authenticatedUser(session);
+        if (requestId == null || user == null || !chatAccessService.isConversationAccessible(user, requestId)) {
+            session.close(CloseStatus.POLICY_VIOLATION);
+            return;
+        }
         JsonNode node;
         try {
             node = objectMapper.readTree(message.getPayload());
@@ -55,22 +67,18 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
         String type = node.path("type").asText("");
         if ("message".equals(type)) {
-            handleIncomingMessage(session, requestId, node);
+            handleIncomingMessage(session, requestId, user, node);
         } else if ("read".equals(type)) {
-            handleReadReceipt(session, requestId, node);
+            handleReadReceipt(session, requestId, user);
         } else {
             sendError(session, "Type inconnu : " + type);
         }
     }
 
-    private void handleIncomingMessage(WebSocketSession session, Long requestId, JsonNode node) throws Exception {
-        if (requestId == null || !node.path("senderUserId").isNumber()) {
-            sendError(session, "senderUserId requis");
-            return;
-        }
+    private void handleIncomingMessage(WebSocketSession session, Long requestId, User user, JsonNode node) throws Exception {
         ChatMessage chatMessage = new ChatMessage();
         chatMessage.setRequestId(requestId);
-        chatMessage.setSenderUserId(node.path("senderUserId").asLong());
+        chatMessage.setSenderUserId(user.getId());
         chatMessage.setText(node.path("text").asText(""));
         chatMessage.setImageUrl(node.hasNonNull("imageUrl") ? node.path("imageUrl").asText() : null);
         if (node.hasNonNull("devisAmount")) {
@@ -90,12 +98,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private void handleReadReceipt(WebSocketSession session, Long requestId, JsonNode node) throws Exception {
-        if (requestId == null || !node.path("userId").isNumber()) {
-            sendError(session, "userId requis");
-            return;
-        }
-        chatController.markReadAndBroadcast(requestId, node.path("userId").asLong());
+    private void handleReadReceipt(WebSocketSession session, Long requestId, User user) throws Exception {
+        chatController.markReadAndBroadcast(requestId, user.getId());
     }
 
     @Override
@@ -110,6 +114,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             session.close(CloseStatus.SERVER_ERROR);
         }
         chatEventService.removeSession(session);
+    }
+
+    private User authenticatedUser(WebSocketSession session) {
+        java.security.Principal principal = session.getPrincipal();
+        if (principal instanceof UsernamePasswordAuthenticationToken token
+                && token.getPrincipal() instanceof User user) {
+            return user;
+        }
+        return null;
     }
 
     private Long requestIdFrom(WebSocketSession session) {

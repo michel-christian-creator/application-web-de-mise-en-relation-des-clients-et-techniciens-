@@ -1,6 +1,9 @@
 node_modules/
 dist/
 build/
+backend/target/
+uploads/
+private-uploads/
 .cache/
 .env*
 .vite/

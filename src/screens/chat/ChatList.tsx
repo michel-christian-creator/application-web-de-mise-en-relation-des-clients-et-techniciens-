@@ -1114,7 +1114,7 @@ export default function ChatList({
                         border: "1px solid rgba(255,255,255,0.15)",
                       }}
                     >
-                      Actives
+                      {tr("Actives")}
                     </button>
                     <button
                       onClick={() => switchTab(true)}
@@ -1125,7 +1125,8 @@ export default function ChatList({
                         border: "1px solid rgba(255,255,255,0.15)",
                       }}
                     >
-                      Archives{archivedVisible.length > 0 ? ` (${archivedVisible.length})` : ""}
+                      {tr("Archives")}
+                      {archivedVisible.length > 0 ? ` (${archivedVisible.length})` : ""}
                     </button>
                   </div>
                 </div>
@@ -1212,10 +1213,10 @@ export default function ChatList({
                     <ChatBubbleIcon className="h-8 w-8 text-slate-400" />
                   </div>
                   <p className="text-sm font-medium" style={{ color: "#E8EDF5" }}>
-                    Chargement de la conversation…
+                    {tr("Chargement de la conversation…")}
                   </p>
                   <p className="text-xs" style={{ color: "#64748B" }}>
-                    La discussion avec l'auteur de la demande s'ouvre.
+                    {tr("La discussion avec l'auteur de la demande s'ouvre.")}
                   </p>
                 </div>
               ) : (
@@ -1282,7 +1283,7 @@ export default function ChatList({
                         className="h-1.5 w-1.5 animate-pulse rounded-full"
                         style={{ background: "#60A5FA" }}
                       />
-                      Temps réel
+                      {tr("Temps réel")}
                     </span>
                     {canValidateWork && (
                       <button
@@ -1297,8 +1298,8 @@ export default function ChatList({
                         }}
                       >
                         {releasingFunds
-                          ? "Libération en cours…"
-                          : "Valider les travaux · libérer les fonds"}
+                          ? tr("Libération en cours…")
+                          : tr("Valider les travaux · libérer les fonds")}
                       </button>
                     )}
                   </div>
@@ -1309,13 +1310,12 @@ export default function ChatList({
                   >
                     {loading && (
                       <p className="text-sm" style={{ color: "#94A3B8" }}>
-                        Chargement des messages…
+                        {tr("Chargement des messages…")}
                       </p>
                     )}
                     {!loading && messages.length === 0 && (
                       <p className="text-sm text-center mt-10" style={{ color: "#94A3B8" }}>
-                        Aucun message pour le moment. Envoyez le premier message pour démarrer la
-                        conversation.
+                        {tr("Aucun message pour le moment. Envoyez le premier message pour démarrer la conversation.")}
                       </p>
                     )}
                     {messages.map((m) => {
@@ -1374,7 +1374,7 @@ export default function ChatList({
                                       letterSpacing: "0.08em",
                                     }}
                                   >
-                                    DEVIS
+                                    {tr("DEVIS")}
                                   </p>
                                 </div>
                                 <div className="px-4 py-3">
@@ -1400,8 +1400,8 @@ export default function ChatList({
                                       }}
                                     >
                                       {respondingDevis === m.id
-                                        ? "Traitement…"
-                                        : "Accepter et procéder au paiement"}
+                                        ? tr("Traitement…")
+                                        : tr("Accepter et procéder au paiement")}
                                     </button>
                                     <button
                                       onClick={() => respondToDevis(m, "rejected")}
@@ -1413,7 +1413,7 @@ export default function ChatList({
                                         border: "1px solid rgba(239,68,68,0.3)",
                                       }}
                                     >
-                                      Rejeter le devis
+                                      {tr("Rejeter le devis")}
                                     </button>
                                   </div>
                                 ) : (
@@ -1478,7 +1478,7 @@ export default function ChatList({
                                       letterSpacing: "0.08em",
                                     }}
                                   >
-                                    INTERVENTION
+                                    {tr("INTERVENTION")}
                                   </p>
                                 </div>
                                 <div className="px-4 py-3">
@@ -1504,8 +1504,8 @@ export default function ChatList({
                                       }}
                                     >
                                       {respondingSchedule === m.id
-                                        ? "Traitement…"
-                                        : "Accepter l'intervention"}
+                                        ? tr("Traitement…")
+                                        : tr("Accepter l'intervention")}
                                     </button>
                                     <button
                                       onClick={() => respondToSchedule(m, "rejected")}
@@ -1517,7 +1517,7 @@ export default function ChatList({
                                         border: "1px solid rgba(239,68,68,0.3)",
                                       }}
                                     >
-                                      Refuser la proposition
+                                      {tr("Refuser la proposition")}
                                     </button>
                                   </div>
                                 ) : (
@@ -1562,7 +1562,7 @@ export default function ChatList({
                               {m.imageUrl && (
                                 <img
                                   src={m.imageUrl}
-                                  alt="Photo partagée dans le chat"
+                                  alt={tr("Photo partagée dans le chat")}
                                   className="mb-2 w-full cursor-pointer rounded-xl object-cover"
                                   style={{ height: "140px" }}
                                 />
@@ -1610,7 +1610,7 @@ export default function ChatList({
                           border: "1px solid rgba(5,150,105,0.2)",
                         }}
                       >
-                        ✓ Intervention terminée — conversation archivée
+                        {tr("✓ Intervention terminée — conversation archivée")}
                       </p>
                     ) : (
                       <>
@@ -1625,7 +1625,7 @@ export default function ChatList({
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && send()}
-                            placeholder="Votre message..."
+                            placeholder={tr("Votre message...")}
                             className="flex-1 bg-transparent outline-none text-sm"
                             style={{
                               color: "#E8EDF5",
@@ -1641,7 +1641,7 @@ export default function ChatList({
                             background: input.trim() ? "#2563EB" : "#1E2A42",
                             boxShadow: input.trim() ? "0 2px 10px rgba(37,99,235,0.35)" : "none",
                           }}
-                          aria-label="Envoyer"
+                          aria-label={tr("Envoyer")}
                         >
                           <svg
                             width="18"
@@ -1687,7 +1687,7 @@ export default function ChatList({
                       color: "#E8EDF5",
                     }}
                   >
-                    Devis
+                    {tr("Devis")}
                   </p>
                 </div>
                 <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
@@ -1699,7 +1699,7 @@ export default function ChatList({
                     }}
                   >
                     <p className="text-xs" style={{ color: "#94A3B8" }}>
-                      Proposez le montant de votre intervention à{" "}
+                      {tr("Proposez le montant de votre intervention à")}{" "}
                       <strong style={{ color: "#E8EDF5" }}>{partnerDisplay}</strong>.
                     </p>
                     <div className="mt-3">
@@ -1707,7 +1707,7 @@ export default function ChatList({
                         className="mb-1.5 block text-xs font-semibold"
                         style={{ color: "#E8EDF5" }}
                       >
-                        Montant (FCFA)
+                        {tr("Montant (FCFA)")}
                       </label>
                       <div
                         className="flex items-center rounded-xl px-3 py-2.5"
@@ -1742,10 +1742,12 @@ export default function ChatList({
                         boxShadow: devisInput.trim() ? "0 4px 16px rgba(37,99,235,0.35)" : "none",
                       }}
                     >
-                      {sendingDevis ? "Envoi…" : `Envoyer le devis à ${partnerDisplay}`}
+                      {sendingDevis
+                        ? tr("Envoi…")
+                        : `${tr("Envoyer le devis à")} ${partnerDisplay}`}
                     </button>
                     <p className="mt-2 text-[10px] leading-relaxed" style={{ color: "#64748B" }}>
-                      Le client pourra accepter et procéder au paiement, ou rejeter votre devis.
+                      {tr("Le client pourra accepter et procéder au paiement, ou rejeter votre devis.")}
                     </p>
                   </div>
 
@@ -1776,11 +1778,11 @@ export default function ChatList({
                         className="text-xs font-bold"
                         style={{ color: "#34D399", letterSpacing: "0.08em" }}
                       >
-                        PLANIFIER L'INTERVENTION
+                        {tr("PLANIFIER L'INTERVENTION")}
                       </p>
                     </div>
                     <p className="mt-2 text-xs" style={{ color: "#94A3B8" }}>
-                      Fixez la date et l'heure de votre intervention pour{" "}
+                      {tr("Fixez la date et l'heure de votre intervention pour")}{" "}
                       <strong style={{ color: "#E8EDF5" }}>{partnerDisplay}</strong>.
                     </p>
                     <div className="mt-3">
@@ -1788,7 +1790,7 @@ export default function ChatList({
                         className="mb-1.5 block text-xs font-semibold"
                         style={{ color: "#E8EDF5" }}
                       >
-                        Date
+                        {tr("Date")}
                       </label>
                       <div
                         className="flex items-center rounded-xl px-3 py-2.5"
@@ -1815,7 +1817,7 @@ export default function ChatList({
                         className="mb-1.5 block text-xs font-semibold"
                         style={{ color: "#E8EDF5" }}
                       >
-                        Heure
+                        {tr("Heure")}
                       </label>
                       <div
                         className="flex items-center rounded-xl px-3 py-2.5"
@@ -1850,13 +1852,13 @@ export default function ChatList({
                       }}
                     >
                       {sendingSchedule
-                        ? "Envoi…"
+                        ? tr("Envoi…")
                         : scheduleDate && scheduleTime
-                          ? `Proposer le ${formatScheduleShort(`${scheduleDate}T${scheduleTime}`)}`
-                          : "Proposer une intervention"}
+                          ? `${tr("Proposer le")} ${formatScheduleShort(`${scheduleDate}T${scheduleTime}`)}`
+                          : tr("Proposer une intervention")}
                     </button>
                     <p className="mt-2 text-[10px] leading-relaxed" style={{ color: "#64748B" }}>
-                      Le client pourra accepter ou refuser votre proposition.
+                      {tr("Le client pourra accepter ou refuser votre proposition.")}
                     </p>
                   </div>
                 </div>

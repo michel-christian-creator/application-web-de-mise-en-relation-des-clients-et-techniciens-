@@ -15,6 +15,7 @@ import com.mboatech.backend.repository.PaymentRepository;
 import com.mboatech.backend.repository.RequestDeclineRepository;
 import com.mboatech.backend.repository.TechnicianProfileRepository;
 import com.mboatech.backend.repository.UserRepository;
+import com.mboatech.backend.service.ChatAccessService;
 import com.mboatech.backend.service.ChatEventService;
 import com.mboatech.backend.service.MissionGuardService;
 import com.mboatech.backend.service.NotificationService;
@@ -25,7 +26,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -52,10 +52,11 @@ public class ChatController {
     private final NotificationService notificationService;
     private final MissionGuardService missionGuardService;
     private final PaymentRepository paymentRepository;
+    private final ChatAccessService chatAccessService;
 
     public static volatile Long SYSTEM_SENDER_USER_ID = 999_999_999_999L;
 
-    public ChatController(ClientRequestRepository requestRepository, ChatMessageRepository messageRepository, UserRepository userRepository, ClientProfileRepository clientProfileRepository, TechnicianProfileRepository technicianProfileRepository, RequestDeclineRepository requestDeclineRepository, ChatEventService chatEventService, TechnicianEventService technicianEventService, NotificationService notificationService, MissionGuardService missionGuardService, PaymentRepository paymentRepository) {
+    public ChatController(ClientRequestRepository requestRepository, ChatMessageRepository messageRepository, UserRepository userRepository, ClientProfileRepository clientProfileRepository, TechnicianProfileRepository technicianProfileRepository, RequestDeclineRepository requestDeclineRepository, ChatEventService chatEventService, TechnicianEventService technicianEventService, NotificationService notificationService, MissionGuardService missionGuardService, PaymentRepository paymentRepository, ChatAccessService chatAccessService) {
         this.requestRepository = requestRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
@@ -67,6 +68,7 @@ public class ChatController {
         this.notificationService = notificationService;
         this.missionGuardService = missionGuardService;
         this.paymentRepository = paymentRepository;
+        this.chatAccessService = chatAccessService;
     }
 
     @PostMapping("/request")
@@ -81,12 +83,17 @@ public class ChatController {
                                                     @RequestParam(value = "domain", required = false) String domain,
                                                     @RequestParam(value = "description", required = false) String description,
                                                     @RequestParam(value = "urgent", required = false) String urgent,
+                                                    @RequestParam(value = "urgency", required = false) String urgency,
                                                     @RequestParam(value = "technicianId", required = false) Long technicianId) {
         ClientRequest request = new ClientRequest();
         request.setCategory(category);
         request.setDomain(domain);
         request.setDescription(description);
-        request.setUrgent("true".equalsIgnoreCase(urgent));
+        if (urgency != null && !urgency.isBlank()) {
+            request.setUrgency(urgency);
+        } else {
+            request.setUrgent("true".equalsIgnoreCase(urgent));
+        }
         request.setTechnicianId(technicianId);
         return createRequestInternal(authorizationHeader, request);
     }
@@ -97,15 +104,12 @@ public class ChatController {
         }
 
         Long clientId = request.getClientId();
-        User authenticatedUser = null;
-        if (clientId == null) {
-            Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
-            if (optionalUser.isEmpty()) {
-                return ResponseEntity.status(401).body(Map.of("message", "Session expirée. Veuillez vous reconnecter."));
-            }
-            authenticatedUser = optionalUser.get();
-            clientId = resolveClientId(authenticatedUser);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("message", "Session expirée. Veuillez vous reconnecter."));
         }
+        User authenticatedUser = optionalUser.get();
+        clientId = resolveClientId(authenticatedUser);
         request.setClientId(clientId);
 
         if (request.getTechnicianId() != null) {
@@ -169,7 +173,7 @@ public class ChatController {
 
     @GetMapping("/requests/technician")
     public ResponseEntity<?> getTechnicianRequests(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -207,7 +211,7 @@ public class ChatController {
 
     @GetMapping("/requests/technician/archived")
     public ResponseEntity<?> getArchivedTechnicianRequests(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -356,10 +360,11 @@ public class ChatController {
         if (message == null) {
             return ResponseEntity.badRequest().build();
         }
-        if (message.getSenderUserId() == null) {
-            Optional<User> authenticatedUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
-            message.setSenderUserId(authenticatedUser.map(User::getId).orElse(1L));
+        Optional<User> authenticatedUser = AuthController.authenticateToken(authorizationHeader, userRepository);
+        if (authenticatedUser.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("message", "Session expirée. Veuillez vous reconnecter."));
         }
+        message.setSenderUserId(authenticatedUser.get().getId());
         try {
             return ResponseEntity.ok(saveMessageBroadcast(message));
         } catch (IllegalArgumentException e) {
@@ -396,7 +401,7 @@ public class ChatController {
 
     @GetMapping("/requests/client")
     public ResponseEntity<?> getClientRequests(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -410,7 +415,7 @@ public class ChatController {
 
     @GetMapping("/requests/client/archived")
     public ResponseEntity<?> getArchivedClientRequests(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -469,12 +474,17 @@ public class ChatController {
 
     @GetMapping("/messages/{requestId}")
     @Transactional
-    public ResponseEntity<List<ChatMessage>> getMessages(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-                                                         @PathVariable("requestId") Long requestId) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
-        if (optionalUser.isPresent()) {
-            markReadAndBroadcast(requestId, optionalUser.get().getId());
+    public ResponseEntity<?> getMessages(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+                                         @PathVariable("requestId") Long requestId) {
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
+        User user = optionalUser.get();
+        if (!chatAccessService.isConversationAccessible(user, requestId)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Accès refusé à cette conversation."));
+        }
+        markReadAndBroadcast(requestId, user.getId());
         List<ChatMessage> history = messageRepository.findByRequestIdOrderByTimestampAsc(requestId);
         return ResponseEntity.ok(history);
     }
@@ -483,10 +493,15 @@ public class ChatController {
     @Transactional
     public ResponseEntity<?> markRequestRead(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
                                              @PathVariable("requestId") Long requestId) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
-        if (optionalUser.isPresent()) {
-            markReadAndBroadcast(requestId, optionalUser.get().getId());
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
+        User user = optionalUser.get();
+        if (!chatAccessService.isConversationAccessible(user, requestId)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Accès refusé à cette conversation."));
+        }
+        markReadAndBroadcast(requestId, user.getId());
         return ResponseEntity.ok(Map.of("ok", true));
     }
 
@@ -526,11 +541,18 @@ public class ChatController {
         if (messageId == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "messageId requis."));
         }
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
+        }
         Optional<ChatMessage> optional = messageRepository.findById(messageId);
         if (optional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         ChatMessage message = optional.get();
+        if (!chatAccessService.isRequestClient(optionalUser.get(), message.getRequestId())) {
+            return ResponseEntity.status(403).body(Map.of("message", "Seul le client de la demande peut répondre à ce devis."));
+        }
         if (message.getDevisAmount() == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "Ce message n'est pas un devis."));
         }
@@ -580,11 +602,18 @@ public class ChatController {
         if (messageId == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "messageId requis."));
         }
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
+        }
         Optional<ChatMessage> optional = messageRepository.findById(messageId);
         if (optional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         ChatMessage message = optional.get();
+        if (!chatAccessService.isRequestClient(optionalUser.get(), message.getRequestId())) {
+            return ResponseEntity.status(403).body(Map.of("message", "Seul le client de la demande peut répondre à cette proposition."));
+        }
         if (message.getScheduleAt() == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "Ce message n'est pas une proposition d'intervention."));
         }
@@ -638,7 +667,7 @@ public class ChatController {
         if (requestId == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "requestId requis."));
         }
-        Optional<User> optionalReporter = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalReporter = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalReporter.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -733,7 +762,7 @@ public class ChatController {
         if (requestId == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "requestId requis."));
         }
-        Optional<User> optionalRequester = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalRequester = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalRequester.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -814,7 +843,7 @@ public class ChatController {
 
     @GetMapping("/unread-count")
     public ResponseEntity<?> getUnreadCount(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.ok(Map.of("count", 0));
         }
@@ -837,15 +866,26 @@ public class ChatController {
     }
 
     @GetMapping("/stream/{requestId}")
-    public SseEmitter streamMessages(@PathVariable("requestId") Long requestId) {
-        return this.chatEventService.createEmitter(requestId);
+    public ResponseEntity<?> streamMessages(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+                                            @RequestParam(value = "token", required = false) String token,
+                                            @PathVariable("requestId") Long requestId) {
+        Optional<User> optionalUser = AuthController.authenticateToken(
+                authorizationHeader != null ? authorizationHeader : "Bearer " + (token == null ? "" : token),
+                userRepository);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
+        }
+        if (!chatAccessService.isConversationAccessible(optionalUser.get(), requestId)) {
+            return ResponseEntity.status(403).body(Map.of("message", "Accès refusé à cette conversation."));
+        }
+        return ResponseEntity.ok(this.chatEventService.createEmitter(requestId));
     }
 
     @PostMapping("/request/{requestId}/assign")
     public ResponseEntity<?> assignTechnician(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
                                               @PathVariable("requestId") Long requestId,
                                               @RequestParam("technicianId") Long technicianId) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -932,7 +972,7 @@ public class ChatController {
     @PostMapping("/request/{requestId}/reopen")
     public ResponseEntity<?> reopenRequest(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
                                            @PathVariable("requestId") Long requestId) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }

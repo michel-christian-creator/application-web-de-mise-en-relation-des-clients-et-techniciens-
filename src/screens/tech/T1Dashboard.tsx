@@ -631,10 +631,10 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
               className="text-2xl font-bold mb-0.5"
               style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
             >
-              Tableau de bord
+              {t("Tableau de bord")}
             </h1>
             <p className="text-sm" style={{ color: "#64748B" }}>
-              Demandes d'intervention qui vous sont réservées
+              {t("Demandes d'intervention qui vous sont réservées")}
             </p>
           </div>
           <button
@@ -847,7 +847,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                         border: `1px solid ${full ? "rgba(239,68,68,0.3)" : st.border}`,
                       }}
                     >
-                      {st.label} {usage}/{maxReservations}
+                      {t(st.label)} {usage}/{maxReservations}
                     </span>
                   )
                 })}
@@ -860,7 +860,8 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                       border: "1px solid rgba(239,68,68,0.3)",
                     }}
                   >
-                    Gel {formatFreeze(freezeSec)}
+                    {t("Gel ")}
+                    {formatFreeze(freezeSec)}
                   </span>
                 )}
               </div>
@@ -869,7 +870,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   className="p-3 rounded-xl text-sm"
                   style={{ background: "#1E2A42", color: "#64748B" }}
                 >
-                  Aucun chantier actif pour le moment
+                  {t("Aucun chantier actif pour le moment")}
                 </div>
               ) : (
                 <div className="flex flex-col gap-2">
@@ -897,12 +898,13 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                       </p>
                       {ch.reservedUntil && (
                         <p className="text-xs mt-0.5 font-mono" style={{ color: "#FBBF24" }}>
-                          ⏳ Réservée · expiration dans {formatCountdown(ch.reservedUntil, t)}
+                          {t("⏳ Réservée · expiration dans ")}
+                          {formatCountdown(ch.reservedUntil, t)}
                         </p>
                       )}
                       {Number(ch.heldAmount) > 0 && (
                         <p className="text-xs mt-1 font-mono" style={{ color: "#F59E0B" }}>
-                          {formatAmount(Number(ch.heldAmount), locale)} FCFA en garde
+                          {formatAmount(Number(ch.heldAmount), locale)} FCFA {t("en garde")}
                         </p>
                       )}
                     </button>
@@ -921,7 +923,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   className="text-base font-semibold"
                   style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
                 >
-                  Ma journée
+                  {t("Ma journée")}
                 </h2>
                 <span
                   className="text-xs px-3 py-1 rounded-full font-mono capitalize"
@@ -947,7 +949,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                     border: "1px solid rgba(255,255,255,0.06)",
                   }}
                 >
-                  Aucune intervention prévue aujourd'hui
+                  {t("Aucune intervention prévue aujourd'hui")}
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
@@ -961,7 +963,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                           textTransform: "uppercase",
                         }}
                       >
-                        ● En cours
+                        {t("● En cours")}
                       </p>
                       {day.inProgress.map((item) => (
                         <div
@@ -992,7 +994,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                 boxShadow: "0 2px 10px rgba(5,150,105,0.3)",
                               }}
                             >
-                              Terminer
+                              {t("Terminer")}
                             </button>
                           </div>
                         </div>
@@ -1010,7 +1012,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                           textTransform: "uppercase",
                         }}
                       >
-                        À venir aujourd'hui
+                        {t("À venir aujourd'hui")}
                       </p>
                       {day.planned.map((item) => {
                         const msLeft = msToScheduled(item.scheduledAt, now)
@@ -1059,8 +1061,8 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                     style={{ color: late ? "#F87171" : "#FBBF24" }}
                                   >
                                     {late
-                                      ? "⚠ Intervention en retard — lancez le démarrage"
-                                      : `⚠ Démarrage imminent · ${formatCountdown(item.scheduledAt, t)}`}
+                                      ? t("⚠ Intervention en retard — lancez le démarrage")
+                                      : `${t("⚠ Démarrage imminent · ")}${formatCountdown(item.scheduledAt, t)}`}
                                   </p>
                                 )}
                               </div>
@@ -1069,7 +1071,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                 className={`px-4 py-2 rounded-lg text-sm font-bold text-white flex-shrink-0 ${imminent ? "mboa-blink" : ""}`}
                                 style={startStyle}
                               >
-                                Démarrer →
+                                {t("Démarrer →")}
                               </button>
                             </div>
                           </div>
@@ -1088,7 +1090,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                           textTransform: "uppercase",
                         }}
                       >
-                        Terminées aujourd'hui
+                        {t("Terminées aujourd'hui")}
                       </p>
                       {day.completedToday.map((item) => (
                         <button
@@ -1110,10 +1112,11 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                             {item.clientName} · {item.category}
                           </p>
                           <p className="text-xs mt-0.5" style={{ color: "#64748B" }}>
-                            Terminée · {formatScheduled(item.updatedAt, t, locale)}
+                            {t("Terminée · ")}
+                            {formatScheduled(item.updatedAt, t, locale)}
                           </p>
                           <p className="text-xs mt-1 font-semibold" style={{ color: "#34D399" }}>
-                            Ouvrir le chat →
+                            {t("Ouvrir le chat →")}
                           </p>
                         </button>
                       ))}
@@ -1128,7 +1131,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                 className="text-base font-semibold"
                 style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
               >
-                Nouvelles demandes
+                {t("Nouvelles demandes")}
               </h2>
               <span
                 className="text-xs px-3 py-1 rounded-full font-mono"
@@ -1140,7 +1143,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   }`,
                 }}
               >
-                {visible.length} en attente
+                {visible.length} {t("en attente")}
               </span>
             </div>
 
@@ -1155,9 +1158,9 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
               >
                 <span className="text-lg leading-none">⚠</span>
                 <div>
-                  <p className="font-semibold">Acceptations gelées</p>
+                  <p className="font-semibold">{t("Acceptations gelées")}</p>
                   <p className="mt-0.5 text-xs opacity-90">
-                    Vous avez décliné trop de demandes récemment. Nouvelle acceptation possible dans{" "}
+                    {t("Vous avez décliné trop de demandes récemment. Nouvelle acceptation possible dans ")}
                     {formatFreeze(freezeSec)}.
                   </p>
                 </div>
@@ -1180,7 +1183,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
             {loading && visible.length === 0 ? (
               <div className="text-center py-16" style={{ color: "#64748B" }}>
                 <p className="text-base font-medium" style={{ color: "#E8EDF5" }}>
-                  Chargement des demandes…
+                  {t("Chargement des demandes…")}
                 </p>
               </div>
             ) : (
@@ -1247,7 +1250,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                       border: "1px solid rgba(37,99,235,0.45)",
                                     }}
                                   >
-                                    Depuis notification
+                                    {t("Depuis notification")}
                                   </span>
                                 )}
                                 {reserved && (
@@ -1259,7 +1262,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                       border: "1px solid rgba(37,99,235,0.3)",
                                     }}
                                   >
-                                    Réservée
+                                    {t("Réservée")}
                                   </span>
                                 )}
                                 {reserved && a.reservedUntil && (
@@ -1282,7 +1285,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                     border: `1px solid ${s.border}`,
                                   }}
                                 >
-                                  {s.label}
+                                  {t(s.label)}
                                 </span>
                               </div>
                             </div>
@@ -1294,7 +1297,8 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                 className="text-xs font-medium truncate min-w-0"
                                 style={{ color: "#2563EB" }}
                               >
-                                Client : {a.clientName}
+                                {t("Client : ")}
+                                {a.clientName}
                               </span>
                               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                                 {reserved ? (
@@ -1307,7 +1311,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                       border: "1px solid rgba(239,68,68,0.2)",
                                     }}
                                   >
-                                    Décliner
+                                    {t("Décliner")}
                                   </button>
                                 ) : (
                                   <button
@@ -1326,12 +1330,12 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                     }}
                                   >
                                     {suspended
-                                      ? "Compte suspendu"
+                                      ? t("Compte suspendu")
                                       : frozen
-                                        ? "Acceptations gelées"
+                                        ? t("Acceptations gelées")
                                         : atUrgencyLimit(aUrgency)
-                                          ? `Limite urgence (${maxReservations})`
-                                          : "Accepter la demande →"}
+                                          ? `${t("Limite urgence (")}${maxReservations})`
+                                          : t("Accepter la demande →")}
                                   </button>
                                 )}
                                 <button
@@ -1348,7 +1352,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                     boxShadow: "0 2px 10px rgba(5,150,105,0.3)",
                                   }}
                                 >
-                                  Ouvrir le chat →
+                                  {t("Ouvrir le chat →")}
                                 </button>
                               </div>
                             </div>
@@ -1361,10 +1365,10 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                 {visible.length === 0 && !loading && (
                   <div className="text-center py-16" style={{ color: "#64748B" }}>
                     <p className="text-base font-medium" style={{ color: "#E8EDF5" }}>
-                      Aucune demande pour le moment
+                      {t("Aucune demande pour le moment")}
                     </p>
                     <p className="text-sm mt-1">
-                      Les demandes réservées pour vous et celles de votre domaine apparaîtront ici
+                      {t("Les demandes réservées pour vous et celles de votre domaine apparaîtront ici")}
                     </p>
                   </div>
                 )}
@@ -1391,23 +1395,23 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
             </span>
             <div>
               <p className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
-                Demande d'urgence {urgencyLabel(toast.urgency, t)} réservée
+                {t("Demande d'urgence")} {urgencyLabel(toast.urgency, t)} {t("réservée")}
               </p>
               <p className="text-xs mt-1 leading-relaxed" style={{ color: "#94A3B8" }}>
-                Réservation de {formatHours(toast.hours, t)} : si l'intervention n'est pas traitée
-                et approuvée dans ce délai, la demande sera libérée automatiquement pour les autres
-                techniciens.
+                {t("Réservation de ")}
+                {formatHours(toast.hours, t)}
+                {t(" : si l'intervention n'est pas traitée et approuvée dans ce délai, la demande sera libérée automatiquement pour les autres techniciens.")}
               </p>
               <div className="mt-2 flex items-center justify-between gap-4">
                 <span className="text-[10px] font-mono" style={{ color: "#64748B" }}>
-                  ⏳ Ce message disparaîtra dans 1 min
+                  {t("⏳ Ce message disparaîtra dans 1 min")}
                 </span>
                 <button
                   onClick={() => setToast(null)}
                   className="text-[10px] font-semibold"
                   style={{ color: "#93C5FD" }}
                 >
-                  Fermer
+                  {t("Fermer")}
                 </button>
               </div>
             </div>
@@ -1438,7 +1442,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   color: "#E8EDF5",
                 }}
               >
-                Retirer les fonds
+                {t("Retirer les fonds")}
               </h2>
               <button
                 onClick={handleWithdrawClose}
@@ -1466,7 +1470,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   }}
                 >
                   <p className="text-xs mb-1" style={{ color: "#94A3B8" }}>
-                    Solde disponible
+                    {t("Solde disponible")}
                   </p>
                   <p className="text-2xl font-bold font-mono" style={{ color: "#E8EDF5" }}>
                     {formatAmount(balance, locale)}{" "}
@@ -1484,7 +1488,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                     textTransform: "uppercase",
                   }}
                 >
-                  Méthode de retrait
+                  {t("Méthode de retrait")}
                 </p>
                 <div className="grid grid-cols-3 gap-2 mb-5">
                   {withdrawMethods.map((m) => (
@@ -1508,7 +1512,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                       <span className="block h-7 mb-1 flex items-center justify-center">
                         {typeof m.icon === "string" ? m.icon : m.icon}
                       </span>
-                      {m.label}
+                      {t(m.label)}
                     </button>
                   ))}
                 </div>
@@ -1521,14 +1525,14 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                     textTransform: "uppercase",
                   }}
                 >
-                  Montant
+                  {t("Montant")}
                 </p>
                 <input
                   type="text"
                   inputMode="numeric"
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(sanitizeDigits(e.target.value).slice(0, 7))}
-                  placeholder="Ex : 25000"
+                  placeholder={t("Ex : 25000")}
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none mb-5"
                   style={{
                     background: "#141C2F",
@@ -1546,7 +1550,9 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                     textTransform: "uppercase",
                   }}
                 >
-                  {withdrawMethod === "bank" ? "Numéro de compte" : "Numéro de téléphone"}
+                  {withdrawMethod === "bank"
+                    ? t("Numéro de compte")
+                    : t("Numéro de téléphone")}
                 </p>
                 <input
                   type="text"
@@ -1554,7 +1560,9 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   value={withdrawAccount}
                   onChange={(e) => setWithdrawAccount(sanitizeWithdrawAccount(e.target.value))}
                   placeholder={
-                    withdrawMethod === "bank" ? "Ex : 0045 1234 5678 9012" : "Ex : 6 55 12 34 56"
+                    withdrawMethod === "bank"
+                      ? t("Ex : 0045 1234 5678 9012")
+                      : t("Ex : 6 55 12 34 56")
                   }
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none mb-5"
                   style={{
@@ -1579,7 +1587,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                     boxShadow: "0 4px 20px rgba(37,99,235,0.35)",
                   }}
                 >
-                  Continuer →
+                  {t("Continuer →")}
                 </button>
               </>
             ) : (
@@ -1593,15 +1601,15 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs" style={{ color: "#94A3B8" }}>
-                      Méthode
+                      {t("Méthode")}
                     </span>
                     <span className="text-xs font-semibold" style={{ color: "#E8EDF5" }}>
-                      {withdrawMethods.find((m) => m.key === withdrawMethod)?.label}
+                      {t(withdrawMethods.find((m) => m.key === withdrawMethod)?.label ?? "")}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs" style={{ color: "#94A3B8" }}>
-                      Compte
+                      {t("Compte")}
                     </span>
                     <span className="text-xs font-mono font-semibold" style={{ color: "#E8EDF5" }}>
                       {withdrawAccount}
@@ -1609,7 +1617,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs" style={{ color: "#94A3B8" }}>
-                      Montant
+                      {t("Montant")}
                     </span>
                     <span className="text-sm font-bold font-mono" style={{ color: "#34D399" }}>
                       {formatAmount(Number(withdrawAmount), locale)} FCFA
@@ -1633,7 +1641,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                     className="flex-1 py-3.5 rounded-xl text-sm font-semibold"
                     style={{ background: "#1E2A42", color: "#E8EDF5" }}
                   >
-                    ← Modifier
+                    {t("← Modifier")}
                   </button>
                   <button
                     onClick={handleSubmitWithdraw}
@@ -1644,7 +1652,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                       boxShadow: "0 4px 20px rgba(5,150,105,0.35)",
                     }}
                   >
-                    {withdrawSubmitting ? "Envoi en cours..." : "Confirmer le retrait"}
+                    {withdrawSubmitting ? t("Envoi en cours...") : t("Confirmer le retrait")}
                   </button>
                 </div>
               </>

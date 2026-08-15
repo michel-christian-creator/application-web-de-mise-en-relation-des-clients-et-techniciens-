@@ -14,27 +14,31 @@ mvn clean package
 
 ## Configuration
 
-Le fichier `src/main/resources/application.yml` contient :
+Toutes les valeurs sensibles passent par des variables d'environnement (aucun secret en clair dans le dépôt) :
 
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/mboatech?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: root
-    password: ""
-  jpa:
-    hibernate:
-      ddl-auto: none
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
-server:
-  port: 8080
+| Variable | Défaut | Rôle |
+| --- | --- | --- |
+| `DB_HOST`, `DB_PORT`, `DB_NAME` | `localhost`, `3306`, `mboatech` | Connexion MySQL |
+| `DB_USERNAME`, `DB_PASSWORD` | `root`, vide | Identifiants MySQL |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | `admin@mboatech.com`, **obligatoire** | Compte admin créé au démarrage si aucun admin n'existe |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Origines autorisées (HTTP + WebSocket), séparées par des virgules |
+| `SERVER_PORT` | `8082` | Port HTTP |
+| `PAYMEE_ENABLED` | `false` | Activer les paiements Paymee réels |
+| `PAYMEE_API_KEY` | vide | Clé API Paymee (jamais dans le dépôt) |
+| `UPLOAD_DIR` | `./uploads` | Fichiers publics (photos de profil / portfolio) |
+| `PRIVATE_UPLOAD_DIR` | `./private-uploads` | Documents KYC (jamais servis par `/uploads/**`) |
 
-admin:
-  username: admin
-  password: admin123
+> **Important** : `ADMIN_PASSWORD` doit être défini en production. S'il est absent, aucun compte admin par défaut n'est créé.
+
+### Migration
+
+La base utilise `ddl-auto: none`. Toute évolution du schéma passe par les
+migrations SQL du dossier `db/` (à la racine du projet), appliquées via le
+script `deploy/migrate-db.sh` :
+
+```bash
+# Mise à jour d'une base existante (applique les migrations manquantes) :
+DB_USERNAME=<user> DB_PASSWORD=<password> ./deploy/migrate-db.sh
 ```
 
 ## API d'inscription
@@ -96,4 +100,4 @@ cd backend
 mvn spring-boot:run
 ```
 
-L'API est accessible sur `http://localhost:8080/api/register`.
+L'API est accessible sur `http://localhost:8082/api/...` (port configurable via `SERVER_PORT`).

@@ -5,9 +5,11 @@ import com.mboatech.backend.model.User;
 import com.mboatech.backend.repository.ChatMessageRepository;
 import com.mboatech.backend.repository.ClientProfileRepository;
 import com.mboatech.backend.repository.ClientRequestRepository;
+import com.mboatech.backend.repository.PaymentRepository;
 import com.mboatech.backend.repository.RequestDeclineRepository;
 import com.mboatech.backend.repository.TechnicianProfileRepository;
 import com.mboatech.backend.repository.UserRepository;
+import com.mboatech.backend.service.ChatAccessService;
 import com.mboatech.backend.service.ChatEventService;
 import com.mboatech.backend.service.MissionGuardService;
 import com.mboatech.backend.service.NotificationService;
@@ -35,6 +37,8 @@ class ChatControllerTest {
         TechnicianEventService technicianEventService = mock(TechnicianEventService.class);
         NotificationService notificationService = mock(NotificationService.class);
         MissionGuardService missionGuardService = mock(MissionGuardService.class);
+        PaymentRepository paymentRepository = mock(PaymentRepository.class);
+        ChatAccessService chatAccessService = mock(ChatAccessService.class);
 
         ChatController controller = new ChatController(
                 requestRepository,
@@ -46,7 +50,9 @@ class ChatControllerTest {
                 chatEventService,
                 technicianEventService,
                 notificationService,
-                missionGuardService
+                missionGuardService,
+                paymentRepository,
+                chatAccessService
         );
 
         User user = new User();

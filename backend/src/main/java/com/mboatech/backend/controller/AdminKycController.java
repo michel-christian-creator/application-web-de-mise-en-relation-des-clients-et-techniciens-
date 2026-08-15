@@ -55,7 +55,7 @@ public class AdminKycController {
     }
 
     private Optional<User> authenticateAdmin(String authorizationHeader) {
-        Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (user.isEmpty() || user.get().getRole() != Role.admin) {
             return Optional.empty();
         }

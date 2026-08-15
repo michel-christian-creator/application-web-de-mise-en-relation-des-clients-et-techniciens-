@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { API_BASE_URL } from "../../config"
+import { useI18n } from "../../i18n"
 import Stagger from "../../components/animations/Stagger"
 import StaggerItem from "../../components/animations/StaggerItem"
 import type { PaymentAccounts } from "../client/C6Payment"
@@ -143,6 +144,7 @@ export default function A1Dashboard({
   paymentAccounts,
   onUpdateAccounts,
 }: Props) {
+  const { t } = useI18n()
   const [data, setData] = useState<AdminDashboard | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -359,10 +361,10 @@ export default function A1Dashboard({
                 className="text-2xl font-bold"
                 style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
               >
-                Supervision Générale
+                {t("Supervision Générale")}
               </h1>
               <p className="text-sm" style={{ color: "#64748B" }}>
-                {data ? formatWeekRange(data.weekStart, data.weekEnd) : "Chargement…"}
+                {data ? formatWeekRange(data.weekStart, data.weekEnd) : t("Chargement…")}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -374,10 +376,10 @@ export default function A1Dashboard({
               />
               <span className="text-xs" style={{ color: loading ? "#F59E0B" : "#059669" }}>
                 {loading
-                  ? "Synchronisation…"
+                  ? t("Synchronisation…")
                   : lastUpdate
-                    ? `À jour · ${lastUpdate}`
-                    : "Tous les systèmes opérationnels"}
+                    ? t("À jour · ") + lastUpdate
+                    : t("Tous les systèmes opérationnels")}
               </span>
             </div>
           </div>
@@ -385,10 +387,10 @@ export default function A1Dashboard({
             <div className="rounded-2xl border border-white/10 bg-[#141C2F] p-4">
               <div>
                 <p className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
-                  Paiements
+                  {t("Paiements")}
                 </p>
                 <p className="text-xs" style={{ color: "#94A3B8" }}>
-                  {paymentsEnabled ? "Activés" : "Désactivés"}
+                  {t(paymentsEnabled ? "Activés" : "Désactivés")}
                 </p>
               </div>
             </div>
@@ -400,7 +402,7 @@ export default function A1Dashboard({
                 color: "white",
               }}
             >
-              {paymentsEnabled ? "Désactiver les paiements" : "Réactiver les paiements"}
+              {t(paymentsEnabled ? "Désactiver les paiements" : "Réactiver les paiements")}
             </button>
           </div>
 
@@ -421,10 +423,10 @@ export default function A1Dashboard({
                     color: "#E8EDF5",
                   }}
                 >
-                  Comptes de la plateforme
+                  {t("Comptes de la plateforme")}
                 </p>
                 <p className="text-xs" style={{ color: "#64748B" }}>
-                  Numéros qui recevront et sécuriseront les fonds des clients
+                  {t("Numéros qui recevront et sécuriseront les fonds des clients")}
                 </p>
               </div>
               {accountsMsg && (
@@ -438,7 +440,7 @@ export default function A1Dashboard({
                     color: accountsMsg === "Enregistré" ? "#059669" : "#EF4444",
                   }}
                 >
-                  {accountsMsg}
+                  {t(accountsMsg)}
                 </span>
               )}
             </div>
@@ -452,12 +454,12 @@ export default function A1Dashboard({
               ).map((field) => (
                 <div key={field.key}>
                   <p className="text-xs mb-1.5" style={{ color: "#94A3B8" }}>
-                    {field.label}
+                    {t(field.label)}
                   </p>
                   <input
                     value={accounts[field.key] ?? ""}
                     onChange={(e) => handleAccountChange(field.key, e.target.value)}
-                    placeholder="Numéro du compte"
+                    placeholder={t("Numéro du compte")}
                     className="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none"
                     style={{
                       background: "#1E2A42",
@@ -479,10 +481,10 @@ export default function A1Dashboard({
                   fontFamily: "Poppins, sans-serif",
                 }}
               >
-                {savingAccounts ? "Enregistrement…" : "Enregistrer les numéros"}
+                {savingAccounts ? t("Enregistrement…") : t("Enregistrer les numéros")}
               </button>
               <p className="text-xs" style={{ color: "#64748B" }}>
-                Affichés sur l'écran de paiement des clients.
+                {t("Affichés sur l'écran de paiement des clients.")}
               </p>
             </div>
           </div>
@@ -521,7 +523,7 @@ export default function A1Dashboard({
                 {k.value}
               </p>
               <p className="text-xs mt-1" style={{ color: "#64748B" }}>
-                {k.label}
+                {t(k.label)}
               </p>
             </StaggerItem>
           ))}
@@ -626,7 +628,7 @@ export default function A1Dashboard({
                 {formatFullAmount(totalByMethod[m.key] ?? 0)}
               </p>
               <p className="relative text-xs mt-1" style={{ color: "#64748B" }}>
-                {m.label}
+                {t(m.label)}
               </p>
             </StaggerItem>
           ))}
@@ -652,7 +654,7 @@ export default function A1Dashboard({
               {formatFullAmount(grandTotal)}
             </p>
             <p className="text-xs mt-1" style={{ color: "#64748B" }}>
-              Total des transactions
+              {t("Total des transactions")}
             </p>
           </StaggerItem>
         </Stagger>
@@ -672,13 +674,13 @@ export default function A1Dashboard({
                 className="text-sm font-semibold"
                 style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
               >
-                Demandes créées par semaine
+                {t("Demandes créées par semaine")}
               </h2>
               <span
                 className="text-xs px-2 py-1 rounded-full"
                 style={{ background: "rgba(37,99,235,0.12)", color: "#2563EB" }}
               >
-                Semaine en cours
+                {t("Semaine en cours")}
               </span>
             </div>
             <div className="flex items-end gap-3" style={{ height: "160px" }}>
@@ -726,11 +728,11 @@ export default function A1Dashboard({
                   textTransform: "uppercase",
                 }}
               >
-                Répartition par métier
+                {t("Répartition par métier")}
               </h2>
               {trades.length === 0 && !loading && (
                 <p className="text-xs" style={{ color: "#64748B" }}>
-                  Aucune demande enregistrée.
+                  {t("Aucune demande enregistrée.")}
                 </p>
               )}
               {trades.slice(0, 4).map((item, index) => {
@@ -747,7 +749,7 @@ export default function A1Dashboard({
                           {item.label}
                         </p>
                         <p className="text-xs" style={{ color: "#64748B" }}>
-                          {item.count} demande{item.count > 1 ? "s" : ""}
+                          {item.count} {t(item.count > 1 ? "demandes" : "demande")}
                         </p>
                       </div>
                       <span
@@ -770,7 +772,7 @@ export default function A1Dashboard({
             className="text-sm font-semibold mb-3"
             style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
           >
-            Zone d'alerte critique
+            {t("Zone d'alerte critique")}
           </h2>
           {!alertDismissed && data && Number(data.openDisputes) > 0 ? (
             <div
@@ -791,17 +793,16 @@ export default function A1Dashboard({
                         fontFamily: "Poppins, sans-serif",
                       }}
                     >
-                      {data.openDisputes} litige
-                      {data.openDisputes > 1 ? "s" : ""} en cours
+                      {data.openDisputes} {t(data.openDisputes > 1 ? "litiges en cours" : "litige en cours")}
                     </p>
                     <p className="text-xs" style={{ color: "#94A3B8" }}>
                       {data.openDisputes > 1
-                        ? "Des litiges clients restent non résolus sur la plateforme."
-                        : "Un litige client reste non résolu sur la plateforme."}
-                      Intervention de médiation requise.
+                        ? t("Des litiges clients restent non résolus sur la plateforme.")
+                        : t("Un litige client reste non résolu sur la plateforme.")}
+                      {t(" Intervention de médiation requise.")}
                     </p>
                     <p className="text-xs mt-1.5 font-mono" style={{ color: "#64748B" }}>
-                      source: /api/admin/dashboard · mise à jour en temps réel
+                      {t("source: /api/admin/dashboard · mise à jour en temps réel")}
                     </p>
                   </div>
                 </div>
@@ -810,7 +811,7 @@ export default function A1Dashboard({
                   className="text-xs px-3 py-1.5 rounded-lg ml-4 flex-shrink-0"
                   style={{ background: "#1E2A42", color: "#94A3B8" }}
                 >
-                  Ignorer
+                  {t("Ignorer")}
                 </button>
               </div>
             </div>
@@ -826,10 +827,10 @@ export default function A1Dashboard({
                 <span style={{ color: "#059669" }}>✓</span>
                 <p className="text-sm" style={{ color: "#64748B" }}>
                   {loading
-                    ? "Vérification des systèmes…"
+                    ? t("Vérification des systèmes…")
                     : error
-                      ? `Synchronisation en cours — ${error}`
-                      : "Aucune alerte critique. Tous les systèmes fonctionnent normalement."}
+                      ? t("Synchronisation en cours — ") + error
+                      : t("Aucune alerte critique. Tous les systèmes fonctionnent normalement.")}
                 </p>
               </div>
             </div>
@@ -850,10 +851,10 @@ export default function A1Dashboard({
                 className="text-sm font-semibold"
                 style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
               >
-                Registre des paiements
+                {t("Registre des paiements")}
               </h2>
               <p className="text-xs" style={{ color: "#64748B" }}>
-                Tous les mouvements d'argent : dépôts, remboursements et versements
+                {t("Tous les mouvements d'argent : dépôts, remboursements et versements")}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -861,36 +862,37 @@ export default function A1Dashboard({
                 className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
                 style={{ background: "rgba(5,150,105,0.12)", color: "#059669" }}
               >
-                Total libéré : {formatFullAmount(releasedTotal)}
+                {t("Total libéré : ")}
+                {formatFullAmount(releasedTotal)}
               </span>
               <span
                 className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
                 style={{ background: "rgba(37,99,235,0.12)", color: "#2563EB" }}
               >
-                {payments.length} transaction{payments.length > 1 ? "s" : ""}
+                {payments.length} {t(payments.length > 1 ? "transactions" : "transaction")}
               </span>
             </div>
           </div>
           {paymentsLoading ? (
             <p className="text-sm" style={{ color: "#64748B" }}>
-              Chargement…
+              {t("Chargement…")}
             </p>
           ) : payments.length === 0 ? (
             <p className="text-sm" style={{ color: "#64748B" }}>
-              Aucun paiement enregistré.
+              {t("Aucun paiement enregistré.")}
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left" style={{ minWidth: "760px" }}>
                 <thead>
                   <tr className="text-[11px] uppercase tracking-wider" style={{ color: "#64748B" }}>
-                    <th className="pb-2 pr-3 font-semibold whitespace-nowrap">Date</th>
-                    <th className="pb-2 pr-3 font-semibold">Demande</th>
-                    <th className="pb-2 pr-3 font-semibold">De → Vers</th>
-                    <th className="pb-2 pr-3 font-semibold">Type</th>
-                    <th className="pb-2 pr-3 font-semibold text-right">Montant</th>
-                    <th className="pb-2 pr-3 font-semibold">Statut</th>
-                    <th className="pb-2 font-semibold">Référence</th>
+                    <th className="pb-2 pr-3 font-semibold whitespace-nowrap">{t("Date")}</th>
+                    <th className="pb-2 pr-3 font-semibold">{t("Demande")}</th>
+                    <th className="pb-2 pr-3 font-semibold">{t("De → Vers")}</th>
+                    <th className="pb-2 pr-3 font-semibold">{t("Type")}</th>
+                    <th className="pb-2 pr-3 font-semibold text-right">{t("Montant")}</th>
+                    <th className="pb-2 pr-3 font-semibold">{t("Statut")}</th>
+                    <th className="pb-2 font-semibold">{t("Référence")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -935,7 +937,7 @@ export default function A1Dashboard({
                             className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
                             style={{ color: st.color, background: st.bg }}
                           >
-                            {st.text}
+                            {t(st.text)}
                           </span>
                         </td>
                         <td
@@ -967,10 +969,10 @@ export default function A1Dashboard({
                 className="text-sm font-semibold"
                 style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
               >
-                Retraits des techniciens
+                {t("Retraits des techniciens")}
               </h2>
               <p className="text-xs" style={{ color: "#64748B" }}>
-                Demande de versement du solde : effectuez le transfert manuel, puis validez ici
+                {t("Demande de versement du solde : effectuez le transfert manuel, puis validez ici")}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -981,13 +983,14 @@ export default function A1Dashboard({
                   color: "#F59E0B",
                 }}
               >
-                En attente : {formatFullAmount(pendingWithdrawTotal)}
+                {t("En attente : ")}
+                {formatFullAmount(pendingWithdrawTotal)}
               </span>
               <span
                 className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
                 style={{ background: "rgba(37,99,235,0.12)", color: "#2563EB" }}
               >
-                {withdrawals.length} demande{withdrawals.length > 1 ? "s" : ""}
+                {withdrawals.length} {t(withdrawals.length > 1 ? "demandes" : "demande")}
               </span>
             </div>
           </div>
@@ -1002,29 +1005,29 @@ export default function A1Dashboard({
                 }`,
               }}
             >
-              {withdrawalsMsg}
+              {t(withdrawalsMsg)}
             </div>
           )}
           {withdrawalsLoading ? (
             <p className="text-sm" style={{ color: "#64748B" }}>
-              Chargement…
+              {t("Chargement…")}
             </p>
           ) : withdrawals.length === 0 ? (
             <p className="text-sm" style={{ color: "#64748B" }}>
-              Aucune demande de retrait enregistrée.
+              {t("Aucune demande de retrait enregistrée.")}
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left" style={{ minWidth: "820px" }}>
                 <thead>
                   <tr className="text-[11px] uppercase tracking-wider" style={{ color: "#64748B" }}>
-                    <th className="pb-2 pr-3 font-semibold whitespace-nowrap">Date</th>
-                    <th className="pb-2 pr-3 font-semibold">Technicien</th>
-                    <th className="pb-2 pr-3 font-semibold">Méthode</th>
-                    <th className="pb-2 pr-3 font-semibold">Compte</th>
-                    <th className="pb-2 pr-3 font-semibold text-right">Montant</th>
-                    <th className="pb-2 pr-3 font-semibold">Statut</th>
-                    <th className="pb-2 font-semibold">Actions</th>
+                    <th className="pb-2 pr-3 font-semibold whitespace-nowrap">{t("Date")}</th>
+                    <th className="pb-2 pr-3 font-semibold">{t("Technicien")}</th>
+                    <th className="pb-2 pr-3 font-semibold">{t("Méthode")}</th>
+                    <th className="pb-2 pr-3 font-semibold">{t("Compte")}</th>
+                    <th className="pb-2 pr-3 font-semibold text-right">{t("Montant")}</th>
+                    <th className="pb-2 pr-3 font-semibold">{t("Statut")}</th>
+                    <th className="pb-2 font-semibold">{t("Actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1048,7 +1051,7 @@ export default function A1Dashboard({
                           {w.technicianName}
                         </td>
                         <td className="py-2.5 pr-3 whitespace-nowrap" style={{ color: "#94A3B8" }}>
-                          {withdrawMethodLabel(w.method)}
+                          {t(withdrawMethodLabel(w.method))}
                         </td>
                         <td
                           className="py-2.5 pr-3 font-mono text-xs whitespace-nowrap"
@@ -1067,7 +1070,7 @@ export default function A1Dashboard({
                             className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
                             style={{ color: st.color, background: st.bg }}
                           >
-                            {st.text}
+                            {t(st.text)}
                           </span>
                         </td>
                         <td className="py-2.5 whitespace-nowrap">
@@ -1082,8 +1085,8 @@ export default function A1Dashboard({
                                 }}
                               >
                                 {processingWithdrawId === w.id
-                                  ? "Traitement…"
-                                  : "Valider le paiement"}
+                                  ? t("Traitement…")
+                                  : t("Valider le paiement")}
                               </button>
                               <button
                                 onClick={() => decideWithdraw(w.id, "reject")}
@@ -1095,7 +1098,7 @@ export default function A1Dashboard({
                                   border: "1px solid rgba(239,68,68,0.3)",
                                 }}
                               >
-                                Rejeter
+                                {t("Rejeter")}
                               </button>
                             </div>
                           ) : (

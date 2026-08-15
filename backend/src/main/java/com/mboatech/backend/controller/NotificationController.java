@@ -26,7 +26,7 @@ public class NotificationController {
 
     @GetMapping
     public ResponseEntity<?> getNotifications(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (user.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -41,7 +41,7 @@ public class NotificationController {
     @PostMapping("/read/{id}")
     public ResponseEntity<?> markRead(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
                                       @PathVariable("id") Long id) {
-        Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (user.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -51,7 +51,7 @@ public class NotificationController {
 
     @PostMapping("/read-all")
     public ResponseEntity<?> markAllRead(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (user.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -61,7 +61,7 @@ public class NotificationController {
 
     @DeleteMapping
     public ResponseEntity<?> clearAll(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (user.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }

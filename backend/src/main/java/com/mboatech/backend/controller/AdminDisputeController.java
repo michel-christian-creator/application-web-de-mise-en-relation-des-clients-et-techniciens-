@@ -63,7 +63,7 @@ public class AdminDisputeController {
     }
 
     private Optional<User> requireAdmin(String authorizationHeader) {
-        Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (user.isPresent() && user.get().getRole() == Role.admin) {
             return user;
         }
@@ -185,7 +185,7 @@ public class AdminDisputeController {
     public ResponseEntity<?> listDisputes(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
         Optional<User> admin = requireAdmin(authorizationHeader);
         if (admin.isEmpty()) {
-            Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+            Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
             return user.isEmpty() ? unauthorized() : forbidden();
         }
         List<Map<String, Object>> disputes = new ArrayList<>();
@@ -201,7 +201,7 @@ public class AdminDisputeController {
                                            @PathVariable("requestId") Long requestId) {
         Optional<User> admin = requireAdmin(authorizationHeader);
         if (admin.isEmpty()) {
-            Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+            Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
             return user.isEmpty() ? unauthorized() : forbidden();
         }
         Optional<ClientRequest> optional = requestRepository.findById(requestId);
@@ -255,7 +255,7 @@ public class AdminDisputeController {
                                     @RequestBody Map<String, String> body) {
         Optional<User> admin = requireAdmin(authorizationHeader);
         if (admin.isEmpty()) {
-            Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+            Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
             return user.isEmpty() ? unauthorized() : forbidden();
         }
         String decision = body != null ? body.get("decision") : null;

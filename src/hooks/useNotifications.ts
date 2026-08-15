@@ -130,9 +130,13 @@ export function useNotifications({ requestId = null }: Options = {}) {
   }, [refresh])
 
   useEffect(() => {
-    const es = new EventSource(`${API_BASE_URL}/api/technicians/stream`, {
-      withCredentials: true,
-    })
+    const token = currentToken()
+    if (!token) return
+
+    const es = new EventSource(
+      `${API_BASE_URL}/api/technicians/stream?token=${encodeURIComponent(token)}`,
+      { withCredentials: true },
+    )
 
     es.addEventListener("recommendation", () => refresh())
     es.addEventListener("request", () => refresh())
@@ -141,14 +145,18 @@ export function useNotifications({ requestId = null }: Options = {}) {
       // Laisse EventSource se reconnecter automatiquement (pas de close()).
     }
     return () => es.close()
-  }, [refresh])
+  }, [refresh, currentToken()])
 
   useEffect(() => {
     if (!requestId) return
 
-    const es = new EventSource(`${API_BASE_URL}/api/chat/stream/${requestId}`, {
-      withCredentials: true,
-    })
+    const token = currentToken()
+    if (!token) return
+
+    const es = new EventSource(
+      `${API_BASE_URL}/api/chat/stream/${requestId}?token=${encodeURIComponent(token)}`,
+      { withCredentials: true },
+    )
 
     es.addEventListener("message", () => refresh())
 
@@ -156,7 +164,7 @@ export function useNotifications({ requestId = null }: Options = {}) {
       // Laisse EventSource se reconnecter automatiquement (pas de close()).
     }
     return () => es.close()
-  }, [requestId, refresh])
+  }, [requestId, refresh, currentToken()])
 
   const markAsRead = useCallback((id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)))

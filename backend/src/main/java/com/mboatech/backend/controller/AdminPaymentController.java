@@ -31,7 +31,7 @@ public class AdminPaymentController {
     }
 
     private Optional<User> requireAdmin(String authorizationHeader) {
-        Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (user.isPresent() && user.get().getRole() == Role.admin) {
             return user;
         }
@@ -91,7 +91,7 @@ public class AdminPaymentController {
     public ResponseEntity<?> ledger(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
         Optional<User> admin = requireAdmin(authorizationHeader);
         if (admin.isEmpty()) {
-            Optional<User> user = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+            Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
             return user.isEmpty()
                     ? ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."))
                     : ResponseEntity.status(403).body(Map.of("message", "Espace réservé aux administrateurs."));

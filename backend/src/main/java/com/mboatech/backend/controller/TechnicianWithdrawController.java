@@ -48,7 +48,7 @@ public class TechnicianWithdrawController {
     public ResponseEntity<?> withdraw(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @RequestBody(required = false) Map<String, Object> body) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty() || optionalUser.get().getRole() != Role.technician) {
             return ResponseEntity.status(401).body(Map.of("message", "Espace réservé aux techniciens."));
         }

@@ -9,6 +9,8 @@ import com.mboatech.backend.service.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -36,8 +38,8 @@ public class KycController {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
-    @Value("${upload.dir:./uploads}")
-    private String uploadDir;
+    @Value("${private-upload.dir:./private-uploads}")
+    private String privateUploadDir;
 
     public KycController(KycDocumentRepository kycDocumentRepository,
                          UserRepository userRepository,
@@ -50,7 +52,7 @@ public class KycController {
     @GetMapping
     @Transactional(readOnly = true)
     public ResponseEntity<?> listDocuments(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -68,7 +70,7 @@ public class KycController {
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @RequestParam(value = "docType", required = false) String docType,
             @RequestParam(value = "file", required = false) MultipartFile file) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -102,7 +104,7 @@ public class KycController {
     public ResponseEntity<?> deleteDocument(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @PathVariable("id") Long id) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, null, userRepository);
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -115,6 +117,51 @@ public class KycController {
         }
         kycDocumentRepository.delete(documentOpt.get());
         return ResponseEntity.ok(Map.of("ok", true));
+    }
+
+    @GetMapping("/file/{filename:.+}")
+    public ResponseEntity<?> getFile(
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+            @RequestParam(value = "token", required = false) String token,
+            @PathVariable("filename") String filename) {
+        String combined = (authorizationHeader != null && !authorizationHeader.isBlank())
+                ? authorizationHeader
+                : (token != null && !token.isBlank() ? "Bearer " + token : null);
+        Optional<User> optionalUser = AuthController.authenticateToken(combined, userRepository);
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
+        }
+        Optional<KycDocument> documentOpt = kycDocumentRepository.findByFileUrl("/api/kyc/file/" + filename);
+        if (documentOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        User user = optionalUser.get();
+        boolean isOwner = documentOpt.get().getUserId().equals(user.getId());
+        boolean isAdmin = user.getRole() == Role.admin;
+        if (!isOwner && !isAdmin) {
+            return ResponseEntity.status(403).body(Map.of("message", "Accès refusé à ce document."));
+        }
+
+        Path base = Path.of(privateUploadDir, "kyc").toAbsolutePath().normalize();
+        Path file = base.resolve(filename).normalize();
+        if (!file.startsWith(base)) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Chemin invalide."));
+        }
+        if (!Files.exists(file) || !Files.isRegularFile(file)) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            byte[] data = Files.readAllBytes(file);
+            MediaType mediaType = MediaTypeFactory.getMediaType(filename).orElse(MediaType.APPLICATION_OCTET_STREAM);
+            return ResponseEntity.ok()
+                    .contentType(mediaType)
+                    .contentLength(data.length)
+                    .header("Content-Disposition", "inline")
+                    .body(data);
+        } catch (IOException e) {
+            logger.error("Erreur lors de la lecture du document KYC {}", filename, e);
+            return ResponseEntity.status(500).body(Map.of("message", "Impossible de lire le fichier."));
+        }
     }
 
     private void notifyAdmins(String title, String text) {
@@ -135,7 +182,7 @@ public class KycController {
 
     private String saveFile(MultipartFile file, Long userId, String docType) {
         try {
-            File dir = new File(uploadDir);
+            File dir = new File(privateUploadDir, "kyc");
             if (!dir.exists() && !dir.mkdirs()) {
                 logger.warn("Impossible de créer le répertoire d'upload: {}", dir.getAbsolutePath());
                 return null;
@@ -151,7 +198,7 @@ public class KycController {
             Path target = Path.of(dir.getAbsolutePath(), filename).normalize();
             Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
             logger.info("Document KYC enregistré: {}", target.getFileName());
-            return "/uploads/" + filename;
+            return "/api/kyc/file/" + filename;
         } catch (IOException e) {
             logger.error("Erreur lors de l'enregistrement du document KYC", e);
             return null;

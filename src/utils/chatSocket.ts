@@ -58,7 +58,8 @@ export function openChatSocket(
     onReconnect?: () => void
   },
 ): ChatSocket {
-  const url = `${API_WS_BASE}/ws/chat/${requestId}`
+  const token = localStorage.getItem("mboaTechToken")
+  const url = `${API_WS_BASE}/ws/chat/${requestId}${token ? `?token=${encodeURIComponent(token)}` : ""}`
   let ws: WebSocket | null = null
   let closed = false
   let firstOpen = true

@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -192,9 +194,8 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-                                        @RequestParam(value = "username", required = false) String username) {
-        Optional<User> optionalUser = authenticateUser(authorizationHeader, username);
+    public ResponseEntity<?> getProfile(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        Optional<User> optionalUser = authenticateUser(authorizationHeader);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -204,7 +205,7 @@ public class AuthController {
 
     @GetMapping("/profile/me")
     public ResponseEntity<?> getProfileMe(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        Optional<User> optionalUser = authenticateUser(authorizationHeader, null);
+        Optional<User> optionalUser = authenticateUser(authorizationHeader);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -216,7 +217,6 @@ public class AuthController {
     @Transactional
     public ResponseEntity<?> updateProfile(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-            @RequestParam(value = "username", required = false) String username,
             @RequestParam(value = "firstName", required = false) String firstName,
             @RequestParam(value = "lastName", required = false) String lastName,
             @RequestParam(value = "role", required = false) String role,
@@ -231,7 +231,7 @@ public class AuthController {
             @RequestParam(value = "photoUrl", required = false) String photoUrl,
             @RequestParam(value = "photo", required = false) MultipartFile photo
     ) {
-        Optional<User> optionalUser = authenticateUser(authorizationHeader, username);
+        Optional<User> optionalUser = authenticateUser(authorizationHeader);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }
@@ -250,15 +250,6 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(Map.of("message", "Le nom ne doit contenir que des lettres."));
             }
             user.setLastName(cleaned);
-        }
-        if (username != null && !username.isBlank() && !username.equals(user.getUsername())) {
-            if (!InputValidator.isValidUsername(username)) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Nom d'utilisateur invalide : 3 à 30 caractères (lettres, chiffres, point, tiret, underscore)."));
-            }
-            if (userRepository.findByUsername(username).isPresent()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Nom d'utilisateur déjà utilisé."));
-            }
-            user.setUsername(InputValidator.sanitizeText(username, 30));
         }
         if (phone != null && !phone.isBlank()) {
             if (!InputValidator.isValidPhone(phone)) {
@@ -428,7 +419,7 @@ public class AuthController {
         return data;
     }
 
-    public static Optional<User> authenticateToken(String authorizationHeader, String username, UserRepository userRepository) {
+    public static Optional<User> authenticateToken(String authorizationHeader, UserRepository userRepository) {
         if (authorizationHeader != null && !authorizationHeader.isBlank()) {
             String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
             if (!token.isBlank()) {
@@ -438,9 +429,6 @@ public class AuthController {
                 }
             }
         }
-        if (username != null && !username.isBlank()) {
-            return userRepository.findByUsername(username);
-        }
         return Optional.empty();
     }
 
@@ -449,7 +437,12 @@ public class AuthController {
             try {
                 Optional<AuthSession> session = authSessionRepository.findByToken(token);
                 if (session.isPresent()) {
-                    return session.get().getUsername();
+                    AuthSession stored = session.get();
+                    if (stored.getExpiresAt() != null && stored.getExpiresAt().isBefore(LocalDateTime.now())) {
+                        authSessionRepository.delete(stored);
+                        return null;
+                    }
+                    return stored.getUsername();
                 }
             } catch (Exception e) {
                 logger.warn("Impossible de lire la session {}: {}", token, e.getMessage());
@@ -458,8 +451,8 @@ public class AuthController {
         return tokenStore.get(token);
     }
 
-    private Optional<User> authenticateUser(String authorizationHeader, String username) {
-        return authenticateToken(authorizationHeader, username, userRepository);
+    private Optional<User> authenticateUser(String authorizationHeader) {
+        return authenticateToken(authorizationHeader, userRepository);
     }
 
     private String generateToken(User user) {
@@ -470,11 +463,47 @@ public class AuthController {
                 AuthSession session = new AuthSession();
                 session.setToken(token);
                 session.setUsername(user.getUsername());
+                session.setExpiresAt(LocalDateTime.now().plusDays(30));
                 authSessionRepository.save(session);
             } catch (Exception e) {
                 logger.warn("Impossible de persister la session: {}", e.getMessage());
             }
         }
         return token;
+    }
+
+    @PostMapping("/auth/logout")
+    public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        if (authorizationHeader != null && !authorizationHeader.isBlank()) {
+            String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
+            if (!token.isBlank()) {
+                tokenStore.remove(token);
+                if (authSessionRepository != null) {
+                    try {
+                        authSessionRepository.deleteById(token);
+                    } catch (Exception e) {
+                        logger.warn("Impossible de supprimer la session {}: {}", token, e.getMessage());
+                    }
+                }
+            }
+        }
+        return ResponseEntity.ok(Map.of("ok", true));
+    }
+
+    @Scheduled(cron = "0 15 3 * * *")
+    public void purgeExpiredSessions() {
+        if (authSessionRepository != null) {
+            try {
+                List<AuthSession> expired = authSessionRepository.findAll().stream()
+                        .filter(s -> s.getExpiresAt() != null && s.getExpiresAt().isBefore(LocalDateTime.now()))
+                        .toList();
+                if (!expired.isEmpty()) {
+                    authSessionRepository.deleteAll(expired);
+                    logger.info("Sessions expirées purgées : {}", expired.size());
+                }
+            } catch (Exception e) {
+                logger.warn("Purge des sessions expirées impossible : {}", e.getMessage());
+            }
+        }
     }
 }

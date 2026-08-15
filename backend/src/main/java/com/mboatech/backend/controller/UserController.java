@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.LinkedHashMap;
@@ -24,9 +23,8 @@ public class UserController {
     }
 
     @GetMapping("/user")
-    public ResponseEntity<?> getUser(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-                                     @RequestParam(value = "username", required = false) String username) {
-        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, username, userRepository);
+    public ResponseEntity<?> getUser(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        Optional<User> optionalUser = AuthController.authenticateToken(authorizationHeader, userRepository);
         if (optionalUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Utilisateur non authentifié."));
         }

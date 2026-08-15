@@ -61,6 +61,11 @@ public class SystemUserInitializer {
         if (!userRepository.findByRole(Role.admin).isEmpty()) {
             return;
         }
+        if (adminPassword == null || adminPassword.isBlank()) {
+            logger.warn("ADMIN_PASSWORD non défini : aucun compte administrateur par défaut n'a été créé. "
+                    + "Définissez ADMIN_PASSWORD (variable d'environnement) pour le créer.");
+            return;
+        }
         User admin = new User();
         admin.setUsername("admin");
         admin.setEmail(adminEmail);

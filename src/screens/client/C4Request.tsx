@@ -470,7 +470,7 @@ export default function C4Request({
                 formData.append("category", categoryValue)
                 formData.append("domain", categoryValue)
                 formData.append("description", cleanedDesc)
-                formData.append("urgent", urgence !== "normal" ? "true" : "false")
+                formData.append("urgency", urgence)
                 if (artisan?.id) {
                   formData.append("technicianId", String(artisan.id))
                 }

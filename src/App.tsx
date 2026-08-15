@@ -314,6 +314,13 @@ export default function App() {
   }
 
   const handleLogout = () => {
+    const token = localStorage.getItem("mboaTechToken")
+    if (token) {
+      fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {})
+    }
     localStorage.removeItem("mboaTechToken")
     localStorage.removeItem("mboaTechUser")
     localStorage.removeItem("mboaTechTechnicianId")
@@ -709,7 +716,7 @@ export default function App() {
           fontFamily: "Inter, sans-serif",
         }}
       >
-        Log out
+        {t("Log out")}
       </button>
     </>
   )
