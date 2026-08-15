@@ -85,33 +85,29 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
   const [withdrawError, setWithdrawError] = useState<string | null>(null)
   const [withdrawSuccess, setWithdrawSuccess] = useState<string | null>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    const loadRefund = async () => {
-      try {
-        const token = localStorage.getItem("mboaTechToken")
-        const response = await fetch(`${API_BASE_URL}/api/client/withdraw`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        })
-        if (!response.ok) return
-        const data = (await response.json()) as {
-          balance?: number
-          pendingTotal?: number
-          withdrawals?: ClientWithdrawal[]
-        }
-        if (cancelled) return
-        setRefundBalance(Number(data.balance ?? 0))
-        setRefundPendingTotal(Number(data.pendingTotal ?? 0))
-        setClientWithdrawals(Array.isArray(data.withdrawals) ? data.withdrawals : [])
-      } catch {
-        /* ignore */
+  const loadRefund = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("mboaTechToken")
+      const response = await fetch(`${API_BASE_URL}/api/client/withdraw`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
+      if (!response.ok) return
+      const data = (await response.json()) as {
+        balance?: number
+        pendingTotal?: number
+        withdrawals?: ClientWithdrawal[]
       }
-    }
-    loadRefund()
-    return () => {
-      cancelled = true
+      setRefundBalance(Number(data.balance ?? 0))
+      setRefundPendingTotal(Number(data.pendingTotal ?? 0))
+      setClientWithdrawals(Array.isArray(data.withdrawals) ? data.withdrawals : [])
+    } catch {
+      /* ignore */
     }
   }, [])
+
+  useEffect(() => {
+    loadRefund()
+  }, [loadRefund])
 
   useEffect(() => {
     let cancelled = false
@@ -441,6 +437,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
       setWithdrawAccount("")
       setWithdrawSubmitting(false)
       setWithdrawOpen(false)
+      loadRefund()
       window.setTimeout(() => setWithdrawSuccess(null), 4000)
     } catch (err) {
       setWithdrawError(err instanceof Error ? err.message : t("Impossible d'effectuer le retrait."))

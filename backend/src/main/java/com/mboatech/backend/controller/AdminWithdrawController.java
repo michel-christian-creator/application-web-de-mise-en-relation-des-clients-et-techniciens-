@@ -126,15 +126,15 @@ public class AdminWithdrawController {
             return ResponseEntity.notFound().build();
         }
         Withdrawal withdrawal = optionalWithdrawal.get();
-        if (!"pending".equals(withdrawal.getStatus())) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Ce retrait a déjà été traité."));
-        }
         BigDecimal balance = availableBalance(withdrawal);
         if (withdrawal.getAmount().compareTo(balance) > 0) {
             return ResponseEntity.badRequest().body(Map.of(
                     "message",
                     "Solde insuffisant : disponible " + balance.toBigInteger()
                             + " FCFA pour un retrait de " + withdrawal.getAmount().toBigInteger() + " FCFA."));
+        }
+        if (withdrawalRepository.markPaidIfPending(id) == 0) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Ce retrait a déjà été traité."));
         }
         withdrawal.setStatus("paid");
         withdrawal.setNotes("Retrait payé (" + withdrawal.getMethod() + " vers " + withdrawal.getAccount() + ").");
@@ -164,7 +164,7 @@ public class AdminWithdrawController {
             return ResponseEntity.notFound().build();
         }
         Withdrawal withdrawal = optionalWithdrawal.get();
-        if (!"pending".equals(withdrawal.getStatus())) {
+        if (withdrawalRepository.markRejectedIfPending(id) == 0) {
             return ResponseEntity.badRequest().body(Map.of("message", "Ce retrait a déjà été traité."));
         }
         withdrawal.setStatus("rejected");

@@ -3,6 +3,7 @@ package com.mboatech.backend.controller;
 import com.mboatech.backend.model.Role;
 import com.mboatech.backend.model.User;
 import com.mboatech.backend.model.Withdrawal;
+import com.mboatech.backend.repository.ClientProfileRepository;
 import com.mboatech.backend.repository.UserRepository;
 import com.mboatech.backend.repository.WithdrawalRepository;
 import com.mboatech.backend.service.NotificationService;
@@ -33,23 +34,30 @@ public class ClientWithdrawController {
 
     private final UserRepository userRepository;
     private final WithdrawalRepository withdrawalRepository;
+    private final ClientProfileRepository clientProfileRepository;
     private final JdbcTemplate jdbcTemplate;
     private final NotificationService notificationService;
 
     public ClientWithdrawController(UserRepository userRepository,
                                     WithdrawalRepository withdrawalRepository,
+                                    ClientProfileRepository clientProfileRepository,
                                     JdbcTemplate jdbcTemplate,
                                     NotificationService notificationService) {
         this.userRepository = userRepository;
         this.withdrawalRepository = withdrawalRepository;
+        this.clientProfileRepository = clientProfileRepository;
         this.jdbcTemplate = jdbcTemplate;
         this.notificationService = notificationService;
     }
 
     private Optional<User> requireClient(String authorizationHeader) {
         Optional<User> user = AuthController.authenticateToken(authorizationHeader, userRepository);
-        if (user.isPresent() && user.get().getRole() == Role.client) {
-            return user;
+        if (user.isPresent()) {
+            User u = user.get();
+            boolean ownsClientProfile = clientProfileRepository.findByUserId(u.getId()).isPresent();
+            if (u.getRole() == Role.client || ownsClientProfile) {
+                return user;
+            }
         }
         return Optional.empty();
     }

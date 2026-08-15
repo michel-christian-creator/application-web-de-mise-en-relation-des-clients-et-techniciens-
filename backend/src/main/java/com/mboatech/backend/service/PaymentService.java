@@ -105,6 +105,9 @@ public class PaymentService {
                         .map(profile -> profile.getUser().getId())
                         .orElse(null)
                 : null;
+        if (payeeUserId == null) {
+            throw new PaymentException("Aucun technicien n'est assigné à cette demande : les fonds ne peuvent pas être sécurisés.");
+        }
         User payer = userRepository.findById(payerUserId).orElse(null);
         String payerName = payer != null ? fullName(payer) : "Client";
 
@@ -232,6 +235,12 @@ public class PaymentService {
             Map<String, Object> out = outcome(payment);
             out.put("confirmed", true);
             out.put("alreadyHeld", true);
+            return out;
+        }
+        if ("released".equals(payment.getStatus()) || "refunded".equals(payment.getStatus())) {
+            Map<String, Object> out = outcome(payment);
+            out.put("confirmed", true);
+            out.put("alreadyReleased", true);
             return out;
         }
         if (!paymentStatus) {

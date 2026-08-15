@@ -143,6 +143,10 @@ public class AuthController {
         if (!InputValidator.isValidUsername(request.getUsername())) {
             return ResponseEntity.badRequest().body("Nom d'utilisateur invalide : 3 à 30 caractères (lettres, chiffres, point, tiret, underscore).");
         }
+        if (request.getPassword() == null || request.getPassword().isBlank()
+                || request.getPassword().length() < 6) {
+            return ResponseEntity.badRequest().body("Le mot de passe doit contenir au moins 6 caractères.");
+        }
         if (request.getFirstName() != null && !request.getFirstName().isBlank()
                 && !InputValidator.isValidName(request.getFirstName())) {
             return ResponseEntity.badRequest().body("Le prénom ne doit contenir que des lettres.");

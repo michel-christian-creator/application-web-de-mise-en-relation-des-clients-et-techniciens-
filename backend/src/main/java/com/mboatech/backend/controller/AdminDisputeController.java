@@ -110,9 +110,9 @@ public class AdminDisputeController {
 
     private BigDecimal heldAmount(ClientRequest request) {
         BigDecimal total = BigDecimal.ZERO;
-        for (ChatMessage m : messageRepository.findByRequestIdOrderByTimestampAsc(request.getId())) {
-            if ("accepted".equals(m.getDevisStatus()) && m.getDevisAmount() != null) {
-                total = total.add(m.getDevisAmount());
+        for (Payment p : paymentRepository.findByRequestIdOrderByIdDesc(request.getId())) {
+            if ("held".equals(p.getStatus())) {
+                total = total.add(p.getAmount());
             }
         }
         return total;
@@ -139,6 +139,16 @@ public class AdminDisputeController {
         payment.setTransactionRef("ADM-" + requestId + "-" + method + "-" + System.currentTimeMillis());
         payment.setNotes(notes);
         return paymentRepository.save(payment);
+    }
+
+    private void closeEscrow(Long requestId, String notes) {
+        for (Payment p : paymentRepository.findByRequestIdOrderByIdDesc(requestId)) {
+            if ("held".equals(p.getStatus())) {
+                p.setStatus("refunded");
+                p.setNotes(notes);
+                paymentRepository.save(p);
+            }
+        }
     }
 
     private Map<String, Object> personDto(ClientProfile profile) {
@@ -295,6 +305,8 @@ public class AdminDisputeController {
                 }
             }
         }
+
+        closeEscrow(requestId, "Escrow clôturé — décision de litige (demande #" + requestId + ").");
 
         request.setDisputeOpen(false);
         request.setDisputeReporterUserId(null);

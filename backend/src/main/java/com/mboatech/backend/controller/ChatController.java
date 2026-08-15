@@ -366,6 +366,12 @@ public class ChatController {
         if (authenticatedUser.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("message", "Session expirée. Veuillez vous reconnecter."));
         }
+        if (message.getRequestId() == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "requestId requis."));
+        }
+        if (!chatAccessService.isConversationAccessible(authenticatedUser.get(), message.getRequestId())) {
+            return ResponseEntity.status(403).body(Map.of("message", "Accès refusé à cette conversation."));
+        }
         message.setSenderUserId(authenticatedUser.get().getId());
         try {
             return ResponseEntity.ok(saveMessageBroadcast(message));
@@ -631,7 +637,6 @@ public class ChatController {
         if (accepted) {
             requestRepository.findById(message.getRequestId()).ifPresent(request -> {
                 request.setScheduledAt(message.getScheduleAt());
-                request.setFundsDeposited(true);
                 request.setUpdatedAt(LocalDateTime.now());
                 requestRepository.save(request);
             });
@@ -884,6 +889,7 @@ public class ChatController {
     }
 
     @PostMapping("/request/{requestId}/assign")
+    @Transactional
     public ResponseEntity<?> assignTechnician(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
                                               @PathVariable("requestId") Long requestId,
                                               @RequestParam("technicianId") Long technicianId) {
@@ -905,15 +911,14 @@ public class ChatController {
                 return ResponseEntity.status(403).body(Map.of("message", "Impossible d'assigner cette demande à un autre technicien."));
             }
         }
-        Optional<ClientRequest> optionalRequest = requestRepository.findById(requestId);
+        Optional<ClientRequest> optionalRequest = requestRepository.findByIdForUpdate(requestId);
         if (optionalRequest.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         ClientRequest request = optionalRequest.get();
         if (request.getTechnicianId() != null) {
             return ResponseEntity.badRequest().body(Map.of("message", "Cette demande a déjà un technicien assigné."));
-        }
-        if (optionalProfile.isPresent()) {
+        }        if (optionalProfile.isPresent()) {
             TechnicianProfile profile = optionalProfile.get();
             if (request.getClientId() != null
                     && clientProfileRepository.findById(request.getClientId())
@@ -955,7 +960,7 @@ public class ChatController {
         ClientRequest saved = requestRepository.save(request);
         optionalProfile.ifPresent(profile -> {
             profile.setAcceptanceCount(profile.getAcceptanceCount() + 1);
-            recordResponseTime(profile, request);
+            recordResponseTime(profile, saved);
             missionGuardService.recomputeSuccessRate(profile);
         });
         notifyTechnicianAssigned(saved);
