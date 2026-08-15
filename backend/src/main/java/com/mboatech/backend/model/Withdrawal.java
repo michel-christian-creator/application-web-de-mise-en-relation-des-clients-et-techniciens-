@@ -19,8 +19,11 @@ public class Withdrawal {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "technician_user_id", nullable = false)
+    @Column(name = "technician_user_id")
     private Long technicianUserId;
+
+    @Column(name = "client_user_id")
+    private Long clientUserId;
 
     @Column(nullable = false)
     private BigDecimal amount;
@@ -61,6 +64,14 @@ public class Withdrawal {
 
     public void setTechnicianUserId(Long technicianUserId) {
         this.technicianUserId = technicianUserId;
+    }
+
+    public Long getClientUserId() {
+        return clientUserId;
+    }
+
+    public void setClientUserId(Long clientUserId) {
+        this.clientUserId = clientUserId;
     }
 
     public BigDecimal getAmount() {

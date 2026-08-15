@@ -33,6 +33,16 @@ export type PaymentHistoryItem = {
   createdAt?: string | null
 }
 
+export type ClientWithdrawal = {
+  id: number
+  amount: number
+  method: string
+  account: string
+  status: string
+  notes?: string | null
+  createdAt?: string | null
+}
+
 interface Props {
   paymentsEnabled: boolean
   onConfirm: () => void
@@ -63,6 +73,45 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
   } | null>(null)
   const [pendingStatus, setPendingStatus] = useState<"pending" | "held" | "failed">("pending")
   const [checking, setChecking] = useState(false)
+
+  const [refundBalance, setRefundBalance] = useState(0)
+  const [refundPendingTotal, setRefundPendingTotal] = useState(0)
+  const [clientWithdrawals, setClientWithdrawals] = useState<ClientWithdrawal[]>([])
+  const [withdrawOpen, setWithdrawOpen] = useState(false)
+  const [withdrawMethod, setWithdrawMethod] = useState("momo")
+  const [withdrawAmount, setWithdrawAmount] = useState("")
+  const [withdrawAccount, setWithdrawAccount] = useState("")
+  const [withdrawSubmitting, setWithdrawSubmitting] = useState(false)
+  const [withdrawError, setWithdrawError] = useState<string | null>(null)
+  const [withdrawSuccess, setWithdrawSuccess] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const loadRefund = async () => {
+      try {
+        const token = localStorage.getItem("mboaTechToken")
+        const response = await fetch(`${API_BASE_URL}/api/client/withdraw`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        })
+        if (!response.ok) return
+        const data = (await response.json()) as {
+          balance?: number
+          pendingTotal?: number
+          withdrawals?: ClientWithdrawal[]
+        }
+        if (cancelled) return
+        setRefundBalance(Number(data.balance ?? 0))
+        setRefundPendingTotal(Number(data.pendingTotal ?? 0))
+        setClientWithdrawals(Array.isArray(data.withdrawals) ? data.withdrawals : [])
+      } catch {
+        /* ignore */
+      }
+    }
+    loadRefund()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -177,6 +226,13 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
           bg: "rgba(148,163,184,0.12)",
         }
     }
+  }
+
+  function withdrawMethodLabel(method: string): string {
+    if (method === "momo") return "MTN Mobile Money"
+    if (method === "orange") return "Orange Money"
+    if (method === "bank") return "Compte bancaire"
+    return method
   }
 
   const paymentModes = [
@@ -321,6 +377,77 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
     setPendingStatus("pending")
   }
 
+  const sanitizeWithdrawAccount = (value: string): string => {
+    if (withdrawMethod === "bank") {
+      return (value ?? "").replace(/[^A-Za-z0-9 .-]/g, "").slice(0, 40)
+    }
+    return (value ?? "").replace(/\D/g, "").slice(0, 12)
+  }
+
+  const handleSubmitWithdraw = async () => {
+    const parsedAmount = Number(withdrawAmount)
+    if (!withdrawAmount || !Number.isInteger(parsedAmount) || parsedAmount < 100) {
+      setWithdrawError(t("Montant invalide (minimum 100 FCFA)."))
+      return
+    }
+    if (parsedAmount > refundBalance) {
+      setWithdrawError(
+        t("Montant supérieur à votre solde de remboursement (") +
+          formatAmount(refundBalance) +
+          t(" FCFA)."),
+      )
+      return
+    }
+    if (!withdrawAccount.trim()) {
+      setWithdrawError(t("Veuillez renseigner votre numéro de compte."))
+      return
+    }
+    if (withdrawMethod !== "bank" && withdrawAccount.replace(/\D/g, "").length < 8) {
+      setWithdrawError(t("Numéro de téléphone invalide (8 à 12 chiffres)."))
+      return
+    }
+    setWithdrawError(null)
+    setWithdrawSubmitting(true)
+    try {
+      const token = localStorage.getItem("mboaTechToken")
+      const response = await fetch(`${API_BASE_URL}/api/client/withdraw`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          method: withdrawMethod,
+          account: withdrawAccount.trim(),
+          amount: parsedAmount,
+        }),
+      })
+      if (!response.ok) {
+        let detail = t("Impossible d'effectuer le retrait.")
+        try {
+          const data = await response.json()
+          if (data?.message) detail = data.message
+        } catch {
+          /* garde le message par défaut */
+        }
+        throw new Error(detail)
+      }
+      setWithdrawSuccess(
+        t(
+          "Votre demande de retrait de remboursement a bien été enregistrée. Elle sera traitée par l'administration.",
+        ),
+      )
+      setWithdrawAmount("")
+      setWithdrawAccount("")
+      setWithdrawSubmitting(false)
+      setWithdrawOpen(false)
+      window.setTimeout(() => setWithdrawSuccess(null), 4000)
+    } catch (err) {
+      setWithdrawError(err instanceof Error ? err.message : t("Impossible d'effectuer le retrait."))
+      setWithdrawSubmitting(false)
+    }
+  }
+
   if (confirmed) {
     return (
       <div
@@ -408,12 +535,16 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
           </h2>
           <p className="text-sm leading-relaxed mb-4" style={{ color: "#94A3B8" }}>
             {failed
-              ? t("Le paiement Paymee a été refusé ou annulé. Aucun fonds n'a été prélevé. Vous pouvez réessayer.")
+              ? t(
+                  "Le paiement Paymee a été refusé ou annulé. Aucun fonds n'a été prélevé. Vous pouvez réessayer.",
+                )
               : waiting
                 ? `${t("Un onglet Paymee s'est ouvert pour finaliser")} ${formatAmount(
                     devis?.amount ?? 0,
                   )} FCFA. ${t("Dès que le paiement est confirmé, les fonds sont mis en garde automatiquement.")}`
-                : t("Votre paiement a été reçu. Les fonds sont maintenant conservés en garde par MboaTech.")}
+                : t(
+                    "Votre paiement a été reçu. Les fonds sont maintenant conservés en garde par MboaTech.",
+                  )}
           </p>
           {txRef && (
             <p
@@ -680,7 +811,9 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                     {t("Votre argent est en sécurité")}
                   </p>
                   <p className="text-xs leading-relaxed" style={{ color: "#94A3B8" }}>
-                    {t("MboaTech conserve vos fonds en garde sécurisée. Le paiement n'est libéré à l'artisan que lorsque")}{" "}
+                    {t(
+                      "MboaTech conserve vos fonds en garde sécurisée. Le paiement n'est libéré à l'artisan que lorsque",
+                    )}{" "}
                     <strong style={{ color: "#E8EDF5" }}>{t("vous validez explicitement")}</strong>{" "}
                     {t("la fin et la qualité des travaux.")}
                   </p>
@@ -751,7 +884,9 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
 
             {!paymentsEnabled && (
               <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-200 mb-4">
-                {t("Les paiements sont temporairement désactivés par l'administrateur. Les transactions ne sont pas disponibles pour le moment.")}
+                {t(
+                  "Les paiements sont temporairement désactivés par l'administrateur. Les transactions ne sont pas disponibles pour le moment.",
+                )}
               </div>
             )}
             {submitError && (
@@ -879,6 +1014,227 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                 )
               })}
             </div>
+          )}
+        </div>
+
+        {/* Remboursements disponibles */}
+        <div
+          className="mt-6 p-6 rounded-2xl"
+          style={{
+            background: "#141C2F",
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p
+                className="text-sm font-semibold"
+                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+              >
+                {t("Remboursements disponibles")}
+              </p>
+              <p className="text-xs" style={{ color: "#64748B" }}>
+                {t("Fonds remboursés suite à un litige résolu")}
+              </p>
+            </div>
+            {refundBalance > 0 && (
+              <button
+                onClick={() => {
+                  setWithdrawOpen(true)
+                  setWithdrawError(null)
+                  setWithdrawSuccess(null)
+                }}
+                disabled={withdrawSubmitting}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white disabled:opacity-60"
+                style={{
+                  background: "linear-gradient(135deg, #059669, #047857)",
+                  boxShadow: "0 4px 16px rgba(5,150,105,0.35)",
+                }}
+              >
+                {t("Retirer mes fonds")}
+              </button>
+            )}
+          </div>
+
+          {refundBalance > 0 ? (
+            <>
+              <div
+                className="flex items-center justify-between p-4 rounded-xl"
+                style={{
+                  background: "rgba(5,150,105,0.08)",
+                  border: "1px solid rgba(5,150,105,0.25)",
+                }}
+              >
+                <div>
+                  <p
+                    className="text-[11px] font-semibold uppercase tracking-wider"
+                    style={{ color: "#34D399" }}
+                  >
+                    {t("Solde de remboursement")}
+                  </p>
+                  <p
+                    className="text-2xl font-bold font-mono"
+                    style={{ color: "#34D399", fontFamily: "Poppins, sans-serif" }}
+                  >
+                    {formatAmount(refundBalance)} FCFA
+                  </p>
+                </div>
+                {refundPendingTotal > 0 && (
+                  <div className="text-right">
+                    <p className="text-[11px]" style={{ color: "#F59E0B" }}>
+                      {t("En attente de validation")}
+                    </p>
+                    <p className="text-sm font-bold font-mono" style={{ color: "#F59E0B" }}>
+                      {formatAmount(refundPendingTotal)} FCFA
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {withdrawOpen && (
+                <div
+                  className="mt-4 p-4 rounded-xl"
+                  style={{ background: "#1E2A42", border: "1px solid rgba(255,255,255,0.05)" }}
+                >
+                  <p
+                    className="text-xs font-semibold mb-3"
+                    style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                  >
+                    {t("Retirer un remboursement")}
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { key: "momo", label: "MTN Mobile Money" },
+                        { key: "orange", label: "Orange Money" },
+                        { key: "bank", label: "Compte bancaire" },
+                      ].map((m) => (
+                        <button
+                          key={m.key}
+                          onClick={() => {
+                            setWithdrawMethod(m.key)
+                            setWithdrawAccount("")
+                          }}
+                          className="py-2 px-1 rounded-lg text-[11px] font-semibold"
+                          style={{
+                            background:
+                              withdrawMethod === m.key
+                                ? "rgba(5,150,105,0.2)"
+                                : "rgba(255,255,255,0.04)",
+                            color: withdrawMethod === m.key ? "#34D399" : "#94A3B8",
+                            border: `1px solid ${withdrawMethod === m.key ? "rgba(5,150,105,0.5)" : "rgba(255,255,255,0.06)"}`,
+                          }}
+                        >
+                          {t(m.label)}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="number"
+                        value={withdrawAmount}
+                        onChange={(e) => setWithdrawAmount(e.target.value)}
+                        placeholder={t("Montant (FCFA)")}
+                        className="px-3 py-2.5 rounded-lg text-sm w-full outline-none"
+                        style={{
+                          background: "#0F172A",
+                          color: "#E8EDF5",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                      />
+                      <input
+                        value={withdrawAccount}
+                        onChange={(e) =>
+                          setWithdrawAccount(sanitizeWithdrawAccount(e.target.value))
+                        }
+                        placeholder={t("Numéro de compte")}
+                        className="px-3 py-2.5 rounded-lg text-sm w-full outline-none"
+                        style={{
+                          background: "#0F172A",
+                          color: "#E8EDF5",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                      />
+                    </div>
+                    {withdrawError && (
+                      <p className="text-xs" style={{ color: "#F87171" }}>
+                        {withdrawError}
+                      </p>
+                    )}
+                    <button
+                      onClick={handleSubmitWithdraw}
+                      disabled={withdrawSubmitting}
+                      className="w-full py-3 rounded-xl font-bold text-sm text-white disabled:opacity-60"
+                      style={{
+                        background: "linear-gradient(135deg, #059669, #047857)",
+                        boxShadow: "0 4px 16px rgba(5,150,105,0.3)",
+                      }}
+                    >
+                      {withdrawSubmitting ? t("Envoi…") : t("Demander le retrait")}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {clientWithdrawals.length > 0 && (
+                <div className="mt-4 flex flex-col gap-2">
+                  {clientWithdrawals.map((w) => (
+                    <div
+                      key={w.id}
+                      className="flex items-center justify-between gap-3 p-3 rounded-xl"
+                      style={{
+                        background: "#1E2A42",
+                        border: "1px solid rgba(255,255,255,0.05)",
+                      }}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold truncate" style={{ color: "#E8EDF5" }}>
+                          {t("Retrait")} · {t(withdrawMethodLabel(w.method))}
+                        </p>
+                        <p className="text-xs truncate" style={{ color: "#64748B" }}>
+                          {w.account}
+                          {w.createdAt ? ` · ${formatDate(w.createdAt)}` : ""}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <p className="text-sm font-bold font-mono" style={{ color: "#E8EDF5" }}>
+                          −{formatAmount(w.amount)} FCFA
+                        </p>
+                        <span
+                          className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                          style={
+                            w.status === "paid"
+                              ? { background: "rgba(5,150,105,0.12)", color: "#059669" }
+                              : w.status === "rejected"
+                                ? { background: "rgba(239,68,68,0.12)", color: "#F87171" }
+                                : { background: "rgba(245,158,11,0.12)", color: "#F59E0B" }
+                          }
+                        >
+                          {w.status === "paid"
+                            ? t("Payé")
+                            : w.status === "rejected"
+                              ? t("Refusé")
+                              : t("En attente")}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {withdrawSuccess && (
+                <p
+                  className="mt-4 text-xs font-semibold px-3 py-2 rounded-lg"
+                  style={{ background: "rgba(5,150,105,0.12)", color: "#34D399" }}
+                >
+                  {withdrawSuccess}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm" style={{ color: "#64748B" }}>
+              {t("Aucun remboursement disponible pour le moment.")}
+            </p>
           )}
         </div>
       </div>

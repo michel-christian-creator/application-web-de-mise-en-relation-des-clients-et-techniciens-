@@ -167,6 +167,8 @@ public class ChatController {
         }
         if (saved.getTechnicianId() == null) {
             notifyMatchingTechnicians(saved);
+        } else {
+            notifyTechnicianAssigned(saved);
         }
         return ResponseEntity.ok(saved);
     }
@@ -913,6 +915,15 @@ public class ChatController {
         }
         if (optionalProfile.isPresent()) {
             TechnicianProfile profile = optionalProfile.get();
+            if (request.getClientId() != null
+                    && clientProfileRepository.findById(request.getClientId())
+                            .map(ClientProfile::getUser)
+                            .map(User::getId)
+                            .map(id -> id.equals(user.getId()))
+                            .orElse(false)) {
+                return ResponseEntity.badRequest().body(Map.of("message",
+                        "Vous ne pouvez pas accepter votre propre demande d'intervention."));
+            }
             if (missionGuardService.isSuspended(profile)) {
                 if (profile.isSuspendedPermanent()) {
                     return ResponseEntity.status(403).body(Map.of("message", "Votre compte technicien a été définitivement suspendu."));

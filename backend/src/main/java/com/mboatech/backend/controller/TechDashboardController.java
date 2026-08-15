@@ -99,7 +99,8 @@ public class TechDashboardController {
 
         BigDecimal balance = jdbcTemplate.queryForObject(
                 "SELECT COALESCE((SELECT COALESCE(SUM(amount), 0) FROM payments "
-                        + "WHERE payee_user_id = ? AND status = 'released' AND method <> 'withdraw') "
+                        + "WHERE payee_user_id = ? AND status = 'released' "
+                        + "AND method <> 'withdraw' AND method <> 'refund') "
                         + "- (SELECT COALESCE(SUM(amount), 0) FROM withdrawals "
                         +                 "WHERE technician_user_id = ? AND status = 'paid'), 0)",
                 BigDecimal.class, techUserId, techUserId);

@@ -9,5 +9,7 @@ public interface WithdrawalRepository extends JpaRepository<Withdrawal, Long> {
 
     List<Withdrawal> findByTechnicianUserIdOrderByCreatedAtDesc(Long technicianUserId);
 
+    List<Withdrawal> findByClientUserIdOrderByCreatedAtDesc(Long clientUserId);
+
     List<Withdrawal> findAllByOrderByCreatedAtDesc();
 }

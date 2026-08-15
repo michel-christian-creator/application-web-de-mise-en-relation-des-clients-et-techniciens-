@@ -110,8 +110,11 @@ function ledgerStatus(item: LedgerItem): { text: string; color: string; bg: stri
 
 type WithdrawalItem = {
   id: number
+  type?: string
   technicianUserId?: number
-  technicianName: string
+  technicianName?: string
+  clientUserId?: number
+  clientName?: string
   amount: number
   method: string
   account: string
@@ -793,7 +796,8 @@ export default function A1Dashboard({
                         fontFamily: "Poppins, sans-serif",
                       }}
                     >
-                      {data.openDisputes} {t(data.openDisputes > 1 ? "litiges en cours" : "litige en cours")}
+                      {data.openDisputes}{" "}
+                      {t(data.openDisputes > 1 ? "litiges en cours" : "litige en cours")}
                     </p>
                     <p className="text-xs" style={{ color: "#94A3B8" }}>
                       {data.openDisputes > 1
@@ -972,7 +976,9 @@ export default function A1Dashboard({
                 {t("Retraits des techniciens")}
               </h2>
               <p className="text-xs" style={{ color: "#64748B" }}>
-                {t("Demande de versement du solde : effectuez le transfert manuel, puis validez ici")}
+                {t(
+                  "Demande de versement du solde : effectuez le transfert manuel, puis validez ici",
+                )}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -1048,7 +1054,20 @@ export default function A1Dashboard({
                           {ledgerDate(w.createdAt)}
                         </td>
                         <td className="py-2.5 pr-3 whitespace-nowrap" style={{ color: "#E8EDF5" }}>
-                          {w.technicianName}
+                          <div className="flex flex-col gap-0.5">
+                            <span>{w.clientName ?? w.technicianName}</span>
+                            {w.type === "client" && (
+                              <span
+                                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full w-fit"
+                                style={{
+                                  background: "rgba(37,99,235,0.12)",
+                                  color: "#60A5FA",
+                                }}
+                              >
+                                {t("Remboursement client")}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="py-2.5 pr-3 whitespace-nowrap" style={{ color: "#94A3B8" }}>
                           {t(withdrawMethodLabel(w.method))}

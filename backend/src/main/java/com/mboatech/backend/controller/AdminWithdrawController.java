@@ -68,8 +68,11 @@ public class AdminWithdrawController {
     private Map<String, Object> withdrawItem(Withdrawal w) {
         Map<String, Object> item = new LinkedHashMap<>();
         item.put("id", w.getId());
+        item.put("type", w.getClientUserId() != null ? "client" : "technician");
         item.put("technicianUserId", w.getTechnicianUserId());
-        item.put("technicianName", userName(w.getTechnicianUserId()));
+        item.put("technicianName", w.getTechnicianUserId() != null ? userName(w.getTechnicianUserId()) : null);
+        item.put("clientUserId", w.getClientUserId());
+        item.put("clientName", w.getClientUserId() != null ? userName(w.getClientUserId()) : null);
         item.put("amount", w.getAmount());
         item.put("method", w.getMethod());
         item.put("account", w.getAccount());
@@ -77,6 +80,10 @@ public class AdminWithdrawController {
         item.put("notes", w.getNotes());
         item.put("createdAt", w.getCreatedAt());
         return item;
+    }
+
+    private Long withdrawalOwnerId(Withdrawal w) {
+        return w.getClientUserId() != null ? w.getClientUserId() : w.getTechnicianUserId();
     }
 
     @GetMapping
@@ -122,7 +129,7 @@ public class AdminWithdrawController {
         if (!"pending".equals(withdrawal.getStatus())) {
             return ResponseEntity.badRequest().body(Map.of("message", "Ce retrait a déjà été traité."));
         }
-        BigDecimal balance = availableBalance(withdrawal.getTechnicianUserId());
+        BigDecimal balance = availableBalance(withdrawal);
         if (withdrawal.getAmount().compareTo(balance) > 0) {
             return ResponseEntity.badRequest().body(Map.of(
                     "message",
@@ -133,7 +140,8 @@ public class AdminWithdrawController {
         withdrawal.setNotes("Retrait payé (" + withdrawal.getMethod() + " vers " + withdrawal.getAccount() + ").");
         withdrawalRepository.save(withdrawal);
 
-        notificationService.create(withdrawal.getTechnicianUserId(), "Retrait payé",
+        Long ownerId = withdrawalOwnerId(withdrawal);
+        notificationService.create(ownerId, "Retrait payé",
                 "Votre retrait de " + withdrawal.getAmount().toBigInteger()
                         + " FCFA (" + withdrawal.getMethod() + ") a été validé et payé.",
                 "system");
@@ -163,20 +171,39 @@ public class AdminWithdrawController {
         withdrawal.setNotes("Retrait refusé par l'administration.");
         withdrawalRepository.save(withdrawal);
 
-        notificationService.create(withdrawal.getTechnicianUserId(), "Retrait refusé",
+        Long ownerId = withdrawalOwnerId(withdrawal);
+        notificationService.create(ownerId, "Retrait refusé",
                 "Votre demande de retrait de " + withdrawal.getAmount().toBigInteger()
                         + " FCFA a été refusée. Vérifiez vos informations de retrait.",
                 "system");
         return ResponseEntity.ok(withdrawItem(withdrawal));
     }
 
-    private BigDecimal availableBalance(Long technicianUserId) {
+    private BigDecimal availableBalance(Withdrawal w) {
+        if (w.getClientUserId() != null) {
+            return clientBalance(w.getClientUserId());
+        }
+        return technicianBalance(w.getTechnicianUserId());
+    }
+
+    private BigDecimal technicianBalance(Long technicianUserId) {
         BigDecimal balance = jdbcTemplate.queryForObject(
                 "SELECT COALESCE((SELECT COALESCE(SUM(amount), 0) FROM payments "
-                        + "WHERE payee_user_id = ? AND status = 'released' AND method <> 'withdraw') "
+                        + "WHERE payee_user_id = ? AND status = 'released' "
+                        + "AND method <> 'withdraw' AND method <> 'refund') "
                         + "- (SELECT COALESCE(SUM(amount), 0) FROM withdrawals "
                         + "WHERE technician_user_id = ? AND status = 'paid'), 0)",
                 BigDecimal.class, technicianUserId, technicianUserId);
+        return balance != null ? balance : BigDecimal.ZERO;
+    }
+
+    private BigDecimal clientBalance(Long clientUserId) {
+        BigDecimal balance = jdbcTemplate.queryForObject(
+                "SELECT COALESCE((SELECT COALESCE(SUM(amount), 0) FROM payments "
+                        + "WHERE payee_user_id = ? AND status = 'released' AND method = 'refund') "
+                        + "- (SELECT COALESCE(SUM(amount), 0) FROM withdrawals "
+                        + "WHERE client_user_id = ? AND status = 'paid'), 0)",
+                BigDecimal.class, clientUserId, clientUserId);
         return balance != null ? balance : BigDecimal.ZERO;
     }
 }
