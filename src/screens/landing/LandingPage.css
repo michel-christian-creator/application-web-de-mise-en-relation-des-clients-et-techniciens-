@@ -1,0 +1,276 @@
+/* ═══════════════════════════════════════
+   Landing Page – extracted styles
+   ═══════════════════════════════════════ */
+
+/* ── Theme toggle ── */
+.landing-theme-toggle {
+  background: rgba(11, 17, 32, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #E8EDF5;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+.landing-theme-toggle:hover {
+  background: rgba(30, 42, 66, 0.9);
+}
+
+[data-theme="light"] .landing-theme-toggle {
+  background: rgba(255, 255, 255, 0.7);
+  color: #1a1a2e;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .landing-theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* ── Root ── */
+.landing {
+  background: #070D1A;
+}
+
+/* ── Hero background grid ── */
+.landing-hero-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ── Radial gradient overlays ── */
+.landing-radial-hero {
+  background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(37,99,235,0.12) 0%, transparent 70%);
+}
+.landing-radial-phone {
+  background: radial-gradient(ellipse 50% 40% at 50% 50%, rgba(37,99,235,0.06) 0%, transparent 70%);
+}
+.landing-radial-features {
+  background: radial-gradient(ellipse 50% 40% at 50% 0%, rgba(37,99,235,0.08) 0%, transparent 70%);
+}
+.landing-radial-tech {
+  background: radial-gradient(ellipse 40% 30% at 80% 50%, rgba(5,150,105,0.06) 0%, transparent 70%);
+}
+
+/* ── Hero badge ── */
+.landing-badge {
+  background: rgba(37,99,235,0.12);
+  border: 1px solid rgba(37,99,235,0.25);
+}
+.landing-badge-dot {
+  background: #059669;
+}
+.landing-badge-text {
+  color: #93C5FD;
+}
+
+/* ── Headline ── */
+.landing-headline {
+  font-family: "Poppins", sans-serif;
+  color: #E8EDF5;
+}
+.landing-gradient-text {
+  background: linear-gradient(135deg, #2563EB, #3B82F6, #059669);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Subtitle ── */
+.landing-subtitle {
+  color: #94A3B8;
+}
+
+/* ── CTA buttons ── */
+.landing-cta-primary {
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
+  box-shadow: 0 4px 20px rgba(37,99,235,0.3);
+  font-family: "Poppins", sans-serif;
+  border: none;
+}
+.landing-cta-secondary {
+  background: transparent;
+  color: #E8EDF5;
+  border: 1px solid rgba(255,255,255,0.15);
+  font-family: "Poppins", sans-serif;
+}
+
+/* ── Trust badges ── */
+.landing-trust-icon {
+  color: #2563EB;
+}
+.landing-trust-text {
+  color: #64748B;
+}
+
+/* ── Scroll indicator ── */
+.landing-scroll-ring {
+  border: 2px solid rgba(255,255,255,0.15);
+}
+.landing-scroll-dot {
+  background: #2563EB;
+}
+
+/* ── Section headings ── */
+.landing-section-label {
+  color: #2563EB;
+}
+.landing-section-label-green {
+  color: #059669;
+}
+.landing-section-label-amber {
+  color: #F59E0B;
+}
+.landing-section-label-blue {
+  color: #3B82F6;
+}
+.landing-section-title {
+  font-family: "Poppins", sans-serif;
+  color: #E8EDF5;
+}
+.landing-section-desc {
+  color: #94A3B8;
+}
+
+/* ── Accent spans ── */
+.landing-accent-green {
+  color: #059669;
+}
+.landing-accent-blue {
+  color: #2563EB;
+}
+.landing-accent-purple {
+  color: #8B5CF6;
+}
+
+/* ── Feature cards ── */
+.landing-card {
+  background: linear-gradient(135deg, #141C2F, #1E2A42);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.landing-card-icon {
+  background: rgba(37,99,235,0.1);
+  border: 1px solid rgba(37,99,235,0.15);
+  color: #93C5FD;
+}
+.landing-card-icon-green {
+  background: rgba(5,150,105,0.1);
+  border: 1px solid rgba(5,150,105,0.15);
+  color: #059669;
+}
+.landing-card-title {
+  font-family: "Poppins", sans-serif;
+  color: #E8EDF5;
+}
+.landing-card-desc {
+  color: #94A3B8;
+}
+
+/* ── Floating feature cards ── */
+.landing-feature-card {
+  background: linear-gradient(135deg, #141C2F, #1E2A42);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.landing-feature-icon {
+  background: linear-gradient(135deg, rgba(37,99,235,0.2), rgba(29,78,216,0.1));
+  border: 1px solid rgba(37,99,235,0.2);
+  color: #93C5FD;
+}
+
+/* ── How-it-works steps ── */
+.landing-step-icon {
+  background: linear-gradient(135deg, rgba(37,99,235,0.15), rgba(37,99,235,0.05));
+  border: 1px solid rgba(37,99,235,0.2);
+  color: #3B82F6;
+}
+.landing-step-label {
+  color: #2563EB;
+}
+.landing-step-title {
+  font-family: "Poppins", sans-serif;
+  color: #E8EDF5;
+}
+.landing-step-desc {
+  color: #94A3B8;
+}
+.landing-connector {
+  background: linear-gradient(90deg, transparent, #2563EB, transparent);
+}
+
+/* ── Stat label ── */
+.landing-stat-label {
+  color: #94A3B8;
+}
+
+/* ── Final CTA card ── */
+.landing-cta-card {
+  background: linear-gradient(135deg, #141C2F, #1E2A42);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 16px 64px rgba(0,0,0,0.4);
+}
+
+/* ── Footer ── */
+.landing-footer {
+  border-color: rgba(255,255,255,0.06);
+  background: #070D1A;
+}
+.landing-footer-logo {
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
+}
+.landing-footer-brand {
+  font-family: "Poppins", sans-serif;
+  color: #E8EDF5;
+}
+.landing-footer-copy {
+  color: #64748B;
+}
+
+/* ── For Clients / For Technicians list items ── */
+.landing-list-icon-blue {
+  background: rgba(37,99,235,0.1);
+  border: 1px solid rgba(37,99,235,0.15);
+  color: #3B82F6;
+}
+.landing-list-icon-green {
+  background: rgba(5,150,105,0.1);
+  border: 1px solid rgba(5,150,105,0.15);
+  color: #059669;
+}
+.landing-list-title {
+  font-family: "Poppins", sans-serif;
+  color: #E8EDF5;
+}
+.landing-list-desc {
+  color: #94A3B8;
+}
+
+/* ── Light theme ── */
+[data-theme="light"] .landing { background: #f0f4f8; }
+[data-theme="light"] .landing-headline { color: #1a1a2e; }
+[data-theme="light"] .landing-subtitle { color: #64748b; }
+[data-theme="light"] .landing-section-title { color: #1a1a2e; }
+[data-theme="light"] .landing-section-desc { color: #64748b; }
+[data-theme="light"] .landing-card { background: linear-gradient(135deg, #ffffff, #f8fafc); border-color: rgba(0,0,0,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+[data-theme="light"] .landing-card-title { color: #1a1a2e; }
+[data-theme="light"] .landing-card-desc { color: #64748b; }
+[data-theme="light"] .landing-feature-card { background: linear-gradient(135deg, #ffffff, #f8fafc); border-color: rgba(0,0,0,0.06); box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+[data-theme="light"] .landing-step-title { color: #1a1a2e; }
+[data-theme="light"] .landing-step-desc { color: #64748b; }
+[data-theme="light"] .landing-stat-label { color: #64748b; }
+[data-theme="light"] .landing-cta-card { background: linear-gradient(135deg, #ffffff, #f8fafc); border-color: rgba(0,0,0,0.06); box-shadow: 0 16px 64px rgba(0,0,0,0.08); }
+[data-theme="light"] .landing-cta-secondary { color: #1a1a2e; border-color: rgba(0,0,0,0.15); }
+[data-theme="light"] .landing-footer { background: #f0f4f8; border-color: rgba(0,0,0,0.06); }
+[data-theme="light"] .landing-footer-brand { color: #1a1a2e; }
+[data-theme="light"] .landing-footer-copy { color: #475569; }
+[data-theme="light"] .landing-list-title { color: #1a1a2e; }
+[data-theme="light"] .landing-list-desc { color: #64748b; }
+[data-theme="light"] .landing-badge-text { color: #3b82f6; }
+[data-theme="light"] .landing-scroll-ring { border-color: rgba(0,0,0,0.15); }
+[data-theme="light"] .landing-hero-grid {
+  background-image:
+    linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
+}
+[data-theme="light"] .landing-trust-text { color: #475569; }

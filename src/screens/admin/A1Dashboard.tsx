@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { API_BASE_URL } from "../../config"
 import { useI18n } from "../../i18n"
+import "./A1Dashboard.css"
 import Stagger from "../../components/animations/Stagger"
 import StaggerItem from "../../components/animations/StaggerItem"
 import type { PaymentAccounts } from "../client/C6Payment"
@@ -163,6 +164,7 @@ export default function A1Dashboard({
   const accountsEdited = useRef(false)
   const [payments, setPayments] = useState<LedgerItem[]>([])
   const [paymentsLoading, setPaymentsLoading] = useState(true)
+  const [paymentsOpen, setPaymentsOpen] = useState(false)
   const [releasedTotal, setReleasedTotal] = useState(0)
   const [heldTotal, setHeldTotal] = useState(0)
   const [grandTotal, setGrandTotal] = useState(0)
@@ -354,19 +356,18 @@ export default function A1Dashboard({
   ]
 
   return (
-    <div className="min-h-full p-3 sm:p-6" style={{ background: "#0B1120" }}>
+    <div className="admin-page min-h-full p-3 sm:p-6">
       <div className="mx-auto max-w-[min(1400px,95%)]">
         {/* Header */}
         <div className="flex flex-col gap-4 pb-6 mb-8 border-b border-white/10">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <h1
-                className="text-2xl font-bold"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                className="admin-heading text-2xl font-bold"
               >
                 {t("Supervision Générale")}
               </h1>
-              <p className="text-sm" style={{ color: "#64748B" }}>
+              <p className="text-sm admin-text-muted">
                 {data ? formatWeekRange(data.weekStart, data.weekEnd) : t("Chargement…")}
               </p>
             </div>
@@ -389,10 +390,10 @@ export default function A1Dashboard({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="rounded-2xl border border-white/10 bg-[#141C2F] p-4">
               <div>
-                <p className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
+                <p className="text-sm font-semibold admin-text-primary">
                   {t("Paiements")}
                 </p>
-                <p className="text-xs" style={{ color: "#94A3B8" }}>
+                <p className="text-xs admin-text-secondary">
                   {t(paymentsEnabled ? "Activés" : "Désactivés")}
                 </p>
               </div>
@@ -411,24 +412,16 @@ export default function A1Dashboard({
 
           {/* Comptes de la plateforme */}
           <div
-            className="rounded-2xl p-5"
-            style={{
-              background: "#141C2F",
-              border: "1px solid rgba(255,255,255,0.06)",
-            }}
+            className="rounded-2xl p-5 admin-card"
           >
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
                 <p
-                  className="text-sm font-semibold"
-                  style={{
-                    fontFamily: "Poppins, sans-serif",
-                    color: "#E8EDF5",
-                  }}
+                  className="text-sm font-semibold admin-heading"
                 >
                   {t("Comptes de la plateforme")}
                 </p>
-                <p className="text-xs" style={{ color: "#64748B" }}>
+                <p className="text-xs admin-text-muted">
                   {t("Numéros qui recevront et sécuriseront les fonds des clients")}
                 </p>
               </div>
@@ -456,20 +449,14 @@ export default function A1Dashboard({
                 ] as const
               ).map((field) => (
                 <div key={field.key}>
-                  <p className="text-xs mb-1.5" style={{ color: "#94A3B8" }}>
+                  <p className="text-xs mb-1.5 admin-text-secondary">
                     {t(field.label)}
                   </p>
                   <input
                     value={accounts[field.key] ?? ""}
                     onChange={(e) => handleAccountChange(field.key, e.target.value)}
                     placeholder={t("Numéro du compte")}
-                    className="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none"
-                    style={{
-                      background: "#1E2A42",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      color: "#E8EDF5",
-                      fontFamily: "JetBrains Mono, monospace",
-                    }}
+                    className="w-full rounded-xl px-3.5 py-2.5 text-sm outline-none admin-input"
                   />
                 </div>
               ))}
@@ -478,15 +465,11 @@ export default function A1Dashboard({
               <button
                 onClick={handleSaveAccounts}
                 disabled={savingAccounts}
-                className="px-5 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-60"
-                style={{
-                  background: "linear-gradient(135deg, #059669, #047857)",
-                  fontFamily: "Poppins, sans-serif",
-                }}
+                className="px-5 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-60 admin-btn-green"
               >
                 {savingAccounts ? t("Enregistrement…") : t("Enregistrer les numéros")}
               </button>
-              <p className="text-xs" style={{ color: "#64748B" }}>
+              <p className="text-xs admin-text-muted">
                 {t("Affichés sur l'écran de paiement des clients.")}
               </p>
             </div>
@@ -502,30 +485,21 @@ export default function A1Dashboard({
             <StaggerItem
               key={k.label}
               hoverY={-3}
-              className="p-5 rounded-2xl"
-              style={{ background: "#141C2F", border: "1px solid rgba(255,255,255,0.06)" }}
+              className="p-5 rounded-2xl admin-card"
             >
               <div className="flex items-center justify-between mb-3">
                 <span
-                  className="text-xs font-mono px-2 py-0.5 rounded-full"
-                  style={{
-                    background: "rgba(5,150,105,0.12)",
-                    color: "#059669",
-                  }}
+                  className="text-xs font-mono px-2 py-0.5 rounded-full admin-badge-green"
                 >
                   {k.delta}
                 </span>
               </div>
               <p
-                className="text-2xl font-bold"
-                style={{
-                  fontFamily: "JetBrains Mono, monospace",
-                  color: "#E8EDF5",
-                }}
+                className="text-2xl font-bold admin-monospace-value"
               >
                 {k.value}
               </p>
-              <p className="text-xs mt-1" style={{ color: "#64748B" }}>
+              <p className="text-xs mt-1 admin-text-muted">
                 {t(k.label)}
               </p>
             </StaggerItem>
@@ -576,8 +550,7 @@ export default function A1Dashboard({
                   <img
                     src={orangeLogo}
                     alt="Orange Money"
-                    className="h-16 w-auto object-contain"
-                    style={{ opacity: 0.55 }}
+                    className="h-16 w-auto object-contain admin-orange-logo"
                   />
                 ),
               },
@@ -595,7 +568,7 @@ export default function A1Dashboard({
                     strokeWidth="1.6"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    style={{ opacity: 0.7 }}
+                    className="admin-card-icon"
                   >
                     <path d="M3 21h18" />
                     <path d="M4 21V10m16 11V10" />
@@ -611,8 +584,7 @@ export default function A1Dashboard({
             <StaggerItem
               key={m.key}
               hoverY={-3}
-              className="relative p-5 rounded-2xl overflow-hidden"
-              style={{ background: "#141C2F", border: "1px solid rgba(255,255,255,0.06)" }}
+              className="relative p-5 rounded-2xl overflow-hidden admin-card"
             >
               <div className="pointer-events-none absolute -right-4 -bottom-3 opacity-[0.11]">
                 {m.icon}
@@ -622,41 +594,29 @@ export default function A1Dashboard({
                 style={{ background: m.color, boxShadow: `0 0 8px ${m.color}` }}
               />
               <p
-                className="relative text-xl font-bold"
-                style={{
-                  fontFamily: "JetBrains Mono, monospace",
-                  color: "#E8EDF5",
-                }}
+                className="relative text-xl font-bold admin-monospace-value"
               >
                 {formatFullAmount(totalByMethod[m.key] ?? 0)}
               </p>
-              <p className="relative text-xs mt-1" style={{ color: "#64748B" }}>
+              <p className="relative text-xs mt-1 admin-text-muted">
                 {t(m.label)}
               </p>
             </StaggerItem>
           ))}
           <StaggerItem
             hoverY={-3}
-            className="p-5 rounded-2xl"
-            style={{
-              background: "linear-gradient(135deg, #1F2937, #141C2F)",
-              border: "1px solid rgba(5,150,105,0.3)",
-            }}
+            className="p-5 rounded-2xl admin-card-gradient"
           >
             <div
               className="w-2 h-2 rounded-full mb-3"
               style={{ background: "#059669", boxShadow: "0 0 8px #059669" }}
             />
             <p
-              className="text-xl font-bold"
-              style={{
-                fontFamily: "JetBrains Mono, monospace",
-                color: "#34D399",
-              }}
+              className="text-xl font-bold admin-green-monospace"
             >
               {formatFullAmount(grandTotal)}
             </p>
-            <p className="text-xs mt-1" style={{ color: "#64748B" }}>
+            <p className="text-xs mt-1 admin-text-muted">
               {t("Total des transactions")}
             </p>
           </StaggerItem>
@@ -666,32 +626,26 @@ export default function A1Dashboard({
         <div className="grid grid-cols-1 gap-4 mb-6 lg:grid-cols-[1fr_280px]">
           {/* Chart */}
           <div
-            className="p-5 rounded-2xl"
-            style={{
-              background: "#141C2F",
-              border: "1px solid rgba(255,255,255,0.06)",
-            }}
+            className="p-5 rounded-2xl admin-card"
           >
             <div className="flex items-center justify-between mb-5">
               <h2
-                className="text-sm font-semibold"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                className="text-sm font-semibold admin-heading"
               >
                 {t("Demandes créées par semaine")}
               </h2>
               <span
-                className="text-xs px-2 py-1 rounded-full"
-                style={{ background: "rgba(37,99,235,0.12)", color: "#2563EB" }}
+                className="text-xs px-2 py-1 rounded-full admin-badge-blue"
               >
                 {t("Semaine en cours")}
               </span>
             </div>
-            <div className="flex items-end gap-3" style={{ height: "160px" }}>
+            <div className="flex items-end gap-3 admin-chart-container">
               {chart.map((d) => {
                 const value = Number(d.value) || 0
                 return (
                   <div key={d.day} className="flex-1 flex flex-col items-center gap-1.5">
-                    <span className="text-xs font-mono" style={{ color: "#64748B" }}>
+                    <span className="text-xs font-mono admin-text-muted">
                       {value}
                     </span>
                     <div
@@ -705,7 +659,7 @@ export default function A1Dashboard({
                         transition: "height 500ms ease",
                       }}
                     />
-                    <span className="text-xs" style={{ color: "#64748B" }}>
+                    <span className="text-xs admin-text-muted">
                       {d.day}
                     </span>
                   </div>
@@ -717,24 +671,15 @@ export default function A1Dashboard({
           {/* Stats side */}
           <div className="flex flex-col gap-3">
             <div
-              className="flex-1 p-5 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
+              className="flex-1 p-5 rounded-2xl admin-card"
             >
               <h2
-                className="text-xs font-semibold mb-4"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
+                className="text-xs font-semibold mb-4 admin-section-label"
               >
                 {t("Répartition par métier")}
               </h2>
               {trades.length === 0 && !loading && (
-                <p className="text-xs" style={{ color: "#64748B" }}>
+                <p className="text-xs admin-text-muted">
                   {t("Aucune demande enregistrée.")}
                 </p>
               )}
@@ -748,10 +693,10 @@ export default function A1Dashboard({
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
+                        <p className="text-sm font-semibold admin-text-primary">
                           {item.label}
                         </p>
-                        <p className="text-xs" style={{ color: "#64748B" }}>
+                        <p className="text-xs admin-text-muted">
                           {item.count} {t(item.count > 1 ? "demandes" : "demande")}
                         </p>
                       </div>
@@ -771,49 +716,39 @@ export default function A1Dashboard({
 
         {/* Alert zone */}
         <div>
-          <h2
-            className="text-sm font-semibold mb-3"
-            style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
-          >
+              <h2
+                className="text-sm font-semibold admin-heading"
+              >
             {t("Zone d'alerte critique")}
           </h2>
           {!alertDismissed && data && Number(data.openDisputes) > 0 ? (
             <div
-              className="p-4 rounded-2xl"
-              style={{
-                background: "rgba(239,68,68,0.08)",
-                border: "1px solid rgba(239,68,68,0.25)",
-              }}
+              className="p-4 rounded-2xl admin-alert-danger"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
                   <span className="text-xl"></span>
                   <div>
                     <p
-                      className="text-sm font-semibold mb-0.5"
-                      style={{
-                        color: "#EF4444",
-                        fontFamily: "Poppins, sans-serif",
-                      }}
+                      className="text-sm font-semibold mb-0.5 admin-danger-heading"
                     >
                       {data.openDisputes}{" "}
                       {t(data.openDisputes > 1 ? "litiges en cours" : "litige en cours")}
                     </p>
-                    <p className="text-xs" style={{ color: "#94A3B8" }}>
+                    <p className="text-xs admin-text-secondary">
                       {data.openDisputes > 1
                         ? t("Des litiges clients restent non résolus sur la plateforme.")
                         : t("Un litige client reste non résolu sur la plateforme.")}
                       {t(" Intervention de médiation requise.")}
                     </p>
-                    <p className="text-xs mt-1.5 font-mono" style={{ color: "#64748B" }}>
+                    <p className="text-xs mt-1.5 font-mono admin-text-muted">
                       {t("source: /api/admin/dashboard · mise à jour en temps réel")}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setAlertDismissed(true)}
-                  className="text-xs px-3 py-1.5 rounded-lg ml-4 flex-shrink-0"
-                  style={{ background: "#1E2A42", color: "#94A3B8" }}
+                  className="text-xs px-3 py-1.5 rounded-lg ml-4 flex-shrink-0 admin-btn-dismiss"
                 >
                   {t("Ignorer")}
                 </button>
@@ -821,15 +756,11 @@ export default function A1Dashboard({
             </div>
           ) : (
             <div
-              className="p-4 rounded-2xl"
-              style={{
-                background: "rgba(5,150,105,0.06)",
-                border: "1px solid rgba(5,150,105,0.15)",
-              }}
+              className="p-4 rounded-2xl admin-alert-success"
             >
               <div className="flex items-center gap-3">
-                <span style={{ color: "#059669" }}>✓</span>
-                <p className="text-sm" style={{ color: "#64748B" }}>
+                <span className="admin-text-green">✓</span>
+                <p className="text-sm admin-text-muted">
                   {loading
                     ? t("Vérification des systèmes…")
                     : error
@@ -843,53 +774,46 @@ export default function A1Dashboard({
 
         {/* Registre des paiements */}
         <div
-          className="mt-8 rounded-2xl p-5"
-          style={{
-            background: "#141C2F",
-            border: "1px solid rgba(255,255,255,0.06)",
-          }}
+          className="mt-8 rounded-2xl p-5 admin-card"
         >
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div>
               <h2
-                className="text-sm font-semibold"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                className="text-sm font-semibold admin-heading"
               >
                 {t("Registre des paiements")}
               </h2>
-              <p className="text-xs" style={{ color: "#64748B" }}>
+              <p className="text-xs admin-text-muted">
                 {t("Tous les mouvements d'argent : dépôts, remboursements et versements")}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <span
-                className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
-                style={{ background: "rgba(5,150,105,0.12)", color: "#059669" }}
+                className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap admin-badge-green"
               >
                 {t("Total libéré : ")}
                 {formatFullAmount(releasedTotal)}
               </span>
               <span
-                className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
-                style={{ background: "rgba(37,99,235,0.12)", color: "#2563EB" }}
+                className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap admin-badge-blue"
               >
                 {payments.length} {t(payments.length > 1 ? "transactions" : "transaction")}
               </span>
             </div>
           </div>
           {paymentsLoading ? (
-            <p className="text-sm" style={{ color: "#64748B" }}>
+            <p className="text-sm admin-text-muted">
               {t("Chargement…")}
             </p>
           ) : payments.length === 0 ? (
-            <p className="text-sm" style={{ color: "#64748B" }}>
+            <p className="text-sm admin-text-muted">
               {t("Aucun paiement enregistré.")}
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left" style={{ minWidth: "760px" }}>
+            <div className="overflow-x-auto admin-scrollable">
+              <table className="w-full text-left admin-table-payments">
                 <thead>
-                  <tr className="text-[11px] uppercase tracking-wider" style={{ color: "#64748B" }}>
+                  <tr className="text-[11px] uppercase tracking-wider admin-text-muted">
                     <th className="pb-2 pr-3 font-semibold whitespace-nowrap">{t("Date")}</th>
                     <th className="pb-2 pr-3 font-semibold">{t("Demande")}</th>
                     <th className="pb-2 pr-3 font-semibold">{t("De → Vers")}</th>
@@ -905,34 +829,29 @@ export default function A1Dashboard({
                     return (
                       <tr
                         key={p.id}
-                        className="text-sm align-top"
-                        style={{
-                          borderTop: "1px solid rgba(255,255,255,0.05)",
-                        }}
+                        className="text-sm align-top admin-table-row"
                       >
                         <td
-                          className="py-2.5 pr-3 text-xs font-mono whitespace-nowrap"
-                          style={{ color: "#94A3B8" }}
+                          className="py-2.5 pr-3 text-xs font-mono whitespace-nowrap admin-text-secondary"
                         >
                           {ledgerDate(p.createdAt)}
                         </td>
-                        <td className="py-2.5 pr-3 whitespace-nowrap" style={{ color: "#94A3B8" }}>
+                        <td className="py-2.5 pr-3 whitespace-nowrap admin-text-secondary">
                           {p.requestId ? `#${p.requestId}` : "—"}
                         </td>
                         <td className="py-2.5 pr-3">
-                          <span className="block" style={{ color: "#E8EDF5" }}>
+                          <span className="block admin-text-primary">
                             {p.payer}
                           </span>
-                          <span className="block text-xs" style={{ color: "#64748B" }}>
+                          <span className="block text-xs admin-text-muted">
                             → {p.payee}
                           </span>
                         </td>
-                        <td className="py-2.5 pr-3 whitespace-nowrap" style={{ color: "#E8EDF5" }}>
+                        <td className="py-2.5 pr-3 whitespace-nowrap admin-text-primary">
                           {p.typeLabel}
                         </td>
                         <td
-                          className="py-2.5 pr-3 text-right font-mono font-semibold whitespace-nowrap"
-                          style={{ color: "#E8EDF5" }}
+                          className="py-2.5 pr-3 text-right font-mono font-semibold whitespace-nowrap admin-text-primary"
                         >
                           {formatFullAmount(p.amount)}
                         </td>
@@ -945,8 +864,7 @@ export default function A1Dashboard({
                           </span>
                         </td>
                         <td
-                          className="py-2.5 text-xs font-mono whitespace-nowrap"
-                          style={{ color: "#475569" }}
+                          className="py-2.5 text-xs font-mono whitespace-nowrap admin-text-dimmed"
                         >
                           {p.transactionRef || "—"}
                         </td>
@@ -961,21 +879,16 @@ export default function A1Dashboard({
 
         {/* Retraits des techniciens */}
         <div
-          className="mt-8 rounded-2xl p-5"
-          style={{
-            background: "#141C2F",
-            border: "1px solid rgba(255,255,255,0.06)",
-          }}
+          className="mt-8 rounded-2xl p-5 admin-card"
         >
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div>
               <h2
-                className="text-sm font-semibold"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                className="text-sm font-semibold admin-heading"
               >
                 {t("Retraits des techniciens")}
               </h2>
-              <p className="text-xs" style={{ color: "#64748B" }}>
+              <p className="text-xs admin-text-muted">
                 {t(
                   "Demande de versement du solde : effectuez le transfert manuel, puis validez ici",
                 )}
@@ -983,18 +896,13 @@ export default function A1Dashboard({
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <span
-                className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
-                style={{
-                  background: "rgba(245,158,11,0.12)",
-                  color: "#F59E0B",
-                }}
+                className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap admin-badge-yellow"
               >
                 {t("En attente : ")}
                 {formatFullAmount(pendingWithdrawTotal)}
               </span>
               <span
-                className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
-                style={{ background: "rgba(37,99,235,0.12)", color: "#2563EB" }}
+                className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap admin-badge-blue"
               >
                 {withdrawals.length} {t(withdrawals.length > 1 ? "demandes" : "demande")}
               </span>
@@ -1015,18 +923,18 @@ export default function A1Dashboard({
             </div>
           )}
           {withdrawalsLoading ? (
-            <p className="text-sm" style={{ color: "#64748B" }}>
+            <p className="text-sm admin-text-muted">
               {t("Chargement…")}
             </p>
           ) : withdrawals.length === 0 ? (
-            <p className="text-sm" style={{ color: "#64748B" }}>
+            <p className="text-sm admin-text-muted">
               {t("Aucune demande de retrait enregistrée.")}
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left" style={{ minWidth: "820px" }}>
+            <div className="overflow-x-auto admin-scrollable">
+              <table className="w-full text-left admin-table-withdrawals">
                 <thead>
-                  <tr className="text-[11px] uppercase tracking-wider" style={{ color: "#64748B" }}>
+                  <tr className="text-[11px] uppercase tracking-wider admin-text-muted">
                     <th className="pb-2 pr-3 font-semibold whitespace-nowrap">{t("Date")}</th>
                     <th className="pb-2 pr-3 font-semibold">{t("Technicien")}</th>
                     <th className="pb-2 pr-3 font-semibold">{t("Méthode")}</th>
@@ -1042,45 +950,35 @@ export default function A1Dashboard({
                     return (
                       <tr
                         key={w.id}
-                        className="text-sm align-top"
-                        style={{
-                          borderTop: "1px solid rgba(255,255,255,0.05)",
-                        }}
+                        className="text-sm align-top admin-table-row"
                       >
                         <td
-                          className="py-2.5 pr-3 text-xs font-mono whitespace-nowrap"
-                          style={{ color: "#94A3B8" }}
+                          className="py-2.5 pr-3 text-xs font-mono whitespace-nowrap admin-text-secondary"
                         >
                           {ledgerDate(w.createdAt)}
                         </td>
-                        <td className="py-2.5 pr-3 whitespace-nowrap" style={{ color: "#E8EDF5" }}>
+                        <td className="py-2.5 pr-3 whitespace-nowrap admin-text-primary">
                           <div className="flex flex-col gap-0.5">
                             <span>{w.clientName ?? w.technicianName}</span>
                             {w.type === "client" && (
                               <span
-                                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full w-fit"
-                                style={{
-                                  background: "rgba(37,99,235,0.12)",
-                                  color: "#60A5FA",
-                                }}
+                                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full w-fit admin-badge-client-refund"
                               >
                                 {t("Remboursement client")}
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="py-2.5 pr-3 whitespace-nowrap" style={{ color: "#94A3B8" }}>
+                        <td className="py-2.5 pr-3 whitespace-nowrap admin-text-secondary">
                           {t(withdrawMethodLabel(w.method))}
                         </td>
                         <td
-                          className="py-2.5 pr-3 font-mono text-xs whitespace-nowrap"
-                          style={{ color: "#94A3B8" }}
+                          className="py-2.5 pr-3 font-mono text-xs whitespace-nowrap admin-text-secondary"
                         >
                           {w.account}
                         </td>
                         <td
-                          className="py-2.5 pr-3 text-right font-mono font-semibold whitespace-nowrap"
-                          style={{ color: "#E8EDF5" }}
+                          className="py-2.5 pr-3 text-right font-mono font-semibold whitespace-nowrap admin-text-primary"
                         >
                           {formatFullAmount(w.amount)}
                         </td>
@@ -1098,10 +996,7 @@ export default function A1Dashboard({
                               <button
                                 onClick={() => decideWithdraw(w.id, "process")}
                                 disabled={processingWithdrawId === w.id}
-                                className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-white disabled:opacity-60"
-                                style={{
-                                  background: "linear-gradient(135deg, #059669, #047857)",
-                                }}
+                                className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-white disabled:opacity-60 admin-btn-green"
                               >
                                 {processingWithdrawId === w.id
                                   ? t("Traitement…")
@@ -1110,18 +1005,13 @@ export default function A1Dashboard({
                               <button
                                 onClick={() => decideWithdraw(w.id, "reject")}
                                 disabled={processingWithdrawId === w.id}
-                                className="px-3 py-1.5 rounded-lg text-[11px] font-bold disabled:opacity-60"
-                                style={{
-                                  background: "rgba(239,68,68,0.12)",
-                                  color: "#F87171",
-                                  border: "1px solid rgba(239,68,68,0.3)",
-                                }}
+                                className="px-3 py-1.5 rounded-lg text-[11px] font-bold disabled:opacity-60 admin-btn-reject"
                               >
                                 {t("Rejeter")}
                               </button>
                             </div>
                           ) : (
-                            <span className="text-xs" style={{ color: "#475569" }}>
+                            <span className="text-xs admin-text-dimmed">
                               {w.notes || "—"}
                             </span>
                           )}

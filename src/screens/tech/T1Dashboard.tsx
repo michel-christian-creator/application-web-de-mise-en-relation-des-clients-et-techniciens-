@@ -8,6 +8,7 @@ import { API_BASE_URL } from "../../config"
 import { sanitizeDigits } from "../../utils/validation"
 import { useI18n } from "../../i18n"
 import orangeLogo from "../../../orange-money-logo-png_seeklogo-440383.png"
+import "./T1Dashboard.css"
 
 interface Props {
   onOpenChat: (request: { id: number; clientName: string; category: string }) => void
@@ -622,18 +623,17 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
   ]
 
   return (
-    <div className="min-h-full p-3 sm:p-6" style={{ background: "#0B1120" }}>
+    <div className="dash-root min-h-full p-3 sm:p-6">
       <div className="mx-auto max-w-[min(1400px,95%)]">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
           <div>
             <h1
-              className="text-2xl font-bold mb-0.5"
-              style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+              className="dash-page-title text-2xl font-bold mb-0.5"
             >
               {t("Tableau de bord")}
             </h1>
-            <p className="text-sm" style={{ color: "#64748B" }}>
+            <p className="dash-text-muted text-sm">
               {t("Demandes d'intervention qui vous sont réservées")}
             </p>
           </div>
@@ -694,7 +694,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   ? t("Compte définitivement suspendu")
                   : t("Compte suspendu · réessai dans ") + formatFreeze(suspensionSec)}
               </p>
-              <p className="text-xs mt-0.5" style={{ color: "#94A3B8" }}>
+              <p className="dash-text-secondary text-xs mt-0.5">
                 {suspendedPermanent
                   ? t("Vous avez dépassé le seuil de non-présentations. La connexion est bloquée.")
                   : t("Vous avez enregistré ") +
@@ -714,67 +714,49 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
             <TiltCard
               maxTilt={6}
               hoverScale={1.02}
-              className="p-6 rounded-2xl"
-              style={{
-                background: "linear-gradient(160deg, #1A2D5A 0%, #141C2F 100%)",
-                border: "1px solid rgba(37,99,235,0.25)",
-              }}
+              className="dash-card-wallet p-6 rounded-2xl"
             >
-              <p className="text-xs mb-2" style={{ color: "#94A3B8" }}>
+              <p className="dash-text-secondary text-xs mb-2">
                 {t("Solde disponible")}
               </p>
-              <p className="text-4xl font-bold font-mono mb-1" style={{ color: "#E8EDF5" }}>
+              <p className="dash-text-primary text-4xl font-bold font-mono mb-1">
                 {formatAmount(stats?.balance ?? 0, locale)}
               </p>
-              <p className="text-sm mb-4" style={{ color: "#64748B" }}>
+              <p className="dash-text-muted text-sm mb-4">
                 FCFA
               </p>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs" style={{ color: "#64748B" }}>
+                  <span className="dash-text-muted text-xs">
                     {t("Chantiers terminés")}
                   </span>
-                  <span className="text-xs font-mono" style={{ color: "#059669" }}>
+                  <span className="dash-text-success text-xs font-mono">
                     {stats?.completedThisMonth ?? 0} {t("ce mois")}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs" style={{ color: "#64748B" }}>
+                  <span className="dash-text-muted text-xs">
                     {t("En garde")}
                   </span>
-                  <span className="text-xs font-mono" style={{ color: "#F59E0B" }}>
+                  <span className="dash-text-amber text-xs font-mono">
                     {formatAmount(stats?.held ?? 0, locale)} FCFA
                   </span>
                 </div>
               </div>
               <button
                 onClick={handleWithdrawOpen}
-                className="mt-4 w-full py-2.5 rounded-xl text-xs font-semibold"
-                style={{
-                  background: "rgba(37,99,235,0.2)",
-                  color: "#2563EB",
-                  border: "1px solid rgba(37,99,235,0.3)",
-                }}
+                className="dash-btn-withdraw mt-4 w-full py-2.5 rounded-xl text-xs font-semibold"
               >
                 {t("Retirer les fonds →")}
               </button>
             </TiltCard>
 
             {/* Stats */}
-            <div
-              className="p-5 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
+                <div
+                  className="dash-modal-balance mb-5 rounded-xl p-4"
+                >
               <p
-                className="text-xs font-semibold mb-4"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
+                className="dash-section-label text-xs font-semibold mb-4"
               >
                 {t("Performance")}
               </p>
@@ -800,13 +782,12 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                 ].map((s) => (
                   <StaggerItem
                     key={s.label}
-                    className="p-3 rounded-xl"
-                    style={{ background: "#1E2A42" }}
+                    className="dash-card-stat p-3 rounded-xl"
                   >
-                    <p className="text-xl font-bold font-mono" style={{ color: "#E8EDF5" }}>
+                    <p className="dash-text-primary text-xl font-bold font-mono">
                       {s.value}
                     </p>
-                    <p className="text-xs" style={{ color: "#64748B" }}>
+                    <p className="dash-text-muted text-xs">
                       {s.label}
                     </p>
                   </StaggerItem>
@@ -816,19 +797,10 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
 
             {/* Quick nav */}
             <div
-              className="p-5 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
+              className="dash-card p-5 rounded-2xl"
             >
               <p
-                className="text-xs font-semibold mb-3"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
+                className="dash-section-label text-xs font-semibold mb-3"
               >
                 {t("Mes chantiers actifs")}
               </p>
@@ -853,12 +825,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                 })}
                 {frozen && (
                   <span
-                    className="text-xs px-2.5 py-1 rounded-full font-semibold"
-                    style={{
-                      background: "rgba(239,68,68,0.12)",
-                      color: "#F87171",
-                      border: "1px solid rgba(239,68,68,0.3)",
-                    }}
+                    className="dash-badge-freeze text-xs px-2.5 py-1 rounded-full font-semibold"
                   >
                     {t("Gel ")}
                     {formatFreeze(freezeSec)}
@@ -867,8 +834,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
               </div>
               {(stats?.activeChantiers?.length ?? 0) === 0 ? (
                 <div
-                  className="p-3 rounded-xl text-sm"
-                  style={{ background: "#1E2A42", color: "#64748B" }}
+                  className="dash-card-stat dash-text-muted p-3 rounded-xl text-sm"
                 >
                   {t("Aucun chantier actif pour le moment")}
                 </div>
@@ -884,26 +850,22 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                           category: ch.category,
                         })
                       }
-                      className="p-3 rounded-xl text-left hover:opacity-90 transition-opacity"
-                      style={{
-                        background: "rgba(37,99,235,0.08)",
-                        border: "1px solid rgba(37,99,235,0.2)",
-                      }}
+                      className="dash-chantier-btn p-3 rounded-xl text-left hover:opacity-90 transition-opacity"
                     >
-                      <p className="text-sm font-medium" style={{ color: "#E8EDF5" }}>
+                      <p className="dash-text-primary text-sm font-medium">
                         {ch.clientName} · {ch.category}
                       </p>
-                      <p className="text-xs mt-0.5" style={{ color: "#64748B" }}>
+                      <p className="dash-text-muted text-xs mt-0.5">
                         {formatScheduled(ch.scheduledAt, t, locale)}
                       </p>
                       {ch.reservedUntil && (
-                        <p className="text-xs mt-0.5 font-mono" style={{ color: "#FBBF24" }}>
+                        <p className="dash-text-amber-strong text-xs mt-0.5 font-mono">
                           {t("⏳ Réservée · expiration dans ")}
                           {formatCountdown(ch.reservedUntil, t)}
                         </p>
                       )}
                       {Number(ch.heldAmount) > 0 && (
-                        <p className="text-xs mt-1 font-mono" style={{ color: "#F59E0B" }}>
+                        <p className="dash-text-amber text-xs mt-1 font-mono">
                           {formatAmount(Number(ch.heldAmount), locale)} FCFA {t("en garde")}
                         </p>
                       )}
@@ -920,18 +882,12 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h2
-                  className="text-base font-semibold"
-                  style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                  className="dash-page-title text-base font-semibold"
                 >
                   {t("Ma journée")}
                 </h2>
                 <span
-                  className="text-xs px-3 py-1 rounded-full font-mono capitalize"
-                  style={{
-                    background: "rgba(37,99,235,0.12)",
-                    color: "#93C5FD",
-                    border: "1px solid rgba(37,99,235,0.3)",
-                  }}
+                  className="dash-day-badge text-xs px-3 py-1 rounded-full font-mono capitalize"
                 >
                   {day ? formatDayLabel(day.date, locale) : ""}
                 </span>
@@ -942,12 +898,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                 day.planned.length === 0 &&
                 day.completedToday.length === 0) ? (
                 <div
-                  className="p-4 rounded-2xl text-sm"
-                  style={{
-                    background: "#141C2F",
-                    color: "#64748B",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                  }}
+                  className="dash-card dash-text-muted p-4 rounded-2xl text-sm"
                 >
                   {t("Aucune intervention prévue aujourd'hui")}
                 </div>
@@ -956,44 +907,30 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   {day.inProgress.length > 0 && (
                     <div className="flex flex-col gap-2">
                       <p
-                        className="text-xs font-semibold"
-                        style={{
-                          color: "#F59E0B",
-                          letterSpacing: "0.08em",
-                          textTransform: "uppercase",
-                        }}
+                        className="dash-section-label-amber text-xs font-semibold"
                       >
                         {t("● En cours")}
                       </p>
                       {day.inProgress.map((item) => (
                         <div
                           key={item.id}
-                          className="p-4 rounded-2xl"
-                          style={{
-                            background: "rgba(245,158,11,0.08)",
-                            border: "1px solid rgba(245,158,11,0.3)",
-                          }}
+                          className="dash-card-in-progress p-4 rounded-2xl"
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0">
                               <p
-                                className="text-sm font-semibold truncate"
-                                style={{ color: "#E8EDF5" }}
+                                className="dash-text-primary text-sm font-semibold truncate"
                               >
                                 {item.clientName} · {item.category}
                               </p>
-                              <p className="text-xs mt-0.5" style={{ color: "#94A3B8" }}>
+                              <p className="dash-text-secondary text-xs mt-0.5">
                                 {formatScheduled(item.scheduledAt, t, locale)}
                               </p>
                             </div>
-                            <button
-                              onClick={() => completeRequest(item.id)}
-                              className="px-4 py-2 rounded-lg text-sm font-bold text-white flex-shrink-0"
-                              style={{
-                                background: "linear-gradient(135deg, #059669, #047857)",
-                                boxShadow: "0 2px 10px rgba(5,150,105,0.3)",
-                              }}
-                            >
+                              <button
+                                onClick={() => completeRequest(item.id)}
+                                className="dash-btn-success px-4 py-2 rounded-lg text-sm font-bold text-white flex-shrink-0"
+                              >
                               {t("Terminer")}
                             </button>
                           </div>
@@ -1005,12 +942,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   {day.planned.length > 0 && (
                     <div className="flex flex-col gap-2">
                       <p
-                        className="text-xs font-semibold"
-                        style={{
-                          color: "#94A3B8",
-                          letterSpacing: "0.08em",
-                          textTransform: "uppercase",
-                        }}
+                        className="dash-section-label-alt text-xs font-semibold"
                       >
                         {t("À venir aujourd'hui")}
                       </p>
@@ -1035,24 +967,19 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                         return (
                           <div
                             key={item.id}
-                            className="p-4 rounded-2xl"
-                            style={{
-                              background: "#141C2F",
-                              border: "1px solid rgba(37,99,235,0.25)",
-                            }}
+                            className="dash-card-planned p-4 rounded-2xl"
                           >
                             <div className="flex items-center justify-between gap-3">
                               <div className="min-w-0">
                                 <p
-                                  className="text-sm font-semibold truncate"
-                                  style={{ color: "#E8EDF5" }}
+                                  className="dash-text-primary text-sm font-semibold truncate"
                                 >
                                   {item.clientName} · {item.category}
                                 </p>
-                                <p className="text-xs mt-0.5" style={{ color: "#94A3B8" }}>
+                                <p className="dash-text-secondary text-xs mt-0.5">
                                   {formatScheduled(item.scheduledAt, t, locale)}
                                 </p>
-                                <p className="text-xs mt-1" style={{ color: "#64748B" }}>
+                                <p className="dash-text-muted text-xs mt-1">
                                   {item.description}
                                 </p>
                                 {imminent && (
@@ -1083,12 +1010,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   {day.completedToday.length > 0 && (
                     <div className="flex flex-col gap-2">
                       <p
-                        className="text-xs font-semibold"
-                        style={{
-                          color: "#059669",
-                          letterSpacing: "0.08em",
-                          textTransform: "uppercase",
-                        }}
+                        className="dash-section-label-success text-xs font-semibold"
                       >
                         {t("Terminées aujourd'hui")}
                       </p>
@@ -1102,20 +1024,16 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                               category: item.category,
                             })
                           }
-                          className="w-full p-4 rounded-2xl text-left hover:opacity-90 transition-opacity"
-                          style={{
-                            background: "rgba(5,150,105,0.06)",
-                            border: "1px solid rgba(5,150,105,0.2)",
-                          }}
+                          className="dash-card-completed w-full p-4 rounded-2xl text-left hover:opacity-90 transition-opacity"
                         >
-                          <p className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
+                          <p className="dash-text-primary text-sm font-semibold">
                             {item.clientName} · {item.category}
                           </p>
-                          <p className="text-xs mt-0.5" style={{ color: "#64748B" }}>
+                          <p className="dash-text-muted text-xs mt-0.5">
                             {t("Terminée · ")}
                             {formatScheduled(item.updatedAt, t, locale)}
                           </p>
-                          <p className="text-xs mt-1 font-semibold" style={{ color: "#34D399" }}>
+                          <p className="dash-text-green text-xs mt-1 font-semibold">
                             {t("Ouvrir le chat →")}
                           </p>
                         </button>
@@ -1128,20 +1046,12 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
 
             <div className="flex items-center justify-between mb-4">
               <h2
-                className="text-base font-semibold"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                className="dash-page-title text-base font-semibold"
               >
                 {t("Nouvelles demandes")}
               </h2>
               <span
-                className="text-xs px-3 py-1 rounded-full font-mono"
-                style={{
-                  background: visible.length > 0 ? "rgba(239,68,68,0.12)" : "rgba(5,150,105,0.12)",
-                  color: visible.length > 0 ? "#EF4444" : "#059669",
-                  border: `1px solid ${
-                    visible.length > 0 ? "rgba(239,68,68,0.2)" : "rgba(5,150,105,0.2)"
-                  }`,
-                }}
+                className={`text-xs px-3 py-1 rounded-full font-mono ${visible.length > 0 ? "dash-badge-red" : "dash-badge-green"}`}
               >
                 {visible.length} {t("en attente")}
               </span>
@@ -1149,12 +1059,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
 
             {frozen && (
               <div
-                className="mb-4 p-4 rounded-2xl text-sm flex items-start gap-3"
-                style={{
-                  background: "rgba(239,68,68,0.1)",
-                  color: "#F87171",
-                  border: "1px solid rgba(239,68,68,0.25)",
-                }}
+                className="dash-frozen-box mb-4 p-4 rounded-2xl text-sm flex items-start gap-3"
               >
                 <span className="text-lg leading-none">⚠</span>
                 <div>
@@ -1169,20 +1074,15 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
 
             {error && (
               <div
-                className="mb-4 p-3 rounded-xl text-sm"
-                style={{
-                  background: "rgba(239,68,68,0.1)",
-                  color: "#F87171",
-                  border: "1px solid rgba(239,68,68,0.2)",
-                }}
+                className="dash-error-box mb-4 p-3 rounded-xl text-sm"
               >
                 {error}
               </div>
             )}
 
             {loading && visible.length === 0 ? (
-              <div className="text-center py-16" style={{ color: "#64748B" }}>
-                <p className="text-base font-medium" style={{ color: "#E8EDF5" }}>
+              <div className="dash-text-muted text-center py-16">
+                <p className="dash-text-primary text-base font-medium">
                   {t("Chargement des demandes…")}
                 </p>
               </div>
@@ -1220,17 +1120,12 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-1">
                               <div className="min-w-0">
                                 <p
-                                  className="text-sm font-semibold"
-                                  style={{
-                                    fontFamily: "Poppins, sans-serif",
-                                    color: "#E8EDF5",
-                                  }}
+                                  className="dash-page-title text-sm font-semibold"
                                 >
                                   {a.domain || a.category}
                                 </p>
                                 <div
-                                  className="flex flex-wrap items-center gap-x-2 text-xs"
-                                  style={{ color: "#64748B" }}
+                                  className="dash-text-muted flex flex-wrap items-center gap-x-2 text-xs"
                                 >
                                   <LocationMarker className="h-3 w-3 text-slate-300 flex-shrink-0" />
                                   <span className="min-w-0">
@@ -1289,13 +1184,12 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                 </span>
                               </div>
                             </div>
-                            <p className="text-sm mb-3" style={{ color: "#94A3B8" }}>
+                            <p className="dash-text-secondary text-sm mb-3">
                               {a.description}
                             </p>
                             <div className="flex flex-wrap items-center justify-between gap-3">
                               <span
-                                className="text-xs font-medium truncate min-w-0"
-                                style={{ color: "#2563EB" }}
+                                className="dash-text-link text-xs font-medium truncate min-w-0"
                               >
                                 {t("Client : ")}
                                 {a.clientName}
@@ -1304,12 +1198,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                 {reserved ? (
                                   <button
                                     onClick={() => decline(a.id)}
-                                    className="px-4 py-2 rounded-lg text-sm font-semibold"
-                                    style={{
-                                      background: "rgba(239,68,68,0.1)",
-                                      color: "#EF4444",
-                                      border: "1px solid rgba(239,68,68,0.2)",
-                                    }}
+                                    className="dash-btn-decline px-4 py-2 rounded-lg text-sm font-semibold"
                                   >
                                     {t("Décliner")}
                                   </button>
@@ -1346,11 +1235,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                       category: a.category || a.domain,
                                     })
                                   }
-                                  className="px-4 sm:px-6 py-2 rounded-lg text-sm font-bold text-white whitespace-nowrap"
-                                  style={{
-                                    background: "linear-gradient(135deg, #059669, #047857)",
-                                    boxShadow: "0 2px 10px rgba(5,150,105,0.3)",
-                                  }}
+                                  className="dash-btn-success px-4 sm:px-6 py-2 rounded-lg text-sm font-bold text-white whitespace-nowrap"
                                 >
                                   {t("Ouvrir le chat →")}
                                 </button>
@@ -1363,8 +1248,8 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   )
                 })}
                 {visible.length === 0 && !loading && (
-                  <div className="text-center py-16" style={{ color: "#64748B" }}>
-                    <p className="text-base font-medium" style={{ color: "#E8EDF5" }}>
+                  <div className="dash-text-muted text-center py-16">
+                    <p className="dash-text-primary text-base font-medium">
                       {t("Aucune demande pour le moment")}
                     </p>
                     <p className="text-sm mt-1">
@@ -1394,22 +1279,21 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
               ⚡
             </span>
             <div>
-              <p className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
+              <p className="dash-text-primary text-sm font-semibold">
                 {t("Demande d'urgence")} {urgencyLabel(toast.urgency, t)} {t("réservée")}
               </p>
-              <p className="text-xs mt-1 leading-relaxed" style={{ color: "#94A3B8" }}>
+              <p className="dash-text-secondary text-xs mt-1 leading-relaxed">
                 {t("Réservation de ")}
                 {formatHours(toast.hours, t)}
                 {t(" : si l'intervention n'est pas traitée et approuvée dans ce délai, la demande sera libérée automatiquement pour les autres techniciens.")}
               </p>
               <div className="mt-2 flex items-center justify-between gap-4">
-                <span className="text-[10px] font-mono" style={{ color: "#64748B" }}>
+                <span className="dash-text-muted text-[10px] font-mono">
                   {t("⏳ Ce message disparaîtra dans 1 min")}
                 </span>
                 <button
                   onClick={() => setToast(null)}
-                  className="text-[10px] font-semibold"
-                  style={{ color: "#93C5FD" }}
+                  className="dash-text-blue text-[10px] font-semibold"
                 >
                   {t("Fermer")}
                 </button>
@@ -1421,34 +1305,23 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
 
       {withdrawOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(2,6,23,0.8)" }}
+          className="dash-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
           onClick={handleWithdrawClose}
         >
           <div
-            className="w-full max-w-md rounded-2xl p-6"
-            style={{
-              background: "#0F172A",
-              border: "1px solid rgba(255,255,255,0.08)",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
-            }}
+            className="dash-modal-panel w-full max-w-md rounded-2xl p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-5">
               <h2
-                className="text-lg font-bold"
-                style={{
-                  fontFamily: "Poppins, sans-serif",
-                  color: "#E8EDF5",
-                }}
+                className="dash-page-title text-lg font-bold"
               >
                 {t("Retirer les fonds")}
               </h2>
               <button
                 onClick={handleWithdrawClose}
                 disabled={withdrawSubmitting}
-                className="text-2xl leading-none"
-                style={{ color: "#64748B" }}
+                className="dash-text-muted text-2xl leading-none"
               >
                 ×
               </button>
@@ -1456,37 +1329,28 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
 
             {withdrawSuccess ? (
               <div className="text-center py-8">
-                <p className="text-sm" style={{ color: "#34D399" }}>
+                <p className="dash-text-green text-sm">
                   {withdrawSuccess}
                 </p>
               </div>
             ) : withdrawStep === "form" ? (
               <>
-                <div
-                  className="mb-5 rounded-xl p-4"
-                  style={{
-                    background: "#141C2F",
-                    border: "1px solid rgba(37,99,235,0.2)",
-                  }}
-                >
-                  <p className="text-xs mb-1" style={{ color: "#94A3B8" }}>
+            <div
+              className="dash-card p-5 rounded-2xl"
+            >
+                  <p className="dash-text-secondary text-xs mb-1">
                     {t("Solde disponible")}
                   </p>
-                  <p className="text-2xl font-bold font-mono" style={{ color: "#E8EDF5" }}>
+                  <p className="dash-text-primary text-2xl font-bold font-mono">
                     {formatAmount(balance, locale)}{" "}
-                    <span className="text-sm font-normal" style={{ color: "#64748B" }}>
+                    <span className="dash-text-muted text-sm font-normal">
                       FCFA
                     </span>
                   </p>
                 </div>
 
                 <p
-                  className="text-xs font-semibold mb-2"
-                  style={{
-                    color: "#94A3B8",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
+                  className="dash-section-label-alt text-xs font-semibold mb-2"
                 >
                   {t("Méthode de retrait")}
                 </p>
@@ -1499,15 +1363,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                         setWithdrawAccount("")
                         setWithdrawError(null)
                       }}
-                      className="rounded-xl px-2 py-3 text-xs font-semibold"
-                      style={{
-                        background: withdrawMethod === m.key ? "rgba(37,99,235,0.2)" : "#141C2F",
-                        color: withdrawMethod === m.key ? "#93C5FD" : "#94A3B8",
-                        border:
-                          withdrawMethod === m.key
-                            ? "1px solid rgba(37,99,235,0.5)"
-                            : "1px solid rgba(255,255,255,0.06)",
-                      }}
+                      className={`${withdrawMethod === m.key ? "dash-method-selected" : "dash-method-unselected"} rounded-xl px-2 py-3 text-xs font-semibold`}
                     >
                       <span className="block h-7 mb-1 flex items-center justify-center">
                         {typeof m.icon === "string" ? m.icon : m.icon}
@@ -1518,12 +1374,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                 </div>
 
                 <p
-                  className="text-xs font-semibold mb-2"
-                  style={{
-                    color: "#94A3B8",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
+                  className="dash-section-label-alt text-xs font-semibold mb-2"
                 >
                   {t("Montant")}
                 </p>
@@ -1533,22 +1384,11 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(sanitizeDigits(e.target.value).slice(0, 7))}
                   placeholder={t("Ex : 25000")}
-                  className="w-full rounded-xl px-4 py-3 text-sm outline-none mb-5"
-                  style={{
-                    background: "#141C2F",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    color: "#E8EDF5",
-                    fontFamily: "JetBrains Mono, monospace",
-                  }}
+                  className="dash-input w-full rounded-xl px-4 py-3 text-sm outline-none mb-5"
                 />
 
                 <p
-                  className="text-xs font-semibold mb-2"
-                  style={{
-                    color: "#94A3B8",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
+                  className="dash-section-label-alt text-xs font-semibold mb-2"
                 >
                   {withdrawMethod === "bank"
                     ? t("Numéro de compte")
@@ -1564,28 +1404,18 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                       ? t("Ex : 0045 1234 5678 9012")
                       : t("Ex : 6 55 12 34 56")
                   }
-                  className="w-full rounded-xl px-4 py-3 text-sm outline-none mb-5"
-                  style={{
-                    background: "#141C2F",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    color: "#E8EDF5",
-                    fontFamily: "JetBrains Mono, monospace",
-                  }}
+                  className="dash-input w-full rounded-xl px-4 py-3 text-sm outline-none mb-5"
                 />
 
                 {withdrawError && (
-                  <p className="text-sm mb-4" style={{ color: "#EF4444" }}>
+                  <p className="dash-text-red text-sm mb-4">
                     {withdrawError}
                   </p>
                 )}
 
                 <button
                   onClick={goToConfirm}
-                  className="w-full py-3.5 rounded-xl font-semibold text-white"
-                  style={{
-                    background: "linear-gradient(135deg, #2563EB, #1D4ED8)",
-                    boxShadow: "0 4px 20px rgba(37,99,235,0.35)",
-                  }}
+                  className="dash-btn-primary w-full py-3.5 rounded-xl font-semibold text-white"
                 >
                   {t("Continuer →")}
                 </button>
@@ -1593,40 +1423,36 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
             ) : (
               <>
                 <div
-                  className="rounded-xl p-4 mb-4 space-y-2"
-                  style={{
-                    background: "#141C2F",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                  }}
+                  className="dash-confirm-summary rounded-xl p-4 mb-4 space-y-2"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs" style={{ color: "#94A3B8" }}>
+                    <span className="dash-text-secondary text-xs">
                       {t("Méthode")}
                     </span>
-                    <span className="text-xs font-semibold" style={{ color: "#E8EDF5" }}>
+                    <span className="dash-text-primary text-xs font-semibold">
                       {t(withdrawMethods.find((m) => m.key === withdrawMethod)?.label ?? "")}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs" style={{ color: "#94A3B8" }}>
+                    <span className="dash-text-secondary text-xs">
                       {t("Compte")}
                     </span>
-                    <span className="text-xs font-mono font-semibold" style={{ color: "#E8EDF5" }}>
+                    <span className="dash-text-primary text-xs font-mono font-semibold">
                       {withdrawAccount}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs" style={{ color: "#94A3B8" }}>
+                    <span className="dash-text-secondary text-xs">
                       {t("Montant")}
                     </span>
-                    <span className="text-sm font-bold font-mono" style={{ color: "#34D399" }}>
+                    <span className="dash-text-green text-sm font-bold font-mono">
                       {formatAmount(Number(withdrawAmount), locale)} FCFA
                     </span>
                   </div>
                 </div>
 
                 {withdrawError && (
-                  <p className="text-sm mb-4" style={{ color: "#EF4444" }}>
+                  <p className="dash-text-red text-sm mb-4">
                     {withdrawError}
                   </p>
                 )}
@@ -1638,19 +1464,14 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                       setWithdrawError(null)
                     }}
                     disabled={withdrawSubmitting}
-                    className="flex-1 py-3.5 rounded-xl text-sm font-semibold"
-                    style={{ background: "#1E2A42", color: "#E8EDF5" }}
+                    className="dash-btn-tertiary flex-1 py-3.5 rounded-xl text-sm font-semibold"
                   >
                     {t("← Modifier")}
                   </button>
                   <button
                     onClick={handleSubmitWithdraw}
                     disabled={withdrawSubmitting}
-                    className="flex-1 py-3.5 rounded-xl text-sm font-bold text-white disabled:opacity-60"
-                    style={{
-                      background: "linear-gradient(135deg, #059669, #047857)",
-                      boxShadow: "0 4px 20px rgba(5,150,105,0.35)",
-                    }}
+                    className="dash-btn-success-lg flex-1 py-3.5 rounded-xl text-sm font-bold text-white disabled:opacity-60"
                   >
                     {withdrawSubmitting ? t("Envoi en cours...") : t("Confirmer le retrait")}
                   </button>

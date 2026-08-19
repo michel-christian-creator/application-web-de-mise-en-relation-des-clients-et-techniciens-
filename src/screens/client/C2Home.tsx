@@ -12,6 +12,8 @@ import { resolvePhotoUrl } from "../../utils/photoUrl"
 
 import { API_BASE_URL } from "../../config"
 
+import "./C2Home.css"
+
 export interface Artisan {
   id: number
 
@@ -298,15 +300,6 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
     }
 
     fetchTechniciansFor(selectedCategory ?? undefined)
-
-    // expose function to window for debug (optional)
-
-    // @ts-ignore
-    window.__fetchTechniciansFor = fetchTechniciansFor
-
-    return () => {
-      // no cleanup needed here
-    }
   }, [selectedCategory])
 
   useEffect(() => {
@@ -314,17 +307,6 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
 
     es.onmessage = () => {
       fetchCategories()
-
-      try {
-        // call the global fetch if available
-
-        // @ts-ignore
-        if (window.__fetchTechniciansFor)
-          // @ts-ignore
-          window.__fetchTechniciansFor(selectedCategory)
-      } catch (e) {
-        // ignore errors from the debug helper
-      }
     }
 
     es.onerror = () => {
@@ -378,47 +360,34 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
   }, [selectedFilter, technicians, userCity, query])
 
   return (
-    <div className="min-h-full p-4 sm:p-6" style={{ background: "#0B1120" }}>
+    <div className="min-h-full p-4 sm:p-6 home-page">
       <div className="mx-auto max-w-[min(1400px,95%)]">
         {searchRequest && (
           <div
-            className="mb-5 rounded-2xl border border-white/10 bg-[#141C2F] p-5 text-sm"
-            style={{ color: "#E8EDF5" }}
+            className="mb-5 rounded-2xl border border-white/10 bg-[#141C2F] p-5 text-sm home-text"
           >
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="font-semibold" style={{ color: "#E8EDF5" }}>
+                <p className="font-semibold home-text">
                   {t("Demande enregistrée")}
                 </p>
-                <p style={{ color: "#94A3B8" }}>{searchRequest.description}</p>
+                <p className="home-text-muted">{searchRequest.description}</p>
               </div>
               <div className="flex flex-wrap gap-2 text-xs">
                 <span
-                  className="rounded-full px-3 py-1"
-                  style={{
-                    background: "rgba(37,99,235,0.12)",
-                    color: "#93C5FD",
-                  }}
+                  className="rounded-full px-3 py-1 home-badge-blue"
                 >
                   {t("Domaine : ")}
                   {searchRequest.domain}
                 </span>
                 <span
-                  className="rounded-full px-3 py-1"
-                  style={{
-                    background: "rgba(245,158,11,0.12)",
-                    color: "#FBBF24",
-                  }}
+                  className="rounded-full px-3 py-1 home-badge-amber"
                 >
                   {t("Urgence : ")}
                   {searchRequest.urgence}
                 </span>
                 <span
-                  className="rounded-full px-3 py-1"
-                  style={{
-                    background: "rgba(5,150,105,0.12)",
-                    color: "#6EE7B7",
-                  }}
+                  className="rounded-full px-3 py-1 home-badge-green"
                 >
                   {t("Photos : ")}
                   {searchRequest.files.length}
@@ -431,14 +400,13 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <LocationMarker className="h-4 w-4 text-slate-300" />
-              <span className="text-sm font-medium" style={{ color: "#64748B" }}>
+              <span className="text-sm font-medium home-text-dim">
                 {userCity}
                 {userQuartier ? `, ${userQuartier}` : ""}
               </span>
             </div>
             <h1
-              className="text-2xl font-bold"
-              style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+              className="text-2xl font-bold home-title"
             >
               {t("Trouver un artisan")}
             </h1>
@@ -448,11 +416,7 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
 
         <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center">
           <div
-            className="flex flex-1 items-center gap-3 rounded-xl px-5 py-3.5"
-            style={{
-              background: "#141C2F",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
+            className="flex flex-1 items-center gap-3 rounded-xl px-5 py-3.5 home-search-bar"
           >
             <svg
               width="18"
@@ -472,8 +436,7 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("Rechercher un électricien, plombier, menuisier...")}
-              className="flex-1 bg-transparent outline-none text-sm"
-              style={{ color: "#94A3B8", fontFamily: "Inter, sans-serif" }}
+              className="flex-1 bg-transparent outline-none text-sm home-search-input"
             />
           </div>
           <div className="flex flex-wrap gap-2">
@@ -489,7 +452,7 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                     selectedFilter === f.label ? null : (f.label as "Mieux notés" | "Plus proches"),
                   )
                 }
-                className="px-4 py-3 rounded-xl text-sm font-medium"
+                className="px-4 py-3 rounded-xl text-sm font-medium home-filter-btn"
                 style={{
                   background: selectedFilter === f.label ? "#1E3A6A" : "#141C2F",
 
@@ -499,8 +462,6 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                     selectedFilter === f.label
                       ? "1px solid rgba(37,99,235,0.4)"
                       : "1px solid rgba(255,255,255,0.06)",
-
-                  fontFamily: "Inter, sans-serif",
                 }}
               >
                 {t(f.label)}
@@ -512,14 +473,13 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
         <div className="mb-6 rounded-3xl border border-white/10 bg-[#141C2F] p-6">
           <div className="flex items-center justify-between gap-4 mb-4">
             <div>
-              <p className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
+              <p className="text-sm font-semibold home-text">
                 {t("Domaines disponibles")}
               </p>
-              <p className="mt-1 text-xs" style={{ color: "#94A3B8" }}></p>
+              <p className="mt-1 text-xs home-text-muted"></p>
             </div>
             <span
-              className="inline-flex rounded-full bg-[#1E3A6A] px-3 py-1 text-xs font-medium"
-              style={{ color: "#E8EDF5" }}
+              className="inline-flex rounded-full bg-[#1E3A6A] px-3 py-1 text-xs font-medium home-text"
             >
               {categories.length} {t("domaines")}
             </span>
@@ -558,16 +518,15 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
             <div className="rounded-3xl border border-white/10 bg-[#141C2F] p-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
+                  <p className="text-sm font-semibold home-text">
                     {t("Demande")}
                   </p>
-                  <p className="mt-1 text-xs" style={{ color: "#94A3B8" }}>
+                  <p className="mt-1 text-xs home-text-muted">
                     {searchRequest ? searchRequest.domain : t("Sélectionnez un domaine")}
                   </p>
                 </div>
                 <span
-                  className="inline-flex rounded-full bg-[#1E3A6A] px-3 py-1 text-xs font-medium"
-                  style={{ color: "#E8EDF5" }}
+                  className="inline-flex rounded-full bg-[#1E3A6A] px-3 py-1 text-xs font-medium home-text"
                 >
                   {lastResponseCount ?? 0} {t("artisans")}
                 </span>
@@ -580,8 +539,7 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                   <StaggerItem key={artisan.id} hoverY={-2}>
                     <button
                       onClick={() => onSelectArtisan(artisan)}
-                      className="w-full rounded-[28px] border border-white/10 bg-[#141C2F] p-6 text-left"
-                      style={{ transition: "background-color 0.2s" }}
+                      className="w-full rounded-[28px] border border-white/10 bg-[#141C2F] p-6 text-left home-card-hover"
                     >
                       <div className="flex items-start gap-5">
                         <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-3xl bg-slate-700">
@@ -594,10 +552,10 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                         <div className="flex-1">
                           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="text-lg font-semibold" style={{ color: "#E8EDF5" }}>
+                              <p className="text-lg font-semibold home-text">
                                 {artisan.fullname}
                               </p>
-                              <p className="text-sm" style={{ color: "#94A3B8" }}>
+                              <p className="text-sm home-text-muted">
                                 {artisan.metier}
                               </p>
                             </div>
@@ -619,15 +577,14 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                               ))}
                               {artisan.note > 0 && (
                                 <span
-                                  className="ml-1 text-xs font-semibold"
-                                  style={{ color: "#D9FAEE" }}
+                                  className="ml-1 text-xs font-semibold home-text-accent"
                                 >
                                   {artisan.note.toFixed(1)}
                                 </span>
                               )}
                             </span>
                           </div>
-                          <p className="text-sm leading-relaxed" style={{ color: "#CBD5E1" }}>
+                          <p className="text-sm leading-relaxed home-text-desc">
                             {artisan.description}
                           </p>
                         </div>
@@ -637,7 +594,7 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                 ))
               ) : (
                 <div className="rounded-[28px] border border-white/10 bg-[#141C2F] p-6 text-center">
-                  <p className="text-sm" style={{ color: "#94A3B8" }}>
+                  <p className="text-sm home-text-muted">
                     {query.trim()
                       ? t("Aucun artisan ne correspond à « ") + query.trim() + t(" ».")
                       : selectedFilter === "Plus proches"
@@ -653,26 +610,25 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
             <div className="rounded-3xl border border-white/10 bg-[#141C2F] p-6">
               <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
+                  <p className="text-sm font-semibold home-text">
                     {t("Filtrer")}
                   </p>
-                  <p className="text-xs" style={{ color: "#94A3B8" }}>
+                  <p className="text-xs home-text-muted">
                     {t("Affinez votre recherche")}
                   </p>
                 </div>
                 <span
-                  className="inline-flex rounded-full bg-[#1E3A6A] px-3 py-1 text-xs font-semibold"
-                  style={{ color: "#D9FAEE" }}
+                  className="inline-flex rounded-full bg-[#1E3A6A] px-3 py-1 text-xs font-semibold home-text-accent"
                 >
                   {selectedFilter ? t(selectedFilter) : t("Aucun filtre")}
                 </span>
               </div>
               <div className="space-y-4">
-                <p className="text-xs" style={{ color: "#94A3B8" }}>
+                <p className="text-xs home-text-muted">
                   {selectedFilter ? (
                     <>
                       {t("Résultats triés par")}{" "}
-                      <strong style={{ color: "#E8EDF5" }}>
+                      <strong className="home-text">
                         {selectedFilter === "Mieux notés" ? t("note") : t("proximité")}
                       </strong>
                       .
@@ -694,19 +650,15 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
+                            <p className="text-sm font-semibold home-text">
                               {artisan.fullname}
                             </p>
-                            <p className="text-xs" style={{ color: "#94A3B8" }}>
+                            <p className="text-xs home-text-muted">
                               {artisan.metier}
                             </p>
                           </div>
                           <span
-                            className="text-xs rounded-full px-2 py-1"
-                            style={{
-                              background: "rgba(37,99,235,0.12)",
-                              color: "#93C5FD",
-                            }}
+                            className="text-xs rounded-full px-2 py-1 home-badge-blue"
                           >
                             {selectedFilter === "Mieux notés"
                               ? t("Note ") + artisan.note.toFixed(1)
@@ -715,7 +667,7 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                                 : `${artisan.missions} ${t("missions")}`}
                           </span>
                         </div>
-                        <p className="text-xs mt-2" style={{ color: "#94A3B8" }}>
+                        <p className="text-xs mt-2 home-text-muted">
                           {selectedFilter === "Mieux notés"
                             ? `${artisan.missions} ${t("missions")} • ${
                                 artisan.dispo ? t("Disponible") : t("Occupé")
@@ -729,7 +681,7 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs" style={{ color: "#94A3B8" }}>
+                    <p className="text-xs home-text-muted">
                       {query.trim()
                         ? t("Aucun artisan ne correspond à « ") + query.trim() + t(" ».")
                         : selectedFilter === "Plus proches"

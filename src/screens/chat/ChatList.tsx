@@ -5,6 +5,7 @@ import type { PaymentDevis } from "../client/C6Payment"
 import { API_BASE_URL } from "../../config"
 import { sanitizeMultiline, isValidAmount, hasSqlInjectionPattern } from "../../utils/validation"
 import { useI18n } from "../../i18n"
+import "./ChatList.css"
 
 const SYSTEM_SENDER_ID = 999999999999
 
@@ -233,7 +234,9 @@ export default function ChatList({
   const [respondingSchedule, setRespondingSchedule] = useState<number | null>(null)
   const [releasingFunds, setReleasingFunds] = useState(false)
   const [releasedRequestId, setReleasedRequestId] = useState<number | null>(null)
+  const [showReleaseConfirm, setShowReleaseConfirm] = useState(false)
   const bottomRef = useRef<HTMLDivElement | null>(null)
+  const chatInputRef = useRef<HTMLTextAreaElement | null>(null)
   const socketRef = useRef<ChatSocket | null>(null)
   const conversationsRef = useRef<Conversation[]>([])
 
@@ -317,7 +320,7 @@ export default function ChatList({
           const list = Array.isArray(data) ? data : []
           setArchivedConversations(list)
         })
-        .catch(() => {})
+        .catch((err) => console.error("Erreur chargement conversations archivees:", err))
     }
     loadArchived()
     const interval = setInterval(loadArchived, 5000)
@@ -352,7 +355,7 @@ export default function ChatList({
         fetch(`${API_BASE_URL}/api/chat/messages/${selectedId}/read`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
-        }).catch(() => {})
+        }).catch((err) => console.error("Erreur marquage messages lus:", err))
       }
       setConversations((prev) =>
         prev.map((c) => (c.id === selectedId && c.unreadCount ? { ...c, unreadCount: 0 } : c)),
@@ -464,7 +467,7 @@ export default function ChatList({
             return changed ? next : prev
           })
         })
-        .catch(() => {})
+        .catch((err) => console.error("Erreur rafraichissement conversations:", err))
     }
     refresh()
     const interval = setInterval(refresh, 5000)
@@ -474,6 +477,13 @@ export default function ChatList({
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
+
+  useEffect(() => {
+    const el = chatInputRef.current
+    if (!el) return
+    el.style.height = "auto"
+    el.style.height = Math.min(el.scrollHeight, 200) + "px"
+  }, [input])
 
   const send = async () => {
     if (!selectedId) return
@@ -494,6 +504,7 @@ export default function ChatList({
       })
       if (sent) {
         setInput("")
+        if (chatInputRef.current) chatInputRef.current.style.height = "auto"
         return
       }
     }
@@ -522,6 +533,7 @@ export default function ChatList({
       upsertMessage(saved)
       bumpConversation(saved)
       setInput("")
+      if (chatInputRef.current) chatInputRef.current.style.height = "auto"
     } catch (err) {
       console.error(err)
       setError(err instanceof Error ? err.message : tr("Erreur réseau"))
@@ -933,7 +945,7 @@ export default function ChatList({
   }
 
   return (
-    <div className="min-h-full p-3 sm:p-6" style={{ background: "#0B1120" }}>
+    <div className="cl-root min-h-full p-3 sm:p-6">
       <div
         className={`mx-auto flex flex-col ${
           direct ? "max-w-[min(1040px,95%)]" : "max-w-[min(1100px,95%)]"
@@ -942,13 +954,10 @@ export default function ChatList({
         {!direct && (
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1
-                className="text-2xl font-bold mb-1"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
-              >
+              <h1 className="cl-font-heading cl-text-primary text-2xl font-bold mb-1">
                 {tr("Messagerie")}
               </h1>
-              <p className="text-sm" style={{ color: "#64748B" }}>
+              <p className="cl-text-muted text-sm">
                 {role === "tech"
                   ? tr("Vos conversations avec les clients")
                   : tr("Vos conversations avec les artisans")}
@@ -1014,48 +1023,27 @@ export default function ChatList({
         )}
 
         {error && (
-          <div
-            className="mb-4 p-3 rounded-xl text-sm"
-            style={{
-              background: "rgba(239,68,68,0.1)",
-              color: "#F87171",
-              border: "1px solid rgba(239,68,68,0.2)",
-            }}
-          >
+          <div className="cl-alert-error mb-4 p-3 rounded-xl text-sm">
             {error}
           </div>
         )}
 
         {success && (
-          <div
-            className="mb-4 p-3 rounded-xl text-sm"
-            style={{
-              background: "rgba(52,211,153,0.1)",
-              color: "#34D399",
-              border: "1px solid rgba(52,211,153,0.25)",
-            }}
-          >
+          <div className="cl-alert-success mb-4 p-3 rounded-xl text-sm">
             {success}
           </div>
         )}
 
         {loading && conversations.length === 0 ? (
-          <div className="text-center py-16" style={{ color: "#64748B" }}>
-            <p className="text-base font-medium" style={{ color: "#E8EDF5" }}>
+          <div className="cl-text-muted text-center py-16">
+            <p className="cl-text-primary text-base font-medium">
               {tr("Chargement des conversations…")}
             </p>
           </div>
         ) : !direct && visibleConversations.length === 0 ? (
-          <div
-            className="text-center py-16 rounded-2xl"
-            style={{
-              background: "#141C2F",
-              border: "1px solid rgba(255,255,255,0.06)",
-              color: "#64748B",
-            }}
-          >
+          <div className="cl-panel cl-text-muted text-center py-16 rounded-2xl">
             <ChatBubbleIcon className="mx-auto mb-3 h-12 w-12 text-slate-600" />
-            <p className="text-base font-medium" style={{ color: "#E8EDF5" }}>
+            <p className="cl-text-primary text-base font-medium">
               {showArchived
                 ? tr("Aucune intervention archivée")
                 : tr("Aucune conversation pour le moment")}
@@ -1079,29 +1067,10 @@ export default function ChatList({
             }`}
             style={{ minHeight: "440px" }}
           >
-            {/* Liste des conversations */}
             {!direct && (
-              <aside
-                className="flex flex-col overflow-hidden rounded-2xl max-h-72 lg:max-h-none lg:w-[320px] lg:flex-shrink-0"
-                style={{
-                  background: "#141C2F",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                <div
-                  className="px-4 py-3 flex-shrink-0"
-                  style={{
-                    background: "linear-gradient(135deg, #1E3A6A, #1D4ED8)",
-                    borderBottom: "1px solid rgba(255,255,255,0.08)",
-                  }}
-                >
-                  <p
-                    className="text-sm font-bold"
-                    style={{
-                      fontFamily: "Poppins, sans-serif",
-                      color: "#E8EDF5",
-                    }}
-                  >
+              <aside className="cl-panel flex flex-col overflow-hidden rounded-2xl max-h-72 lg:max-h-none lg:w-[320px] lg:flex-shrink-0">
+                <div className="cl-header-gradient px-4 py-3 flex-shrink-0">
+                  <p className="cl-font-heading cl-text-primary text-sm font-bold">
                     {tr("Discussions")}
                   </p>
                   <div className="mt-2 flex items-center gap-1.5">
@@ -1138,10 +1107,9 @@ export default function ChatList({
                       <button
                         key={c.id}
                         onClick={() => setSelectedId(c.id)}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-left"
+                        className="cl-conv-separator flex w-full items-center gap-3 px-4 py-3 text-left"
                         style={{
                           background: active ? "rgba(37,99,235,0.18)" : "transparent",
-                          borderBottom: "1px solid rgba(255,255,255,0.04)",
                         }}
                       >
                         <div
@@ -1152,16 +1120,10 @@ export default function ChatList({
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-baseline justify-between gap-2">
-                            <p
-                              className="truncate text-sm font-semibold"
-                              style={{ color: "#E8EDF5" }}
-                            >
+                            <p className="cl-text-primary truncate text-sm font-semibold">
                               {display}
                             </p>
-                            <span
-                              className="flex-shrink-0 text-[10px]"
-                              style={{ color: "#64748B" }}
-                            >
+                            <span className="cl-text-muted flex-shrink-0 text-[10px]">
                               {timeAgo(c.lastMessageAt || c.createdAt, tr)}
                             </span>
                           </div>
@@ -1175,13 +1137,7 @@ export default function ChatList({
                                 : c.domain || c.category}
                             </p>
                             {(c.unreadCount ?? 0) > 0 && (
-                              <span
-                                className="flex h-5 min-w-5 flex-shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-bold"
-                                style={{
-                                  background: "#2563EB",
-                                  color: "#FFFFFF",
-                                }}
-                              >
+                              <span className="cl-unread-badge flex h-5 min-w-5 flex-shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-bold">
                                 {c.unreadCount}
                               </span>
                             )}
@@ -1194,48 +1150,30 @@ export default function ChatList({
               </aside>
             )}
 
-            {/* Conversation */}
             <section
-              className={`${
+              className={`cl-panel ${
                 direct ? (showDevisPanel ? "flex-1" : "w-full") : "flex-1"
               } flex flex-col overflow-hidden rounded-2xl min-h-[60vh] lg:min-h-0`}
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
             >
               {!selected ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-                  <div
-                    className="flex h-16 w-16 items-center justify-center rounded-full"
-                    style={{ background: "#1E2A42" }}
-                  >
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "#1E2A42" }}>
                     <ChatBubbleIcon className="h-8 w-8 text-slate-400" />
                   </div>
-                  <p className="text-sm font-medium" style={{ color: "#E8EDF5" }}>
+                  <p className="cl-text-primary text-sm font-medium">
                     {tr("Chargement de la conversation…")}
                   </p>
-                  <p className="text-xs" style={{ color: "#64748B" }}>
+                  <p className="cl-text-muted text-xs">
                     {tr("La discussion avec l'auteur de la demande s'ouvre.")}
                   </p>
                 </div>
               ) : (
                 <>
-                  <div
-                    className="flex items-center gap-3 px-3 sm:px-5 py-3 flex-shrink-0"
-                    style={{
-                      background: "linear-gradient(135deg, #1E3A6A, #1D4ED8)",
-                      borderBottom: "1px solid rgba(255,255,255,0.08)",
-                    }}
-                  >
+                  <div className="cl-header-gradient flex items-center gap-3 px-3 sm:px-5 py-3 flex-shrink-0">
                     {direct && onBack && (
                       <button
                         onClick={onBack}
-                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
-                        style={{
-                          background: "rgba(255,255,255,0.12)",
-                          color: "#E8EDF5",
-                        }}
+                        className="cl-back-btn flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
                         aria-label="Retour"
                       >
                         <svg
@@ -1259,43 +1197,23 @@ export default function ChatList({
                       {initials(partnerDisplay)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p
-                        className="truncate text-sm font-semibold"
-                        style={{
-                          fontFamily: "Poppins, sans-serif",
-                          color: "#E8EDF5",
-                        }}
-                      >
+                      <p className="cl-font-heading cl-text-primary truncate text-sm font-semibold">
                         {partnerDisplay}
                       </p>
-                      <p className="text-xs" style={{ color: "#93C5FD" }}>
+                      <p className="cl-text-accent text-xs">
                         {selected?.domain || selected?.category} · {meta.label}
                       </p>
                     </div>
-                    <span
-                      className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold flex-shrink-0"
-                      style={{
-                        background: "rgba(37,99,235,0.15)",
-                        color: "#93C5FD",
-                      }}
-                    >
-                      <span
-                        className="h-1.5 w-1.5 animate-pulse rounded-full"
-                        style={{ background: "#60A5FA" }}
-                      />
+                    <span className="cl-realtime-badge flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold flex-shrink-0">
+                      <span className="cl-realtime-dot h-1.5 w-1.5 animate-pulse rounded-full" />
                       {tr("Temps réel")}
                     </span>
                     {canValidateWork && (
                       <button
-                        onClick={releaseFunds}
+                        onClick={() => setShowReleaseConfirm(true)}
                         disabled={releasingFunds}
-                        className="flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold whitespace-nowrap"
-                        style={{
-                          background: "linear-gradient(135deg, #059669, #047857)",
-                          color: "#FFFFFF",
-                          boxShadow: "0 2px 12px rgba(5,150,105,0.35)",
-                          cursor: releasingFunds ? "not-allowed" : "pointer",
-                        }}
+                        className="cl-btn-accept flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold whitespace-nowrap"
+                        style={{ cursor: releasingFunds ? "not-allowed" : "pointer" }}
                       >
                         {releasingFunds
                           ? tr("Libération en cours…")
@@ -1304,17 +1222,63 @@ export default function ChatList({
                     )}
                   </div>
 
-                  <div
-                    className="flex-1 overflow-y-auto px-3 sm:px-6 py-5 flex flex-col gap-2"
-                    style={{ background: "#0F172A" }}
-                  >
+                  {showReleaseConfirm && (
+                    <div
+                      className="cl-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
+                      onClick={() => setShowReleaseConfirm(false)}
+                    >
+                      <div
+                        className="cl-modal w-full max-w-sm rounded-2xl p-6"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="cl-modal-warning-icon flex items-center justify-center w-10 h-10 rounded-full text-lg">
+                            ⚠
+                          </span>
+                          <h3 className="cl-font-heading text-base font-bold" style={{ color: "#F1F5F9" }}>
+                            {tr("Confirmer la libération des fonds")}
+                          </h3>
+                        </div>
+                        <p className="text-sm leading-relaxed mb-2" style={{ color: "#CBD5E1" }}>
+                          {tr(
+                            "Vous êtes sur le point de valider la fin de l'intervention et de libérer les fonds en garde au technicien.",
+                          )}
+                        </p>
+                        <p className="cl-text-danger text-sm font-semibold leading-relaxed mb-6">
+                          {tr(
+                            "Cette action est irréversible. Ne confirmez que si les travaux sont réellement terminés et conformes.",
+                          )}
+                        </p>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => setShowReleaseConfirm(false)}
+                            className="cl-modal-cancel-btn cl-font-heading flex-1 py-3 rounded-xl font-semibold text-sm"
+                          >
+                            {tr("Annuler")}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowReleaseConfirm(false)
+                              releaseFunds()
+                            }}
+                            disabled={releasingFunds}
+                            className="cl-btn-accept cl-font-heading flex-1 py-3 rounded-xl font-bold text-sm text-white disabled:opacity-60"
+                          >
+                            {tr("Oui, je confirme")}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="cl-chat-bg flex-1 overflow-y-auto px-3 sm:px-6 py-5 flex flex-col gap-2">
                     {loading && (
-                      <p className="text-sm" style={{ color: "#94A3B8" }}>
+                      <p className="cl-text-light-muted text-sm">
                         {tr("Chargement des messages…")}
                       </p>
                     )}
                     {!loading && messages.length === 0 && (
-                      <p className="text-sm text-center mt-10" style={{ color: "#94A3B8" }}>
+                      <p className="cl-text-light-muted text-sm text-center mt-10">
                         {tr("Aucun message pour le moment. Envoyez le premier message pour démarrer la conversation.")}
                       </p>
                     )}
@@ -1326,14 +1290,7 @@ export default function ChatList({
                       if (m.senderUserId === SYSTEM_SENDER_ID) {
                         return (
                           <div key={m.id} className="flex justify-center">
-                            <span
-                              className="rounded-full px-3 py-1.5 text-[11px] font-medium"
-                              style={{
-                                background: "rgba(148,163,184,0.12)",
-                                color: "#94A3B8",
-                                border: "1px solid rgba(148,163,184,0.18)",
-                              }}
-                            >
+                            <span className="cl-system-msg rounded-full px-3 py-1.5 text-[11px] font-medium">
                               {m.text}
                             </span>
                           </div>
@@ -1346,13 +1303,7 @@ export default function ChatList({
                             className={`flex ${mine ? "justify-end" : "justify-start"}`}
                           >
                             <div className="max-w-[78%]">
-                              <div
-                                className="overflow-hidden rounded-2xl shadow-lg"
-                                style={{
-                                  background: "#1E2A42",
-                                  border: "1px solid rgba(255,255,255,0.08)",
-                                }}
-                              >
+                              <div className="cl-inner-card overflow-hidden rounded-2xl shadow-lg">
                                 <div className="flex items-center gap-2 px-4 pt-3">
                                   <svg
                                     width="16"
@@ -1367,23 +1318,14 @@ export default function ChatList({
                                     <line x1="12" y1="1" x2="12" y2="23" />
                                     <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                                   </svg>
-                                  <p
-                                    className="text-xs font-bold"
-                                    style={{
-                                      color: "#93C5FD",
-                                      letterSpacing: "0.08em",
-                                    }}
-                                  >
+                                  <p className="cl-text-accent cl-label-tracked text-xs font-bold">
                                     {tr("DEVIS")}
                                   </p>
                                 </div>
                                 <div className="px-4 py-3">
-                                  <p
-                                    className="text-3xl font-bold font-mono"
-                                    style={{ color: "#E8EDF5" }}
-                                  >
+                                  <p className="cl-text-primary text-3xl font-bold font-mono">
                                     {formatAmount(Number(m.devisAmount))}{" "}
-                                    <span className="text-sm" style={{ color: "#64748B" }}>
+                                    <span className="cl-text-muted text-sm">
                                       FCFA
                                     </span>
                                   </p>
@@ -1393,11 +1335,7 @@ export default function ChatList({
                                     <button
                                       onClick={() => respondToDevis(m, "accepted")}
                                       disabled={respondingDevis === m.id}
-                                      className="w-full rounded-lg py-2.5 text-xs font-bold text-white"
-                                      style={{
-                                        background: "linear-gradient(135deg, #059669, #047857)",
-                                        boxShadow: "0 2px 12px rgba(5,150,105,0.35)",
-                                      }}
+                                      className="cl-btn-accept w-full rounded-lg py-2.5 text-xs font-bold text-white"
                                     >
                                       {respondingDevis === m.id
                                         ? tr("Traitement…")
@@ -1406,12 +1344,7 @@ export default function ChatList({
                                     <button
                                       onClick={() => respondToDevis(m, "rejected")}
                                       disabled={respondingDevis === m.id}
-                                      className="w-full rounded-lg py-2.5 text-xs font-bold"
-                                      style={{
-                                        background: "rgba(239,68,68,0.12)",
-                                        color: "#F87171",
-                                        border: "1px solid rgba(239,68,68,0.3)",
-                                      }}
+                                      className="cl-btn-reject w-full rounded-lg py-2.5 text-xs font-bold"
                                     >
                                       {tr("Rejeter le devis")}
                                     </button>
@@ -1428,11 +1361,8 @@ export default function ChatList({
                                 )}
                               </div>
                               <p
-                                className="mt-0.5 px-1 text-[10px]"
-                                style={{
-                                  color: "#64748B",
-                                  textAlign: mine ? "right" : "left",
-                                }}
+                                className="cl-text-muted mt-0.5 px-1 text-[10px]"
+                                style={{ textAlign: mine ? "right" : "left" }}
                               >
                                 {mine && <ReadReceipt read={!!m.read} />}
                                 {m.time}
@@ -1448,13 +1378,7 @@ export default function ChatList({
                             className={`flex ${mine ? "justify-end" : "justify-start"}`}
                           >
                             <div className="max-w-[78%]">
-                              <div
-                                className="overflow-hidden rounded-2xl shadow-lg"
-                                style={{
-                                  background: "#1E2A42",
-                                  border: "1px solid rgba(255,255,255,0.08)",
-                                }}
-                              >
+                              <div className="cl-inner-card overflow-hidden rounded-2xl shadow-lg">
                                 <div className="flex items-center gap-2 px-4 pt-3">
                                   <svg
                                     width="16"
@@ -1471,24 +1395,12 @@ export default function ChatList({
                                     <line x1="8" y1="2" x2="8" y2="6" />
                                     <line x1="3" y1="10" x2="21" y2="10" />
                                   </svg>
-                                  <p
-                                    className="text-xs font-bold"
-                                    style={{
-                                      color: "#34D399",
-                                      letterSpacing: "0.08em",
-                                    }}
-                                  >
+                                  <p className="cl-text-success cl-label-tracked text-xs font-bold">
                                     {tr("INTERVENTION")}
                                   </p>
                                 </div>
                                 <div className="px-4 py-3">
-                                  <p
-                                    className="text-sm font-bold leading-snug"
-                                    style={{
-                                      color: "#E8EDF5",
-                                      fontFamily: "Poppins, sans-serif",
-                                    }}
-                                  >
+                                  <p className="cl-text-primary cl-font-heading text-sm font-bold leading-snug">
                                     {formatScheduleDate(m.scheduleAt, locale, tr)}
                                   </p>
                                 </div>
@@ -1497,11 +1409,7 @@ export default function ChatList({
                                     <button
                                       onClick={() => respondToSchedule(m, "accepted")}
                                       disabled={respondingSchedule === m.id}
-                                      className="w-full rounded-lg py-2.5 text-xs font-bold text-white"
-                                      style={{
-                                        background: "linear-gradient(135deg, #059669, #047857)",
-                                        boxShadow: "0 2px 12px rgba(5,150,105,0.35)",
-                                      }}
+                                      className="cl-btn-accept w-full rounded-lg py-2.5 text-xs font-bold text-white"
                                     >
                                       {respondingSchedule === m.id
                                         ? tr("Traitement…")
@@ -1510,12 +1418,7 @@ export default function ChatList({
                                     <button
                                       onClick={() => respondToSchedule(m, "rejected")}
                                       disabled={respondingSchedule === m.id}
-                                      className="w-full rounded-lg py-2.5 text-xs font-bold"
-                                      style={{
-                                        background: "rgba(239,68,68,0.12)",
-                                        color: "#F87171",
-                                        border: "1px solid rgba(239,68,68,0.3)",
-                                      }}
+                                      className="cl-btn-reject w-full rounded-lg py-2.5 text-xs font-bold"
                                     >
                                       {tr("Refuser la proposition")}
                                     </button>
@@ -1532,11 +1435,8 @@ export default function ChatList({
                                 )}
                               </div>
                               <p
-                                className="mt-0.5 px-1 text-[10px]"
-                                style={{
-                                  color: "#64748B",
-                                  textAlign: mine ? "right" : "left",
-                                }}
+                                className="cl-text-muted mt-0.5 px-1 text-[10px]"
+                                style={{ textAlign: mine ? "right" : "left" }}
                               >
                                 {mine && <ReadReceipt read={!!m.read} />}
                                 {m.time}
@@ -1567,13 +1467,7 @@ export default function ChatList({
                                   style={{ height: "140px" }}
                                 />
                               )}
-                              <p
-                                className="text-sm leading-relaxed"
-                                style={{
-                                  color: "#E8EDF5",
-                                  fontFamily: "Inter, sans-serif",
-                                }}
-                              >
+                              <p className="cl-text-primary cl-font-body text-sm leading-relaxed">
                                 {m.text}
                               </p>
                             </div>
@@ -1594,44 +1488,35 @@ export default function ChatList({
                     <div ref={bottomRef} />
                   </div>
 
-                  <div
-                    className="flex items-center gap-3 px-3 sm:px-5 py-4 flex-shrink-0"
-                    style={{
-                      background: "#141C2F",
-                      borderTop: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
+                  <div className="cl-input-bar flex items-center gap-3 px-3 sm:px-5 py-4 flex-shrink-0">
                     {showArchived || selectedIsArchived ? (
-                      <p
-                        className="w-full text-center text-xs rounded-xl px-4 py-3"
-                        style={{
-                          background: "rgba(5,150,105,0.08)",
-                          color: "#34D399",
-                          border: "1px solid rgba(5,150,105,0.2)",
-                        }}
-                      >
+                      <p className="cl-archived-notice w-full text-center text-xs rounded-xl px-4 py-3">
                         {tr("✓ Intervention terminée — conversation archivée")}
                       </p>
                     ) : (
                       <>
-                        <div
-                          className="flex flex-1 items-center rounded-xl px-4 py-3"
-                          style={{
-                            background: "#1E2A42",
-                            border: "1px solid rgba(255,255,255,0.06)",
-                          }}
-                        >
-                          <input
+                        <div className="cl-input-wrapper flex-1 flex flex-col rounded-xl px-4 py-3">
+                          <textarea
+                            ref={chatInputRef}
                             value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && send()}
-                            placeholder={tr("Votre message...")}
-                            className="flex-1 bg-transparent outline-none text-sm"
-                            style={{
-                              color: "#E8EDF5",
-                              fontFamily: "Inter, sans-serif",
+                            onChange={(e) => setInput(e.target.value.slice(0, 500))}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault()
+                                send()
+                              }
                             }}
+                            placeholder={tr("Votre message...")}
+                            rows={1}
+                            className="cl-input-field w-full bg-transparent outline-none text-sm resize-none"
+                            style={{ maxHeight: "200px", overflowY: "auto" }}
                           />
+                          <span
+                            className="text-right text-[10px] mt-0.5"
+                            style={{ color: input.length > 450 ? "#EF4444" : "#475569" }}
+                          >
+                            {input.length}/500
+                          </span>
                         </div>
                         <button
                           onClick={send}
@@ -1664,58 +1549,24 @@ export default function ChatList({
               )}
             </section>
 
-            {/* Panneau devis (technicien, chat direct) */}
             {showDevisPanel && (
-              <aside
-                className="flex w-full flex-col overflow-hidden rounded-2xl lg:w-[260px] lg:flex-shrink-0"
-                style={{
-                  background: "#141C2F",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                <div
-                  className="flex-shrink-0 px-4 py-3"
-                  style={{
-                    background: "linear-gradient(135deg, #1E3A6A, #1D4ED8)",
-                    borderBottom: "1px solid rgba(255,255,255,0.08)",
-                  }}
-                >
-                  <p
-                    className="text-sm font-bold"
-                    style={{
-                      fontFamily: "Poppins, sans-serif",
-                      color: "#E8EDF5",
-                    }}
-                  >
+              <aside className="cl-panel flex w-full flex-col overflow-hidden rounded-2xl lg:w-[260px] lg:flex-shrink-0">
+                <div className="cl-header-gradient flex-shrink-0 px-4 py-3">
+                  <p className="cl-font-heading cl-text-primary text-sm font-bold">
                     {tr("Devis")}
                   </p>
                 </div>
                 <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-                  <div
-                    className="rounded-2xl p-4"
-                    style={{
-                      background: "#1E2A42",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                    }}
-                  >
-                    <p className="text-xs" style={{ color: "#94A3B8" }}>
+                  <div className="cl-inner-card rounded-2xl p-4">
+                    <p className="cl-text-light-muted text-xs">
                       {tr("Proposez le montant de votre intervention à")}{" "}
-                      <strong style={{ color: "#E8EDF5" }}>{partnerDisplay}</strong>.
+                      <strong className="cl-text-primary">{partnerDisplay}</strong>.
                     </p>
                     <div className="mt-3">
-                      <label
-                        className="mb-1.5 block text-xs font-semibold"
-                        style={{ color: "#E8EDF5" }}
-                      >
+                      <label className="cl-text-primary mb-1.5 block text-xs font-semibold">
                         {tr("Montant (FCFA)")}
                       </label>
-                      <div
-                        className="flex items-center rounded-xl px-3 py-2.5"
-                        style={{
-                          background: "#0F172A",
-                          border: "1px solid rgba(255,255,255,0.06)",
-                        }}
-                      >
+                      <div className="cl-input-field-wrapper flex items-center rounded-xl px-3 py-2.5">
                         <input
                           type="number"
                           min="0"
@@ -1723,11 +1574,7 @@ export default function ChatList({
                           onChange={(e) => setDevisInput(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && sendDevis()}
                           placeholder="Ex : 15000"
-                          className="flex-1 bg-transparent text-sm outline-none"
-                          style={{
-                            color: "#E8EDF5",
-                            fontFamily: "Inter, sans-serif",
-                          }}
+                          className="cl-input-field flex-1 bg-transparent text-sm outline-none"
                         />
                       </div>
                     </div>
@@ -1746,18 +1593,12 @@ export default function ChatList({
                         ? tr("Envoi…")
                         : `${tr("Envoyer le devis à")} ${partnerDisplay}`}
                     </button>
-                    <p className="mt-2 text-[10px] leading-relaxed" style={{ color: "#64748B" }}>
+                    <p className="cl-text-muted mt-2 text-[10px] leading-relaxed">
                       {tr("Le client pourra accepter et procéder au paiement, ou rejeter votre devis.")}
                     </p>
                   </div>
 
-                  <div
-                    className="rounded-2xl p-4"
-                    style={{
-                      background: "#1E2A42",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                    }}
-                  >
+                  <div className="cl-inner-card rounded-2xl p-4">
                     <div className="flex items-center gap-2">
                       <svg
                         width="14"
@@ -1774,67 +1615,38 @@ export default function ChatList({
                         <line x1="8" y1="2" x2="8" y2="6" />
                         <line x1="3" y1="10" x2="21" y2="10" />
                       </svg>
-                      <p
-                        className="text-xs font-bold"
-                        style={{ color: "#34D399", letterSpacing: "0.08em" }}
-                      >
+                      <p className="cl-text-success cl-label-tracked text-xs font-bold">
                         {tr("PLANIFIER L'INTERVENTION")}
                       </p>
                     </div>
-                    <p className="mt-2 text-xs" style={{ color: "#94A3B8" }}>
+                    <p className="cl-text-light-muted mt-2 text-xs">
                       {tr("Fixez la date et l'heure de votre intervention pour")}{" "}
-                      <strong style={{ color: "#E8EDF5" }}>{partnerDisplay}</strong>.
+                      <strong className="cl-text-primary">{partnerDisplay}</strong>.
                     </p>
                     <div className="mt-3">
-                      <label
-                        className="mb-1.5 block text-xs font-semibold"
-                        style={{ color: "#E8EDF5" }}
-                      >
+                      <label className="cl-text-primary mb-1.5 block text-xs font-semibold">
                         {tr("Date")}
                       </label>
-                      <div
-                        className="flex items-center rounded-xl px-3 py-2.5"
-                        style={{
-                          background: "#0F172A",
-                          border: "1px solid rgba(255,255,255,0.06)",
-                        }}
-                      >
+                      <div className="cl-input-field-wrapper flex items-center rounded-xl px-3 py-2.5">
                         <input
                           type="date"
                           value={scheduleDate}
                           min={todayMin}
                           onChange={(e) => setScheduleDate(e.target.value)}
-                          className="w-full bg-transparent text-sm outline-none [color-scheme:dark]"
-                          style={{
-                            color: "#E8EDF5",
-                            fontFamily: "Inter, sans-serif",
-                          }}
+                          className="cl-input-field w-full bg-transparent text-sm outline-none [color-scheme:dark]"
                         />
                       </div>
                     </div>
                     <div className="mt-3">
-                      <label
-                        className="mb-1.5 block text-xs font-semibold"
-                        style={{ color: "#E8EDF5" }}
-                      >
+                      <label className="cl-text-primary mb-1.5 block text-xs font-semibold">
                         {tr("Heure")}
                       </label>
-                      <div
-                        className="flex items-center rounded-xl px-3 py-2.5"
-                        style={{
-                          background: "#0F172A",
-                          border: "1px solid rgba(255,255,255,0.06)",
-                        }}
-                      >
+                      <div className="cl-input-field-wrapper flex items-center rounded-xl px-3 py-2.5">
                         <input
                           type="time"
                           value={scheduleTime}
                           onChange={(e) => setScheduleTime(e.target.value)}
-                          className="w-full bg-transparent text-sm outline-none [color-scheme:dark]"
-                          style={{
-                            color: "#E8EDF5",
-                            fontFamily: "Inter, sans-serif",
-                          }}
+                          className="cl-input-field w-full bg-transparent text-sm outline-none [color-scheme:dark]"
                         />
                       </div>
                     </div>
@@ -1857,7 +1669,7 @@ export default function ChatList({
                           ? `${tr("Proposer le")} ${formatScheduleShort(`${scheduleDate}T${scheduleTime}`)}`
                           : tr("Proposer une intervention")}
                     </button>
-                    <p className="mt-2 text-[10px] leading-relaxed" style={{ color: "#64748B" }}>
+                    <p className="cl-text-muted mt-2 text-[10px] leading-relaxed">
                       {tr("Le client pourra accepter ou refuser votre proposition.")}
                     </p>
                   </div>

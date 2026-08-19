@@ -158,17 +158,17 @@ public class ChatController {
         request.setCreatedAt(LocalDateTime.now());
         request.setUpdatedAt(LocalDateTime.now());
         ClientRequest saved = requestRepository.save(request);
+        if (saved.getTechnicianId() == null) {
+            notifyMatchingTechnicians(saved);
+        } else {
+            notifyTechnicianAssigned(saved);
+        }
         if (this.technicianEventService != null) {
             this.technicianEventService.broadcast("request", Map.of(
                     "id", saved.getId(),
                     "category", saved.getCategory() != null ? saved.getCategory() : "",
                     "description", saved.getDescription() != null ? saved.getDescription() : "",
                     "status", saved.getStatus() != null ? saved.getStatus() : ""));
-        }
-        if (saved.getTechnicianId() == null) {
-            notifyMatchingTechnicians(saved);
-        } else {
-            notifyTechnicianAssigned(saved);
         }
         return ResponseEntity.ok(saved);
     }

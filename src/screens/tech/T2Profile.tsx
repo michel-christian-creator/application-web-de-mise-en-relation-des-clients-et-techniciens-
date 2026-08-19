@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react"
+import "./T2Profile.css"
 import { resolvePhotoUrl } from "../../utils/photoUrl"
 import { API_BASE_URL } from "../../config"
 import {
@@ -38,6 +39,39 @@ interface Profile {
 interface Props {
   profile?: Profile | null
   onUpdateProfile?: (profile: Profile) => void
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  mono,
+  filter,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  mono?: boolean
+  filter?: "letters" | "digits"
+}) {
+  return (
+    <div>
+      <p className="text-xs font-medium mb-1.5 t2-label">
+        {label}
+      </p>
+      <input
+        value={value}
+        onChange={(e) => {
+          let next = e.target.value
+          if (filter === "digits") next = sanitizeDigits(next)
+          else if (filter === "letters") next = sanitizeLetters(next)
+          onChange(next)
+        }}
+        className="w-full rounded-xl px-4 py-3.5 text-sm outline-none t2-input"
+        style={mono ? { fontFamily: "JetBrains Mono, monospace" } : undefined}
+      />
+    </div>
+  )
 }
 
 export default function T2Profile({ profile, onUpdateProfile }: Props) {
@@ -425,8 +459,8 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
       })
       if (!response.ok) return
       setPortfolio((prev) => prev.filter((p) => p.id !== id))
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error("Erreur suppression realisation:", err)
     }
   }
 
@@ -438,8 +472,8 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (res.ok) setKycDocs(await res.json())
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error("Erreur chargement documents KYC:", err)
     }
   }
 
@@ -477,8 +511,8 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       })
       await refreshKyc()
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error("Erreur suppression document KYC:", err)
     }
   }
 
@@ -487,49 +521,6 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
     const parts = url.split("/")
     return parts[parts.length - 1] || t("Document")
   }
-
-  const Field = ({
-    label,
-    value,
-    onChange,
-    mono,
-    filter,
-  }: {
-    label: string
-    value: string
-    onChange: (v: string) => void
-    mono?: boolean
-    filter?: "letters" | "digits"
-  }) => (
-    <div>
-      <p
-        className="text-xs font-medium mb-1.5"
-        style={{
-          color: "#94A3B8",
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-        }}
-      >
-        {label}
-      </p>
-      <input
-        value={value}
-        onChange={(e) => {
-          let next = e.target.value
-          if (filter === "digits") next = sanitizeDigits(next)
-          else if (filter === "letters") next = sanitizeLetters(next)
-          onChange(next)
-        }}
-        className="w-full rounded-xl px-4 py-3.5 text-sm outline-none"
-        style={{
-          background: "#1E2A42",
-          border: "1px solid rgba(255,255,255,0.06)",
-          color: "#E8EDF5",
-          fontFamily: mono ? "JetBrains Mono, monospace" : "Inter, sans-serif",
-        }}
-      />
-    </div>
-  )
 
   const KycUploadZone = ({
     label,
@@ -553,33 +544,17 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
     const busy = kycBusy === docType
     return (
       <div>
-        <p
-          className="text-xs font-medium mb-1.5"
-          style={{
-            color: "#94A3B8",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
-        >
+        <p className="text-xs font-medium mb-1.5 t2-label">
           {label}
         </p>
         {doc ? (
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background: "#1E2A42",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
+          <div className="rounded-xl p-4 t2-kyc-card">
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-                style={{ background: "#141C2F" }}
-              >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 t2-icon-bg">
                 📄
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate" style={{ color: "#E8EDF5" }}>
+                <p className="text-sm font-medium truncate t2-text-primary">
                   {fileNameFromUrl(doc.fileUrl)}
                 </p>
                 <span
@@ -595,19 +570,15 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                 type="button"
                 onClick={() => inputRef.current?.click()}
                 disabled={busy}
-                className="text-xs px-3 py-1.5 rounded-lg flex-shrink-0 text-white"
-                style={{ background: "#1D4ED8", opacity: busy ? 0.6 : 1 }}
+                className="text-xs px-3 py-1.5 rounded-lg flex-shrink-0 text-white t2-replace-btn"
+                style={{ opacity: busy ? 0.6 : 1 }}
               >
                 {busy ? "..." : t("Remplacer")}
               </button>
               <button
                 type="button"
                 onClick={() => onDelete(doc.id)}
-                className="text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0"
-                style={{
-                  background: "rgba(248,113,113,0.1)",
-                  color: "#F87171",
-                }}
+                className="text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0 t2-delete-btn"
               >
                 ✕
               </button>
@@ -618,24 +589,17 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={busy}
-            className="w-full flex items-center gap-4 p-4 rounded-xl text-left"
-            style={{
-              background: "#1E2A42",
-              border: "2px dashed rgba(255,255,255,0.1)",
-              opacity: busy ? 0.6 : 1,
-            }}
+            className="w-full flex items-center gap-4 p-4 rounded-xl text-left t2-upload-zone"
+            style={{ opacity: busy ? 0.6 : 1 }}
           >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-              style={{ background: "#141C2F" }}
-            >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 t2-icon-bg">
               {icon}
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium" style={{ color: "#E8EDF5" }}>
+              <p className="text-sm font-medium t2-text-primary">
                 {busy ? t("Envoi en cours...") : t("Télécharger le fichier")}
               </p>
-              <p className="text-xs" style={{ color: "#64748B" }}>
+              <p className="text-xs t2-text-muted">
                 {hint}
               </p>
             </div>
@@ -671,17 +635,14 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
   }
 
   return (
-    <div className="min-h-full p-4 sm:p-6" style={{ background: "#0B1120" }}>
+    <div className="min-h-full p-4 sm:p-6 t2-page">
       <div className="mx-auto max-w-[min(1400px,95%)]">
         <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1
-              className="mb-1 text-xl font-bold sm:text-2xl"
-              style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
-            >
+            <h1 className="mb-1 text-xl font-bold sm:text-2xl t2-heading">
               {t("Mon profil")}
             </h1>
-            <p className="text-sm" style={{ color: "#64748B" }}>
+            <p className="text-sm t2-text-muted">
               {t("Gérez vos informations, spécialités et documents de certification")}
             </p>
           </div>
@@ -700,12 +661,12 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
               {saved ? t("✓ Enregistré") : t("Enregistrer les modifications")}
             </button>
             {uploadingPhoto && (
-              <p className="text-xs" style={{ color: "#93C5FD" }}>
+              <p className="text-xs t2-text-blue">
                 {t("Enregistrement de la photo de profil...")}
               </p>
             )}
             {saveError && !uploadingPhoto && (
-              <p className="text-xs" style={{ color: "#F87171" }}>
+              <p className="text-xs t2-text-error">
                 {saveError}
               </p>
             )}
@@ -715,13 +676,7 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
         <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
           {/* Profile card */}
           <div className="flex flex-col gap-4">
-            <div
-              className="p-6 rounded-2xl text-center"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
+            <div className="p-6 rounded-2xl text-center t2-card">
               <div className="relative mx-auto mb-4 w-20 h-20">
                 <div className="h-20 w-20 rounded-full overflow-hidden border border-white/10 bg-[#0F172A]">
                   {photoPreview ? (
@@ -731,10 +686,7 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div
-                      className="flex h-full w-full items-center justify-center text-xs uppercase tracking-[0.15em]"
-                      style={{ color: "#64748B" }}
-                    >
+                    <div className="flex h-full w-full items-center justify-center text-xs uppercase tracking-[0.15em] t2-text-muted">
                       {t("Photo")}
                     </div>
                   )}
@@ -742,8 +694,7 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                 <button
                   type="button"
                   onClick={() => photoInputRef.current?.click()}
-                  className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-[#2563EB] text-xs text-white shadow-lg"
-                  style={{ boxShadow: "0 10px 20px rgba(0,0,0,0.12)" }}
+                  className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-[#2563EB] text-xs text-white shadow-lg t2-btn-shadow"
                 >
                   ✎
                 </button>
@@ -755,60 +706,30 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                   onChange={handlePhotoChange}
                 />
               </div>
-              <p
-                className="text-base font-bold"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
-              >
+              <p className="text-base font-bold t2-heading">
                 {prenom} {nom}
               </p>
               {profile?.email && (
-                <p className="text-xs mt-0.5" style={{ color: "#64748B" }}>
+                <p className="text-xs mt-0.5 t2-text-muted">
                   {profile.email}
                 </p>
               )}
-              <p className="text-sm mt-1 mb-3" style={{ color: "#64748B" }}>
+              <p className="text-sm mt-1 mb-3 t2-text-muted">
                 {profile?.domain || t("Domaine non renseigné")}
               </p>
               {profile?.verified ? (
-                <span
-                  className="inline-block px-3 py-1 rounded-full text-xs font-bold"
-                  style={{
-                    background: "rgba(5,150,105,0.15)",
-                    color: "#059669",
-                    border: "1px solid rgba(5,150,105,0.3)",
-                  }}
-                >
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-bold t2-badge-verified">
                   {t("✓ Identité vérifiée")}
                 </span>
               ) : (
-                <span
-                  className="inline-block px-3 py-1 rounded-full text-xs font-bold"
-                  style={{
-                    background: "rgba(245,158,11,0.15)",
-                    color: "#F59E0B",
-                    border: "1px solid rgba(245,158,11,0.3)",
-                  }}
-                >
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-bold t2-badge-pending">
                   {t("Vérification en attente")}
                 </span>
               )}
             </div>
 
-            <div
-              className="p-5 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
-              <p
-                className="text-xs font-semibold mb-3"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
+            <div className="p-5 rounded-2xl t2-card">
+              <p className="text-xs font-semibold mb-3 t2-section-heading">
                 {t("Statut des documents")}
               </p>
               {(() => {
@@ -842,10 +763,9 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                 return rows.map((d) => (
                   <div
                     key={d.label}
-                    className="flex items-center justify-between py-2"
-                    style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
+                    className="flex items-center justify-between py-2 t2-doc-row"
                   >
-                    <span className="text-xs" style={{ color: "#94A3B8" }}>
+                    <span className="text-xs t2-status-text">
                       {d.label}
                     </span>
                     <span
@@ -863,21 +783,8 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
           {/* Forms */}
           <div className="flex flex-col gap-5">
             {/* Personal info */}
-            <div
-              className="p-6 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
-              <h2
-                className="text-xs font-semibold mb-5"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
+            <div className="p-6 rounded-2xl t2-card">
+              <h2 className="text-xs font-semibold mb-5 t2-section-heading">
                 {t("Informations personnelles")}
               </h2>
               <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -952,18 +859,11 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                   filter="digits"
                 />
               </div>
-              <p className="mt-2 text-[11px]" style={{ color: "#64748B" }}>
+              <p className="mt-2 text-[11px] t2-text-muted">
                 {t("Ces informations sont affichées dans le catalogue : « Tarif horaire » et « Années d'expérience ».")}
               </p>
               <div className="mt-4">
-                <p
-                  className="text-xs font-medium mb-1.5"
-                  style={{
-                    color: "#94A3B8",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
-                >
+                <p className="text-xs font-medium mb-1.5 t2-label">
                   {t("Présentation / bio")}
                 </p>
                 <textarea
@@ -973,24 +873,11 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                     setBio(e.target.value)
                   }}
                   rows={2}
-                  className="w-full rounded-xl px-4 py-3.5 text-sm outline-none resize-none"
-                  style={{
-                    background: "#1E2A42",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    color: "#E8EDF5",
-                    fontFamily: "Inter, sans-serif",
-                  }}
+                  className="w-full rounded-xl px-4 py-3.5 text-sm outline-none resize-none t2-input"
                 />
               </div>
               <div className="mt-4">
-                <p
-                  className="text-xs font-medium mb-1.5"
-                  style={{
-                    color: "#94A3B8",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
-                >
+                <p className="text-xs font-medium mb-1.5 t2-label">
                   {t("Spécialités")}
                 </p>
                 <textarea
@@ -1000,37 +887,18 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                     setSpecs(e.target.value)
                   }}
                   rows={3}
-                  className="w-full rounded-xl px-4 py-3.5 text-sm outline-none resize-none"
-                  style={{
-                    background: "#1E2A42",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    color: "#E8EDF5",
-                    fontFamily: "Inter, sans-serif",
-                  }}
+                  className="w-full rounded-xl px-4 py-3.5 text-sm outline-none resize-none t2-input"
                 />
               </div>
             </div>
 
             {/* KYC */}
-            <div
-              className="p-6 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
-              <h2
-                className="text-xs font-semibold mb-5"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
+            <div className="p-6 rounded-2xl t2-card">
+              <h2 className="text-xs font-semibold mb-5 t2-section-heading">
                 {t("Documents KYC")}
               </h2>
               {kycError && (
-                <p className="text-xs mb-3" style={{ color: "#F87171" }}>
+                <p className="text-xs mb-3 t2-text-error">
                   {kycError}
                 </p>
               )}
@@ -1066,24 +934,11 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
             </div>
 
             {/* Recommendations */}
-            <div
-              className="p-6 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
-              <h2
-                className="text-xs font-semibold mb-2"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
+            <div className="p-6 rounded-2xl t2-card">
+              <h2 className="text-xs font-semibold mb-2 t2-section-heading">
                 {t("Lettres de recommandation")}
               </h2>
-              <p className="text-xs mb-4" style={{ color: "#64748B" }}>
+              <p className="text-xs mb-4 t2-text-muted">
                 {t("Lettres signées par des artisans seniors ou d'anciens clients hors-plateforme")}
               </p>
 
@@ -1092,20 +947,13 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                   {letters.map((letter) => (
                     <div
                       key={letter.id}
-                      className="rounded-xl p-3 flex items-center gap-3"
-                      style={{
-                        background: "#1E2A42",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                      }}
+                      className="rounded-xl p-3 flex items-center gap-3 t2-kyc-card"
                     >
-                      <div
-                        className="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0"
-                        style={{ background: "#141C2F" }}
-                      >
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0 t2-icon-bg">
                         📄
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate" style={{ color: "#E8EDF5" }}>
+                        <p className="text-sm font-medium truncate t2-text-primary">
                           {fileNameFromUrl(letter.fileUrl)}
                         </p>
                         <span
@@ -1121,10 +969,8 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                         type="button"
                         onClick={() => deleteKyc(letter.id)}
                         disabled={kycBusy === "recommendation_letter"}
-                        className="text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0"
+                        className="text-xs px-2.5 py-1.5 rounded-lg flex-shrink-0 t2-delete-btn"
                         style={{
-                          background: "rgba(248,113,113,0.1)",
-                          color: "#F87171",
                           opacity: kycBusy === "recommendation_letter" ? 0.6 : 1,
                         }}
                       >
@@ -1139,28 +985,21 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                 type="button"
                 onClick={() => letterInputRef.current?.click()}
                 disabled={kycBusy === "recommendation_letter"}
-                className="w-full flex items-center gap-4 p-4 rounded-xl text-left"
-                style={{
-                  background: "#1E2A42",
-                  border: "2px dashed rgba(255,255,255,0.1)",
-                  opacity: kycBusy === "recommendation_letter" ? 0.6 : 1,
-                }}
+                className="w-full flex items-center gap-4 p-4 rounded-xl text-left t2-upload-zone"
+                style={{ opacity: kycBusy === "recommendation_letter" ? 0.6 : 1 }}
               >
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-                  style={{ background: "#141C2F" }}
-                >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 t2-icon-bg">
                   📄
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium" style={{ color: "#E8EDF5" }}>
+                  <p className="text-sm font-medium t2-text-primary">
                     {kycBusy === "recommendation_letter"
                       ? t("Envoi en cours...")
                       : letters.length > 0
                         ? t("Ajouter une lettre")
                         : t("Importer une lettre")}
                   </p>
-                  <p className="text-xs" style={{ color: "#64748B" }}>
+                  <p className="text-xs t2-text-muted">
                     {t("PDF, JPG, PNG · Lettres signées et datées")}
                   </p>
                 </div>
@@ -1193,24 +1032,11 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
             </div>
 
             {/* Portfolio — preuves avant/après */}
-            <div
-              className="p-6 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
-              <h2
-                className="text-xs font-semibold mb-2"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
+            <div className="p-6 rounded-2xl t2-card">
+              <h2 className="text-xs font-semibold mb-2 t2-section-heading">
                 {t("Mes réalisations")}
               </h2>
-              <p className="text-xs mb-4" style={{ color: "#64748B" }}>
+              <p className="text-xs mb-4 t2-text-muted">
                 {t("Ajoutez des preuves avant / après de vos chantiers pour convaincre les clients.")}
               </p>
 
@@ -1220,14 +1046,7 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <p
-                    className="text-xs font-medium mb-1.5"
-                    style={{
-                      color: "#94A3B8",
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                    }}
-                  >
+                  <p className="text-xs font-medium mb-1.5 t2-label">
                     {t("Photo — Avant")}
                   </p>
                   {beforePreview ? (
@@ -1244,27 +1063,19 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                           setBeforeFile(null)
                           setBeforePreview("")
                         }}
-                        className="absolute top-2 right-2 text-xs px-2 py-1 rounded-lg"
-                        style={{
-                          background: "rgba(11,17,32,0.85)",
-                          color: "#F87171",
-                        }}
+                        className="absolute top-2 right-2 text-xs px-2 py-1 rounded-lg t2-remove-overlay"
                       >
-                          {t("✕ Retirer")}
+                        {t("✕ Retirer")}
                       </button>
                     </div>
                   ) : (
                     <button
                       type="button"
                       onClick={() => beforeInputRef.current?.click()}
-                      className="w-full flex items-center justify-center gap-3 rounded-xl p-5"
-                      style={{
-                        background: "#1E2A42",
-                        border: "2px dashed rgba(255,255,255,0.1)",
-                      }}
+                      className="w-full flex items-center justify-center gap-3 rounded-xl p-5 t2-upload-zone"
                     >
                       <span className="text-xl">📷</span>
-                      <span className="text-sm font-medium" style={{ color: "#E8EDF5" }}>
+                      <span className="text-sm font-medium t2-text-primary">
                         {t("Avant travaux")}
                       </span>
                     </button>
@@ -1278,14 +1089,7 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                   />
                 </div>
                 <div>
-                  <p
-                    className="text-xs font-medium mb-1.5"
-                    style={{
-                      color: "#94A3B8",
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                    }}
-                  >
+                  <p className="text-xs font-medium mb-1.5 t2-label">
                     {t("Photo — Après")}
                   </p>
                   {afterPreview ? (
@@ -1302,27 +1106,19 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                           setAfterFile(null)
                           setAfterPreview("")
                         }}
-                        className="absolute top-2 right-2 text-xs px-2 py-1 rounded-lg"
-                        style={{
-                          background: "rgba(11,17,32,0.85)",
-                          color: "#F87171",
-                        }}
+                        className="absolute top-2 right-2 text-xs px-2 py-1 rounded-lg t2-remove-overlay"
                       >
-                          {t("✕ Retirer")}
+                        {t("✕ Retirer")}
                       </button>
                     </div>
                   ) : (
                     <button
                       type="button"
                       onClick={() => afterInputRef.current?.click()}
-                      className="w-full flex items-center justify-center gap-3 rounded-xl p-5"
-                      style={{
-                        background: "#1E2A42",
-                        border: "2px dashed rgba(255,255,255,0.1)",
-                      }}
+                      className="w-full flex items-center justify-center gap-3 rounded-xl p-5 t2-upload-zone"
                     >
                       <span className="text-xl">✨</span>
-                      <span className="text-sm font-medium" style={{ color: "#E8EDF5" }}>
+                      <span className="text-sm font-medium t2-text-primary">
                         {t("Après travaux")}
                       </span>
                     </button>
@@ -1342,17 +1138,15 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                   type="button"
                   onClick={addPortfolio}
                   disabled={portfolioBusy}
-                  className="rounded-xl px-5 py-3 text-sm font-bold text-white"
+                  className="rounded-xl px-5 py-3 text-sm font-bold text-white t2-primary-btn"
                   style={{
-                    background: "linear-gradient(135deg, #2563EB, #1D4ED8)",
-                    boxShadow: "0 4px 20px rgba(37,99,235,0.3)",
                     opacity: portfolioBusy ? 0.6 : 1,
                   }}
                 >
                   {portfolioBusy ? t("Ajout en cours...") : t("+ Ajouter la réalisation")}
                 </button>
                 {portfolioError && (
-                  <p className="text-xs" style={{ color: "#F87171" }}>
+                  <p className="text-xs t2-text-error">
                     {portfolioError}
                   </p>
                 )}
@@ -1363,11 +1157,7 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                   {portfolio.map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-xl overflow-hidden"
-                      style={{
-                        background: "#1E2A42",
-                        border: "1px solid rgba(255,255,255,0.06)",
-                      }}
+                      className="rounded-xl overflow-hidden t2-item-card"
                     >
                       <div className="relative">
                         {item.afterUrl ? (
@@ -1378,39 +1168,22 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                             style={{ height: "110px" }}
                           />
                         ) : (
-                          <div
-                            className="w-full flex items-center justify-center text-xs"
-                            style={{
-                              height: "110px",
-                              background: "#0F172A",
-                              color: "#64748B",
-                            }}
-                          >
+                          <div className="w-full flex items-center justify-center text-xs t2-item-placeholder">
                             {t("Sans photo après")}
                           </div>
                         )}
-                        <span
-                          className="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full font-bold"
-                          style={{
-                            background: "rgba(5,150,105,0.85)",
-                            color: "white",
-                          }}
-                        >
+                        <span className="absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full font-bold t2-after-badge">
                           {t("APRÈS")}
                         </span>
                       </div>
                       <div className="p-3 flex items-center justify-between gap-2">
-                        <p className="text-xs font-medium truncate" style={{ color: "#E8EDF5" }}>
+                        <p className="text-xs font-medium truncate t2-text-primary">
                           {item.label || t("Réalisation")}
                         </p>
                         <button
                           type="button"
                           onClick={() => deletePortfolio(item.id)}
-                          className="text-xs px-2 py-1 rounded-lg flex-shrink-0"
-                          style={{
-                            background: "rgba(248,113,113,0.1)",
-                            color: "#F87171",
-                          }}
+                          className="text-xs px-2 py-1 rounded-lg flex-shrink-0 t2-delete-btn"
                         >
                           {t("Supprimer")}
                         </button>
@@ -1419,14 +1192,7 @@ export default function T2Profile({ profile, onUpdateProfile }: Props) {
                   ))}
                 </div>
               ) : (
-                <div
-                  className="mt-5 rounded-xl p-4 text-xs"
-                  style={{
-                    background: "#0F172A",
-                    border: "1px dashed rgba(255,255,255,0.1)",
-                    color: "#64748B",
-                  }}
-                >
+                <div className="mt-5 rounded-xl p-4 text-xs t2-empty-state">
                   {t("Aucune réalisation enregistrée. Sélectionnez une photo (avant et/ou après), puis cliquez sur « + Ajouter la réalisation » pour l'enregistrer.")}
                 </div>
               )}

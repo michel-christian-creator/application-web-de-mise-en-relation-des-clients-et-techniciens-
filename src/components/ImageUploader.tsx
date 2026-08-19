@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect } from "react"
+import "./ImageUploader.css"
 import { useI18n } from "../i18n"
 
 interface Props {
@@ -174,21 +175,14 @@ export default function ImageUploader({
           return (
             <div
               key={i}
-              className="group relative h-32 w-32 overflow-hidden rounded-2xl"
-              style={{
-                background: "#1E2A42",
-                border: "1px solid rgba(37,99,235,0.25)",
-              }}
+              className="group relative h-32 w-32 overflow-hidden rounded-2xl uploader-file-card"
             >
               {f.type.startsWith("image/") ? (
                 <img src={previewUrls.get(f)} alt={f.name} className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-2">
                   <span className="text-3xl">{badge.icon}</span>
-                  <span
-                    className="line-clamp-2 text-center text-[10px] leading-tight"
-                    style={{ color: "#94A3B8" }}
-                  >
+                  <span className="line-clamp-2 text-center text-[10px] leading-tight uploader-file-name">
                     {f.name}
                   </span>
                 </div>
@@ -203,26 +197,15 @@ export default function ImageUploader({
 
               <button
                 onClick={() => removeFile(i)}
-                className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full text-xs text-white"
-                style={{
-                  background: "rgba(0,0,0,0.55)",
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  backdropFilter: "blur(4px)",
-                }}
+                className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full text-xs text-white uploader-remove-btn"
                 aria-label={t("Supprimer le fichier")}
               >
                 ✕
               </button>
 
-              <div
-                className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 px-2 py-1"
-                style={{
-                  background: "rgba(0,0,0,0.6)",
-                  backdropFilter: "blur(4px)",
-                }}
-              >
+              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 px-2 py-1 uploader-file-bar">
                 <span className="truncate text-[10px] font-medium text-white">{f.name}</span>
-                <span className="flex-shrink-0 text-[9px]" style={{ color: "#94A3B8" }}>
+                <span className="flex-shrink-0 text-[9px] uploader-file-size">
                   {formatSize(f.size)}
                 </span>
               </div>
@@ -239,13 +222,11 @@ export default function ImageUploader({
               }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
-              className="flex h-32 w-32 flex-col items-center justify-center gap-2 rounded-2xl"
+              className="flex h-32 w-32 flex-col items-center justify-center gap-2 rounded-2xl uploader-drop-zone"
               style={{
-                background: "#1A2236",
                 border: dragOver
                   ? "2px dashed rgba(59,130,246,0.7)"
                   : "2px dashed rgba(255,255,255,0.12)",
-                transition: "all 150ms",
               }}
             >
               <button
@@ -253,10 +234,7 @@ export default function ImageUploader({
                 onClick={openFilePicker}
                 className="flex flex-col items-center gap-2"
               >
-                <span
-                  className="flex h-9 w-9 items-center justify-center rounded-full"
-                  style={{ background: "rgba(37,99,235,0.15)" }}
-                >
+                <span className="flex h-9 w-9 items-center justify-center rounded-full uploader-drop-icon">
                   <svg
                     width="16"
                     height="16"
@@ -272,29 +250,18 @@ export default function ImageUploader({
                     <polyline points="21 15 16 10 5 21" />
                   </svg>
                 </span>
-                <span className="text-xs font-medium" style={{ color: "#94A3B8" }}>
+                <span className="text-xs font-medium uploader-drop-label">
                   {t("Ajouter une image")}
                 </span>
               </button>
             </div>
-            <div
-              className="flex h-32 w-32 flex-col items-center justify-center gap-2 rounded-2xl"
-              style={{
-                background: "#1A2236",
-                border: "2px dashed rgba(255,255,255,0.12)",
-                transition: "all 150ms",
-                cursor: "pointer",
-              }}
-            >
+            <div className="flex h-32 w-32 flex-col items-center justify-center gap-2 rounded-2xl uploader-camera-zone">
               <button
                 type="button"
                 onClick={startCamera}
                 className="flex flex-col items-center gap-2"
               >
-                <span
-                  className="flex h-9 w-9 items-center justify-center rounded-full"
-                  style={{ background: "rgba(5,150,105,0.15)" }}
-                >
+                <span className="flex h-9 w-9 items-center justify-center rounded-full uploader-camera-icon">
                   <svg
                     width="16"
                     height="16"
@@ -309,7 +276,7 @@ export default function ImageUploader({
                     <circle cx="12" cy="13" r="4" />
                   </svg>
                 </span>
-                <span className="text-xs font-medium" style={{ color: "#94A3B8" }}>
+                <span className="text-xs font-medium uploader-camera-label">
                   {t("Prendre une photo")}
                 </span>
               </button>

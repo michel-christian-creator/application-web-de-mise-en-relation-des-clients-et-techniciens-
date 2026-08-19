@@ -4,6 +4,7 @@ import { API_BASE_URL } from "../../config"
 import FadeIn from "../../components/animations/FadeIn"
 import Stagger from "../../components/animations/Stagger"
 import StaggerItem from "../../components/animations/StaggerItem"
+import ThemeToggle from "../../components/ThemeToggle"
 import { useI18n } from "../../i18n"
 import {
   sanitizeText,
@@ -17,6 +18,7 @@ import {
   MAX_MULTILINE_LENGTH,
   MAX_PASSWORD_LENGTH,
 } from "../../utils/validation"
+import "./C1Auth.css"
 
 type BackendProfile = {
   username?: string
@@ -80,6 +82,7 @@ const professions = [
   "Jardinier",
   "Déménageur",
   "Informaticien",
+  "Multi-métier",
   "Autre",
 ].sort((a, b) => a.localeCompare(b))
 
@@ -107,6 +110,9 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
   })
   const [customCity, setCustomCity] = useState("")
   const [customDomain, setCustomDomain] = useState("")
+  const [selectedDomains, setSelectedDomains] = useState<string[]>([])
+  const [customMultiDomains, setCustomMultiDomains] = useState(["", "", ""])
+  const multiProfessions = professions.filter((p) => p !== "Multi-métier" && p !== "Autre")
   const [phone, setPhone] = useState("")
   const [otp, setOtp] = useState(["", "", "", ""])
   const [timer, setTimer] = useState(59)
@@ -131,8 +137,12 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
     )
     const location = sanitizeText(profile.location, MAX_TEXT_LENGTH)
     const domain = sanitizeText(
-      profile.domain === "Autre" ? customDomain : profile.domain,
-      MAX_TEXT_LENGTH,
+      profile.domain === "Autre"
+        ? customDomain
+        : profile.domain === "Multi-métier"
+          ? selectedDomains.join(", ")
+          : profile.domain,
+      MAX_MULTILINE_LENGTH,
     )
     const bio = sanitizeMultiline(profile.bio, MAX_MULTILINE_LENGTH)
     const specialties = sanitizeMultiline(profile.specialties, MAX_MULTILINE_LENGTH)
@@ -285,6 +295,10 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
       setError(t("Veuillez préciser votre domaine d'expertise."))
       return
     }
+    if (profile.role === "technician" && profile.domain === "Multi-métier" && selectedDomains.length === 0) {
+      setError(t("Veuillez sélectionner au moins un métier."))
+      return
+    }
     if (profile.role === "technician" && profile.domain === "Autre" && !customDomain.trim()) {
       setError(t("Veuillez préciser votre métier."))
       return
@@ -348,8 +362,8 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
       {
         key: "domain",
         label: "domaine",
-        value: profile.domain,
-        maxLength: MAX_TEXT_LENGTH,
+        value: profile.domain === "Multi-métier" ? selectedDomains.join(", ") : profile.domain,
+        maxLength: MAX_MULTILINE_LENGTH,
       },
       {
         key: "bio",
@@ -524,20 +538,19 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
   }
 
   return (
-    <div className="flex min-h-screen overflow-hidden" style={{ background: "#0B1120" }}>
+    <div className="flex min-h-screen overflow-hidden auth-bg">
+      {/* Theme toggle — fixed top-right */}
+      <div className="fixed top-5 right-5 z-50">
+        <ThemeToggle className="border-white/15 auth-theme-toggle" />
+      </div>
+
       {/* Left panel — branding */}
       <div
-        className="flex flex-col justify-between p-10 h-screen overflow-hidden"
-        style={{
-          flex: "0 0 70%",
-          background: "linear-gradient(160deg, #0F1E3D 0%, #0B1120 100%)",
-          borderRight: "1px solid rgba(255,255,255,0.05)",
-        }}
+        className="flex flex-col justify-between p-10 h-screen overflow-hidden auth-left-panel"
       >
         <div className="flex items-center gap-3">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #2563EB, #1D4ED8)" }}
+            className="w-10 h-10 rounded-xl flex items-center justify-center auth-logo-icon"
           >
             <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
               <path
@@ -565,8 +578,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
             </svg>
           </div>
           <span
-            className="font-bold text-lg"
-            style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+            className="font-bold text-lg auth-text-primary"
           >
             MboaTech
           </span>
@@ -576,21 +588,14 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
           <FadeIn delay={0.15}>
             <div>
               <h1
-                className="text-4xl font-bold leading-tight mb-4 max-w-[90%]"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                className="text-4xl font-bold leading-tight mb-4 max-w-[90%] auth-text-primary"
               >
                 {t("Votre artisan de confiance,")}
                 <br />
-                <span style={{ color: "#059669" }}>{t("en toute sérénité.")}</span>
+                <span className="auth-text-green">{t("en toute sérénité.")}</span>
               </h1>
               <p
-                className="text-base leading-relaxed"
-                style={{
-                  color: "#64748B",
-                  width: "80%",
-                  maxWidth: "340px",
-                  marginTop: "0.5rem",
-                }}
+                className="text-base leading-relaxed auth-description"
               >
                 {t("Trouvez, évaluez et payez votre artisan en toute sérénité — vos fonds sont gardés jusqu'à validation.")}
               </p>
@@ -624,7 +629,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-950/80 text-sm font-semibold text-white ring-1 ring-white/10">
                     <span className="text-base">✓</span>
                   </div>
-                  <span className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
+                  <span className="text-sm font-semibold auth-text-primary">
                     {t(item.text)}
                   </span>
                 </div>
@@ -634,7 +639,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
         </div>
 
         <div className="mt-auto">
-          <p className="text-xs" style={{ color: "#1E2A42" }}>
+          <p className="text-xs auth-footer-text">
             {t("© 2026 MboaTech · Cameroun")}
           </p>
         </div>
@@ -642,25 +647,23 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
 
       {/* Right panel — form */}
       <div
-        className="flex flex-col justify-center overflow-y-auto bg-[#0B1120] px-4 py-8"
-        style={{ flex: "0 0 30%", minWidth: "320px", height: "100vh" }}
+        className="flex flex-col justify-center overflow-y-auto px-4 py-8 auth-right-panel"
       >
         <motion.div
           key={step}
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          style={{ width: "100%", margin: "0 auto" }}
+          className="auth-form-card"
         >
           {step === "choice" ? (
             <>
               <h2
-                className="text-2xl font-bold mb-2"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                className="text-2xl font-bold mb-2 auth-text-primary"
               >
                 {t("Bienvenue")}
               </h2>
-              <p className="text-sm mb-8" style={{ color: "#64748B" }}>
+              <p className="text-sm mb-8 auth-text-muted">
                 {t("Choisissez ce que vous souhaitez faire pour commencer.")}
               </p>
 
@@ -668,15 +671,10 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                 <button
                   type="button"
                   onClick={() => handleChoice("signup")}
-                  className="rounded-xl border px-4 py-4 text-left"
-                  style={{
-                    background: "#141C2F",
-                    borderColor: "rgba(255,255,255,0.1)",
-                    color: "#E8EDF5",
-                  }}
+                  className="rounded-xl border px-4 py-4 text-left auth-choice-btn"
                 >
                   <div className="font-semibold">{t("Créer un compte")}</div>
-                  <div className="mt-1 text-sm" style={{ color: "#64748B" }}>
+                  <div className="mt-1 text-sm auth-text-muted">
                     {t("Pour rejoindre MboaTech en tant que client ou technicien.")}
                   </div>
                 </button>
@@ -684,15 +682,10 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                 <button
                   type="button"
                   onClick={() => handleChoice("login")}
-                  className="rounded-xl border px-4 py-4 text-left"
-                  style={{
-                    background: "#141C2F",
-                    borderColor: "rgba(255,255,255,0.1)",
-                    color: "#E8EDF5",
-                  }}
+                  className="rounded-xl border px-4 py-4 text-left auth-choice-btn"
                 >
                   <div className="font-semibold">{t("Se connecter")}</div>
-                  <div className="mt-1 text-sm" style={{ color: "#64748B" }}>
+                  <div className="mt-1 text-sm auth-text-muted">
                     {t("Si vous avez déjà un compte, accédez directement à votre espace.")}
                   </div>
                 </button>
@@ -701,23 +694,17 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
           ) : step === "credentials" ? (
             <>
               <h2
-                className="text-2xl font-bold mb-2"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                className="text-2xl font-bold mb-2 auth-text-primary"
               >
                 {t("Connexion à votre espace")}
               </h2>
-              <p className="text-sm mb-6" style={{ color: "#64748B" }}>
+              <p className="text-sm mb-6 auth-text-muted">
                 {t("Saisissez vos identifiants puis poursuivez la vérification.")}
               </p>
 
               <div className="mb-4">
                 <p
-                  className="text-xs font-medium mb-2"
-                  style={{
-                    color: "#94A3B8",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
+                  className="text-xs font-medium mb-2 auth-label"
                 >
                   {t("Email")}
                 </p>
@@ -728,24 +715,14 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                     updateCredentials("email", e.target.value)
                   }
                   placeholder={t("Votre adresse email")}
-                  className="w-full rounded-xl border px-4 py-3 outline-none"
-                  style={{
-                    background: "#141C2F",
-                    borderColor: "rgba(255,255,255,0.1)",
-                    color: "#E8EDF5",
-                  }}
+                  className="w-full rounded-xl border px-4 py-3 outline-none auth-input"
                   autoFocus
                 />
               </div>
 
               <div className="mb-4">
                 <p
-                  className="text-xs font-medium mb-2"
-                  style={{
-                    color: "#94A3B8",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
+                  className="text-xs font-medium mb-2 auth-label"
                 >
                   {t("Mot de passe")}
                 </p>
@@ -757,12 +734,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                       updateCredentials("password", e.target.value)
                     }
                     placeholder={t("Votre mot de passe")}
-                    className="w-full rounded-xl border px-4 py-3 pr-12 outline-none"
-                    style={{
-                      background: "#141C2F",
-                      borderColor: "rgba(255,255,255,0.1)",
-                      color: "#E8EDF5",
-                    }}
+                    className="w-full rounded-xl border px-4 py-3 pr-12 outline-none auth-input"
                   />
                   <button
                     type="button"
@@ -812,42 +784,34 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                   </button>
                 </div>
                 <label
-                  className="mt-2 flex items-center gap-2 text-xs select-none"
-                  style={{ color: "#94A3B8", cursor: "pointer" }}
+                  className="mt-2 flex items-center gap-2 text-xs select-none auth-checkbox-label"
                 >
                   <input
                     type="checkbox"
                     checked={showPassword}
                     onChange={(e) => setShowPassword(e.target.checked)}
-                    className="w-4 h-4 rounded"
-                    style={{ accentColor: "#2563EB" }}
+                    className="w-4 h-4 rounded auth-checkbox"
                   />
                   {t("Afficher le mot de passe")}
                 </label>
               </div>
 
               {error && (
-                <p className="mb-4 text-sm" style={{ color: "#F59E0B" }}>
+                <p className="mb-4 text-sm auth-error">
                   {error}
                 </p>
               )}
 
               <button
                 onClick={handleCredentialsNext}
-                className="w-full py-4 rounded-xl font-semibold text-base text-white mb-4"
-                style={{
-                  background: "linear-gradient(135deg, #2563EB, #1D4ED8)",
-                  fontFamily: "Poppins, sans-serif",
-                  boxShadow: "0 4px 20px rgba(37,99,235,0.35)",
-                }}
+                className="w-full py-4 rounded-xl font-semibold text-base text-white mb-4 auth-btn-primary"
               >
                 {t("Continuer")}
               </button>
 
               <button
                 onClick={() => setStep("choice")}
-                className="w-full text-sm text-center py-2"
-                style={{ color: "#64748B" }}
+                className="w-full text-sm text-center py-2 auth-text-muted"
               >
                 {t("← Retour au choix")}
               </button>
@@ -855,24 +819,18 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
           ) : step === "profile" ? (
             <>
               <h2
-                className="text-2xl font-bold mb-2"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                className="text-2xl font-bold mb-2 auth-text-primary"
               >
                 {t("Créer votre compte")}
               </h2>
-              <p className="text-sm mb-6" style={{ color: "#64748B" }}>
+              <p className="text-sm mb-6 auth-text-muted">
                 {t("Quelques informations pour commencer votre aventure MboaTech.")}
               </p>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
                   <p
-                    className="text-xs font-medium mb-2"
-                    style={{
-                      color: "#94A3B8",
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                    }}
+                    className="text-xs font-medium mb-2 auth-label"
                   >
                     {t("Prénom")}
                   </p>
@@ -883,22 +841,12 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                       updateProfile("firstName", sanitizeLetters(e.target.value))
                     }
                     placeholder={t("Votre prénom")}
-                    className="w-full rounded-xl border px-4 py-3 outline-none"
-                    style={{
-                      background: "#141C2F",
-                      borderColor: "rgba(255,255,255,0.1)",
-                      color: "#E8EDF5",
-                    }}
+                    className="w-full rounded-xl border px-4 py-3 outline-none auth-input"
                   />
                 </div>
                 <div>
                   <p
-                    className="text-xs font-medium mb-2"
-                    style={{
-                      color: "#94A3B8",
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                    }}
+                    className="text-xs font-medium mb-2 auth-label"
                   >
                     {t("Nom")}
                   </p>
@@ -909,24 +857,14 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                       updateProfile("lastName", sanitizeLetters(e.target.value))
                     }
                     placeholder={t("Votre nom")}
-                    className="w-full rounded-xl border px-4 py-3 outline-none"
-                    style={{
-                      background: "#141C2F",
-                      borderColor: "rgba(255,255,255,0.1)",
-                      color: "#E8EDF5",
-                    }}
+                    className="w-full rounded-xl border px-4 py-3 outline-none auth-input"
                   />
                 </div>
               </div>
 
               <div className="mb-4">
                 <p
-                  className="text-xs font-medium mb-2"
-                  style={{
-                    color: "#94A3B8",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
+                  className="text-xs font-medium mb-2 auth-label"
                 >
                   {t("Sexe")}
                 </p>
@@ -935,20 +873,15 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                   onChange={(e: ChangeEvent<HTMLSelectElement>) =>
                     updateProfile("gender", e.target.value)
                   }
-                  className="w-full rounded-xl border px-4 py-3 outline-none"
-                  style={{
-                    background: "#141C2F",
-                    borderColor: "rgba(255,255,255,0.1)",
-                    color: "#E8EDF5",
-                  }}
+                  className="w-full rounded-xl border px-4 py-3 outline-none auth-input"
                 >
-                  <option value="" style={{ background: "#141C2F", color: "#E8EDF5" }}>
+                  <option value="" className="auth-option">
                     {t("Sélectionner votre sexe")}
                   </option>
-                  <option value="masculin" style={{ background: "#141C2F", color: "#E8EDF5" }}>
+                  <option value="masculin" className="auth-option">
                     {t("Masculin")}
                   </option>
-                  <option value="feminin" style={{ background: "#141C2F", color: "#E8EDF5" }}>
+                  <option value="feminin" className="auth-option">
                     {t("Féminin")}
                   </option>
                 </select>
@@ -956,12 +889,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
 
               <div className="mb-4">
                 <p
-                  className="text-xs font-medium mb-2"
-                  style={{
-                    color: "#94A3B8",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
+                  className="text-xs font-medium mb-2 auth-label"
                 >
                   {t("Mot de passe")}
                 </p>
@@ -973,12 +901,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                       updateCredentials("password", e.target.value)
                     }
                     placeholder={t("Créez un mot de passe sécurisé")}
-                    className="w-full rounded-xl border px-4 py-3 pr-12 outline-none"
-                    style={{
-                      background: "#141C2F",
-                      borderColor: "rgba(255,255,255,0.1)",
-                      color: "#E8EDF5",
-                    }}
+                    className="w-full rounded-xl border px-4 py-3 pr-12 outline-none auth-input"
                   />
                   <button
                     type="button"
@@ -1028,15 +951,13 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                   </button>
                 </div>
                 <label
-                  className="mt-2 flex items-center gap-2 text-xs select-none"
-                  style={{ color: "#94A3B8", cursor: "pointer" }}
+                  className="mt-2 flex items-center gap-2 text-xs select-none auth-checkbox-label"
                 >
                   <input
                     type="checkbox"
                     checked={showPassword}
                     onChange={(e) => setShowPassword(e.target.checked)}
-                    className="w-4 h-4 rounded"
-                    style={{ accentColor: "#2563EB" }}
+                    className="w-4 h-4 rounded auth-checkbox"
                   />
                   {t("Afficher le mot de passe")}
                 </label>
@@ -1047,19 +968,14 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                   }}
                 >
                   {t("Au moins 6 caractères, composé de lettres et de chiffres (ex : ")}
-                  <span style={{ color: "#94A3B8", fontFamily: "monospace" }}>maison2026</span>
+                  <span className="auth-mono-example">maison2026</span>
                   {t(").")}
                 </p>
               </div>
 
               <div className="mb-4">
                 <p
-                  className="text-xs font-medium mb-2"
-                  style={{
-                    color: "#94A3B8",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
+                  className="text-xs font-medium mb-2 auth-label"
                 >
                   {t("Email")}
                 </p>
@@ -1070,23 +986,13 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                     updateProfile("email", e.target.value)
                   }
                   placeholder={t("Votre email")}
-                  className="w-full rounded-xl border px-4 py-3 outline-none"
-                  style={{
-                    background: "#141C2F",
-                    borderColor: "rgba(255,255,255,0.1)",
-                    color: "#E8EDF5",
-                  }}
+                  className="w-full rounded-xl border px-4 py-3 outline-none auth-input"
                 />
               </div>
 
               <div className="mb-4">
                 <p
-                  className="text-xs font-medium mb-2"
-                  style={{
-                    color: "#94A3B8",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
+                  className="text-xs font-medium mb-2 auth-label"
                 >
                   {t("Ville")}
                 </p>
@@ -1100,21 +1006,16 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                     const value = e.target.value
                     updateProfile("city", value === "Autre" ? "Autre" : value)
                   }}
-                  className="w-full rounded-xl border px-4 py-3 outline-none"
-                  style={{
-                    background: "#141C2F",
-                    borderColor: "rgba(255,255,255,0.1)",
-                    color: "#E8EDF5",
-                  }}
+                  className="w-full rounded-xl border px-4 py-3 outline-none auth-input"
                 >
-                  <option value="" style={{ background: "#141C2F", color: "#E8EDF5" }}>
+                  <option value="" className="auth-option">
                     {t("Sélectionner une ville")}
                   </option>
                   {cameroonCities.map((city) => (
                     <option
                       key={city}
                       value={city}
-                      style={{ background: "#141C2F", color: "#E8EDF5" }}
+                      className="auth-option"
                     >
                       {city}
                     </option>
@@ -1128,24 +1029,14 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                       setCustomCity(sanitizeLetters(e.target.value))
                     }
                     placeholder={t("Précisez votre ville")}
-                    className="mt-3 w-full rounded-xl border px-4 py-3 outline-none"
-                    style={{
-                      background: "#141C2F",
-                      borderColor: "rgba(255,255,255,0.1)",
-                      color: "#E8EDF5",
-                    }}
+                    className="mt-3 w-full rounded-xl border px-4 py-3 outline-none auth-input"
                   />
                 )}
               </div>
 
               <div className="mb-4">
                 <p
-                  className="text-xs font-medium mb-2"
-                  style={{
-                    color: "#94A3B8",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
+                  className="text-xs font-medium mb-2 auth-label"
                 >
                   {t("Quartier / localisation")}
                 </p>
@@ -1156,23 +1047,13 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                     updateProfile("location", sanitizeLetters(e.target.value))
                   }
                   placeholder={t("Ex : Bastos, Mokolo, Bonanjo")}
-                  className="w-full rounded-xl border px-4 py-3 outline-none"
-                  style={{
-                    background: "#141C2F",
-                    borderColor: "rgba(255,255,255,0.1)",
-                    color: "#E8EDF5",
-                  }}
+                  className="w-full rounded-xl border px-4 py-3 outline-none auth-input"
                 />
               </div>
 
               <div className="mb-4">
                 <p
-                  className="text-xs font-medium mb-2"
-                  style={{
-                    color: "#94A3B8",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
+                  className="text-xs font-medium mb-2 auth-label"
                 >
                   {t("Vous êtes")}
                 </p>
@@ -1180,30 +1061,22 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                   <button
                     type="button"
                     onClick={() => updateProfile("role", "client")}
-                    className="rounded-xl border px-4 py-3 text-sm font-medium"
-                    style={{
-                      background: profile.role === "client" ? "#1E3A6A" : "#141C2F",
-                      borderColor:
-                        profile.role === "client"
-                          ? "rgba(37,99,235,0.35)"
-                          : "rgba(255,255,255,0.1)",
-                      color: profile.role === "client" ? "#fff" : "#94A3B8",
-                    }}
+                    className={`rounded-xl border px-4 py-3 text-sm font-medium ${
+                      profile.role === "client"
+                        ? "auth-role-active"
+                        : "auth-role-inactive"
+                    }`}
                   >
                     {t("Client")}
                   </button>
                   <button
                     type="button"
                     onClick={() => updateProfile("role", "technician")}
-                    className="rounded-xl border px-4 py-3 text-sm font-medium"
-                    style={{
-                      background: profile.role === "technician" ? "#1E3A6A" : "#141C2F",
-                      borderColor:
-                        profile.role === "technician"
-                          ? "rgba(37,99,235,0.35)"
-                          : "rgba(255,255,255,0.1)",
-                      color: profile.role === "technician" ? "#fff" : "#94A3B8",
-                    }}
+                    className={`rounded-xl border px-4 py-3 text-sm font-medium ${
+                      profile.role === "technician"
+                        ? "auth-role-active"
+                        : "auth-role-inactive"
+                    }`}
                   >
                     {t("Technicien")}
                   </button>
@@ -1213,12 +1086,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
               {profile.role === "technician" && (
                 <div className="mb-4">
                   <p
-                    className="text-xs font-medium mb-2"
-                    style={{
-                      color: "#94A3B8",
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                    }}
+                    className="text-xs font-medium mb-2 auth-label"
                   >
                     {t("Métier")}
                   </p>
@@ -1230,28 +1098,125 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                     }
                     onChange={(e: ChangeEvent<HTMLSelectElement>) => {
                       const value = e.target.value
-                      updateProfile("domain", value === "Autre" ? "Autre" : value)
+                      updateProfile("domain", value)
+                      if (value !== "Multi-métier") setSelectedDomains([])
                     }}
-                    className="w-full rounded-xl border px-4 py-3 outline-none"
-                    style={{
-                      background: "#141C2F",
-                      borderColor: "rgba(255,255,255,0.1)",
-                      color: "#E8EDF5",
-                    }}
+                    className="w-full rounded-xl border px-4 py-3 outline-none auth-input"
                   >
-                    <option value="" style={{ background: "#141C2F", color: "#E8EDF5" }}>
+                    <option value="" className="auth-option">
                       {t("Sélectionner un métier")}
                     </option>
                     {professions.map((profession) => (
                       <option
                         key={profession}
                         value={profession}
-                        style={{ background: "#141C2F", color: "#E8EDF5" }}
+                        className="auth-option"
                       >
                         {profession}
                       </option>
                     ))}
                   </select>
+                  {profile.domain === "Multi-métier" && (
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      {multiProfessions.map((profession) => {
+                        const checked = selectedDomains.includes(profession)
+                        const atMax = !checked && selectedDomains.length >= 3
+                        return (
+                          <label
+                            key={profession}
+                            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                              atMax
+                                ? "cursor-not-allowed opacity-50 auth-multi-unchecked"
+                                : "cursor-pointer"
+                            } ${
+                              checked
+                                ? "auth-multi-checked"
+                                : "auth-multi-unchecked"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              disabled={atMax}
+                              onChange={() => {
+                                setSelectedDomains((prev) =>
+                                  checked
+                                    ? prev.filter((d) => d !== profession)
+                                    : [...prev, profession],
+                                )
+                              }}
+                              className="w-4 h-4 rounded accent-[#2563EB]"
+                            />
+                            <span className="auth-text-primary">{profession}</span>
+                          </label>
+                        )
+                      })}
+                      {/* Autre checkbox */}
+                      {(() => {
+                        const autreChecked = selectedDomains.includes("Autre")
+                        const atMax = !autreChecked && selectedDomains.length >= 3
+                        return (
+                          <label
+                            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                              atMax
+                                ? "cursor-not-allowed opacity-50 auth-multi-unchecked"
+                                : "cursor-pointer"
+                            } ${
+                              autreChecked
+                                ? "auth-multi-checked"
+                                : "auth-multi-unchecked"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={autreChecked}
+                              disabled={atMax}
+                              onChange={() => {
+                                setSelectedDomains((prev) =>
+                                  autreChecked
+                                    ? prev.filter((d) => d !== "Autre")
+                                    : [...prev, "Autre"],
+                                )
+                                if (!autreChecked) {
+                                  setCustomMultiDomains(["", "", ""])
+                                }
+                              }}
+                              className="w-4 h-4 rounded accent-[#2563EB]"
+                            />
+                            <span className="auth-text-primary">Autre</span>
+                          </label>
+                        )
+                      })()}
+                    </div>
+                  )}
+                  {profile.domain === "Multi-métier" && selectedDomains.includes("Autre") && (
+                    <div className="mt-3 flex flex-col gap-2">
+                      {customMultiDomains.map((val, i) => (
+                        <input
+                          key={i}
+                          type="text"
+                          value={val}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                            const next = [...customMultiDomains]
+                            next[i] = sanitizeLetters(e.target.value)
+                            setCustomMultiDomains(next)
+                          }}
+                          placeholder={`${t("Métier personnalisé")} ${i + 1}`}
+                          className="w-full rounded-xl border px-4 py-3 text-sm outline-none auth-input"
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {profile.domain === "Multi-métier" && selectedDomains.length > 0 && (
+                    <p className="mt-2 text-xs auth-text-muted">
+                      {selectedDomains.length}/3 {t("métier(s) sélectionné(s)")}
+                    </p>
+                  )}
+                  {profile.domain === "Multi-métier" && selectedDomains.length >= 3 && (
+                    <p className="mt-1 text-xs text-amber-400">
+                      {t("Maximum 3 métiers atteint.")}
+                    </p>
+                  )}
                   {profile.domain === "Autre" && (
                     <input
                       type="text"
@@ -1260,12 +1225,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                         setCustomDomain(sanitizeLetters(e.target.value))
                       }
                       placeholder={t("Précisez votre métier")}
-                      className="mt-3 w-full rounded-xl border px-4 py-3 outline-none"
-                      style={{
-                        background: "#141C2F",
-                        borderColor: "rgba(255,255,255,0.1)",
-                        color: "#E8EDF5",
-                      }}
+                      className="mt-3 w-full rounded-xl border px-4 py-3 outline-none auth-input"
                     />
                   )}
                 </div>
@@ -1275,12 +1235,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                 <div className="mb-4 grid grid-cols-2 gap-3">
                   <div>
                     <p
-                      className="text-xs font-medium mb-2"
-                      style={{
-                        color: "#94A3B8",
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                      }}
+                      className="text-xs font-medium mb-2 auth-label"
                     >
                       {t("Tarif horaire (FCFA)")}
                     </p>
@@ -1292,25 +1247,15 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                         updateProfile("hourlyRate", sanitizeDigits(e.target.value).slice(0, 9))
                       }
                       placeholder={t("Ex : 5000")}
-                      className="w-full rounded-xl border px-4 py-3 outline-none"
-                      style={{
-                        background: "#141C2F",
-                        borderColor: "rgba(255,255,255,0.1)",
-                        color: "#E8EDF5",
-                      }}
+                      className="w-full rounded-xl border px-4 py-3 outline-none auth-input"
                     />
-                    <p className="text-[11px] mt-1.5" style={{ color: "#64748B" }}>
+                    <p className="text-[11px] mt-1.5 auth-text-muted">
                       {t("Optionnel · visible dans le catalogue")}
                     </p>
                   </div>
                   <div>
                     <p
-                      className="text-xs font-medium mb-2"
-                      style={{
-                        color: "#94A3B8",
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                      }}
+                      className="text-xs font-medium mb-2 auth-label"
                     >
                       {t("Années d'expérience")}
                     </p>
@@ -1322,14 +1267,9 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                         updateProfile("experienceYears", sanitizeDigits(e.target.value).slice(0, 3))
                       }
                       placeholder={t("Ex : 5")}
-                      className="w-full rounded-xl border px-4 py-3 outline-none"
-                      style={{
-                        background: "#141C2F",
-                        borderColor: "rgba(255,255,255,0.1)",
-                        color: "#E8EDF5",
-                      }}
+                      className="w-full rounded-xl border px-4 py-3 outline-none auth-input"
                     />
-                    <p className="text-[11px] mt-1.5" style={{ color: "#64748B" }}>
+                    <p className="text-[11px] mt-1.5 auth-text-muted">
                       {t("Optionnel")}
                     </p>
                   </div>
@@ -1337,30 +1277,24 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
               )}
 
               {error && (
-                <p className="mb-4 text-sm" style={{ color: "#F59E0B" }}>
+                <p className="mb-4 text-sm auth-error">
                   {error}
                 </p>
               )}
 
               <button
                 onClick={handleProfileNext}
-                className="w-full py-4 rounded-xl font-semibold text-base text-white"
-                style={{
-                  background: "linear-gradient(135deg, #2563EB, #1D4ED8)",
-                  fontFamily: "Poppins, sans-serif",
-                  boxShadow: "0 4px 20px rgba(37,99,235,0.35)",
-                }}
+                className="w-full py-4 rounded-xl font-semibold text-base text-white auth-btn-primary"
               >
                 {t("Suivant")}
               </button>
 
-              <p className="mt-4 text-center text-sm" style={{ color: "#64748B" }}>
+              <p className="mt-4 text-center text-sm auth-text-muted">
                 {t("Déjà un compte ?")}{" "}
                 <button
                   type="button"
                   onClick={() => setStep("credentials")}
-                  className="font-medium"
-                  style={{ color: "#2563EB" }}
+                  className="font-medium auth-link"
                 >
                   {t("Se connecter")}
                 </button>
@@ -1369,48 +1303,34 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
           ) : step === "phone" ? (
             <>
               <h2
-                className="text-2xl font-bold mb-2"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                className="text-2xl font-bold mb-2 auth-text-primary"
               >
                 {t("Vérification de compte")}
               </h2>
-              <p className="text-sm mb-8" style={{ color: "#64748B" }}>
+              <p className="text-sm mb-8 auth-text-muted">
                 {t("Entrez votre numéro pour recevoir un code de sécurité")}
               </p>
 
               <div className="mb-6">
                 <p
-                  className="text-xs font-medium mb-2"
-                  style={{
-                    color: "#94A3B8",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
+                  className="text-xs font-medium mb-2 auth-label"
                 >
                   {t("Numéro de téléphone")}
                 </p>
                 <div
-                  className="flex items-center gap-3 rounded-xl px-4 py-4 border"
-                  style={{
-                    background: "#141C2F",
-                    borderColor: "rgba(255,255,255,0.1)",
-                  }}
+                  className="flex items-center gap-3 rounded-xl px-4 py-4 border auth-input"
                 >
                   <span className="text-lg">🇨🇲</span>
-                  <span className="text-sm font-medium" style={{ color: "#64748B" }}>
+                  <span className="text-sm font-medium auth-text-muted">
                     +237
                   </span>
-                  <div className="w-px h-5" style={{ background: "rgba(255,255,255,0.1)" }} />
+                  <div className="w-px h-5 auth-phone-divider" />
                   <input
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(sanitizeDigits(e.target.value))}
                     placeholder="6 XX XX XX XX"
-                    className="flex-1 bg-transparent outline-none text-base"
-                    style={{
-                      color: "#E8EDF5",
-                      fontFamily: "Inter, sans-serif",
-                    }}
+                    className="flex-1 bg-transparent outline-none text-base auth-phone-input"
                     autoFocus
                   />
                 </div>
@@ -1432,8 +1352,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
 
               <button
                 onClick={() => setStep("choice")}
-                className="w-full text-sm text-center py-2"
-                style={{ color: "#64748B" }}
+                className="w-full text-sm text-center py-2 auth-text-muted"
               >
                 {t("← Retour au choix")}
               </button>
@@ -1441,13 +1360,12 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
           ) : (
             <>
               <h2
-                className="text-2xl font-bold mb-2"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                className="text-2xl font-bold mb-2 auth-text-primary"
               >
                 {t("Code de vérification")}
               </h2>
-              <p className="text-sm mb-8" style={{ color: "#64748B" }}>
-                {t("Code envoyé au ")}<strong style={{ color: "#E8EDF5" }}>+237 {phone}</strong>
+              <p className="text-sm mb-8 auth-text-muted">
+                {t("Code envoyé au ")}<strong className="auth-text-primary">+237 {phone}</strong>
               </p>
 
               <div className="flex justify-between gap-3 mb-6">
@@ -1463,11 +1381,9 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                     value={d}
                     onChange={(e) => handleOtp(e.target.value, i)}
                     onKeyDown={(e) => handleKeyDown(e, i)}
-                    className="flex-1 h-16 text-center text-2xl font-bold rounded-xl border-2 outline-none"
+                    className="flex-1 h-16 text-center text-2xl font-bold rounded-xl border-2 outline-none auth-input"
                     style={{
-                      background: "#141C2F",
                       borderColor: d ? "#2563EB" : "rgba(255,255,255,0.1)",
-                      color: "#E8EDF5",
                       fontFamily: "JetBrains Mono, monospace",
                       boxShadow: d ? "0 0 0 3px rgba(37,99,235,0.2)" : "none",
                     }}
@@ -1478,17 +1394,16 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
 
               <div className="text-center mb-6">
                 {timer > 0 ? (
-                  <p className="text-sm font-medium" style={{ color: "#EF4444" }}>
+                  <p className="text-sm font-medium auth-timer">
                     {t("Renvoyer dans ")}
-                    <span style={{ fontFamily: "JetBrains Mono, monospace" }}>
+                    <span className="auth-mono">
                       00:{String(timer).padStart(2, "0")}
                     </span>
                   </p>
                 ) : (
                   <button
                     onClick={() => setTimer(59)}
-                    className="text-sm font-semibold"
-                    style={{ color: "#2563EB" }}
+                    className="text-sm font-semibold auth-link"
                   >
                     {t("Renvoyer le code")}
                   </button>
@@ -1497,8 +1412,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
 
               <button
                 onClick={() => setStep("phone")}
-                className="w-full text-sm text-center py-2"
-                style={{ color: "#64748B" }}
+                className="w-full text-sm text-center py-2 auth-text-muted"
               >
                 {t("← Modifier le numéro")}
               </button>

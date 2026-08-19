@@ -41,7 +41,7 @@ public class SystemUserInitializer {
             system.setId(ChatController.SYSTEM_SENDER_USER_ID);
             system.setUsername("system");
             system.setEmail("system@mboatech.com");
-            system.setPasswordHash("");
+            system.setPasswordHash("!DISABLED!");
             system.setFirstName("MboaTech");
             system.setLastName("Systeme");
             system.setRole(Role.client);

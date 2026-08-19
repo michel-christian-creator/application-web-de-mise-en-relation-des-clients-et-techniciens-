@@ -1,0 +1,351 @@
+.profile-page {
+  background: #0B1120;
+}
+
+.profile-card {
+  background: #141C2F;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.profile-title {
+  font-family: "Poppins, sans-serif";
+  color: #E8EDF5;
+}
+
+.profile-subtitle {
+  color: #94A3B8;
+}
+
+.profile-text {
+  color: #64748B;
+}
+
+.profile-btn {
+  background: #1E2A42;
+  color: #94A3B8;
+}
+
+.profile-btn-primary {
+  background: #2563EB;
+  color: #E8EDF5;
+}
+
+.profile-btn-save {
+  background: #059669;
+  color: #E8EDF5;
+}
+
+.profile-btn-action {
+  background: linear-gradient(135deg, #059669, #047857);
+  font-family: "Poppins, sans-serif";
+  box-shadow: 0 4px 20px rgba(5, 150, 105, 0.4);
+  white-space: nowrap;
+}
+
+.profile-label {
+  color: #E8EDF5;
+}
+
+.profile-section {
+  background: #1E2A42;
+}
+
+.profile-section-header {
+  color: #64748B;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.profile-info-row {
+  color: #94A3B8;
+}
+
+.profile-input {
+  background: #0F172A;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-avatar {
+  background: #1E3A6A;
+  border: 2px solid #0B1120;
+  color: #059669;
+}
+
+.profile-avatar-empty {
+  background: #111827;
+  color: #64748B;
+}
+
+.profile-badge {
+  background: rgba(5, 150, 105, 0.15);
+  color: #059669;
+}
+
+.profile-status-available {
+  color: #059669;
+}
+
+.profile-status-busy {
+  color: #94A3B8;
+}
+
+.profile-text-light {
+  color: #93C5FD;
+}
+
+.profile-text-error {
+  color: #F87171;
+}
+
+.profile-text-success {
+  color: #34D399;
+}
+
+.profile-text-star {
+  color: #F59E0B;
+}
+
+.profile-text-mono {
+  color: #334155;
+  font-family: "JetBrains Mono, monospace";
+}
+
+.profile-img {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.profile-edit-shadow {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+}
+
+.profile-card-section {
+  background: #141C2F;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.profile-tag {
+  background: #1E3A6A;
+  border: 2px solid #0B1120;
+  color: #059669;
+}
+
+.profile-tag-photo {
+  background: rgba(37, 99, 235, 0.8);
+  color: white;
+}
+
+.profile-tag-done {
+  background: rgba(5, 150, 105, 0.8);
+  color: white;
+}
+
+.profile-gallery-overlay {
+  background: linear-gradient(to top, rgba(11, 17, 32, 0.9), transparent);
+  transition: opacity 200ms;
+}
+
+.profile-gallery-badge {
+  background: rgba(5, 150, 105, 0.8);
+  color: white;
+}
+
+.profile-gallery-badge-photo {
+  background: rgba(37, 99, 235, 0.8);
+  color: white;
+}
+
+.profile-gallery-empty {
+  background: #1E2A42;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.profile-gallery-item {
+  background: #1E2A42;
+}
+
+.profile-gallery-img {
+  height: 180px;
+}
+
+.profile-gallery-compare {
+  background: rgba(37, 99, 235, 0.8);
+  color: white;
+}
+
+.profile-modal-overlay {
+  background: rgba(0, 0, 0, 0.88);
+}
+
+.profile-modal {
+  background: #141C2F;
+  width: min(640px, calc(100vw - 32px));
+}
+
+.profile-modal-height {
+  height: 380px;
+}
+
+.profile-modal-divider {
+  width: 2px;
+  background: white;
+}
+
+.profile-modal-label {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.profile-modal-label-after {
+  background: rgba(5, 150, 105, 0.8);
+}
+
+.profile-modal-close {
+  background: #1E2A42;
+  color: #94A3B8;
+}
+
+.profile-range {
+  color: #0B1120;
+  font-size: 14px;
+}
+
+.profile-btn-disabled {
+  opacity: 0.6;
+}
+
+.profile-review-border {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.profile-review-form {
+  background: #1E2A42;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.profile-star-active {
+  color: #F59E0B;
+}
+
+.profile-star-inactive {
+  color: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Light theme ── */
+[data-theme="light"] .profile-btn-primary { color: #1a1a2e; }
+[data-theme="light"] .profile-btn-save { color: #ffffff; }
+[data-theme="light"] .profile-status-busy { color: #475569; }
+[data-theme="light"] .profile-text-mono { color: #334155; }
+[data-theme="light"] .profile-img { border-color: rgba(0,0,0,0.06); }
+[data-theme="light"] .profile-star-inactive { color: rgba(0,0,0,0.15); }
+[data-theme="light"] .profile-modal-label { background: rgba(0,0,0,0.6); }
+[data-theme="light"] .profile-modal-divider { background: #1a1a2e; }
+
+/* ── Light theme ── */
+[data-theme="light"] .profile-page {
+  background: #f0f4f8;
+}
+
+[data-theme="light"] .profile-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .profile-title {
+  color: #1a1a2e;
+}
+
+[data-theme="light"] .profile-subtitle {
+  color: #64748b;
+}
+
+[data-theme="light"] .profile-text {
+  color: #475569;
+}
+
+[data-theme="light"] .profile-btn {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+[data-theme="light"] .profile-label {
+  color: #1a1a2e;
+}
+
+[data-theme="light"] .profile-section {
+  background: #e2e8f0;
+}
+
+[data-theme="light"] .profile-section-header {
+  color: #475569;
+}
+
+[data-theme="light"] .profile-info-row {
+  color: #64748b;
+}
+
+[data-theme="light"] .profile-input {
+  background: #f1f5f9;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .profile-avatar {
+  background: #dbeafe;
+  border: 2px solid #f0f4f8;
+}
+
+[data-theme="light"] .profile-avatar-empty {
+  background: #f8fafc;
+  color: #475569;
+}
+
+[data-theme="light"] .profile-card-section {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .profile-tag {
+  background: #dbeafe;
+  border: 2px solid #f0f4f8;
+}
+
+[data-theme="light"] .profile-gallery-empty {
+  background: #e2e8f0;
+  border: 1px dashed rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .profile-gallery-item {
+  background: #e2e8f0;
+}
+
+[data-theme="light"] .profile-gallery-overlay {
+  background: linear-gradient(to top, rgba(240, 244, 248, 0.9), transparent);
+}
+
+[data-theme="light"] .profile-modal {
+  background: #ffffff;
+}
+
+[data-theme="light"] .profile-modal-close {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+[data-theme="light"] .profile-range {
+  color: #1a1a2e;
+}
+
+[data-theme="light"] .profile-review-border {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .profile-review-form {
+  background: #e2e8f0;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .profile-star-inactive {
+  color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .profile-text-light {
+  color: #3b82f6;
+}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { API_BASE_URL } from "../../config"
 import { resolvePhotoUrl } from "../../utils/photoUrl"
 import { useI18n } from "../../i18n"
+import "./S1Console.css"
 
 const resolveKycUrl = (url: string): string => {
   const resolved = resolvePhotoUrl(url)
@@ -326,7 +327,7 @@ export default function S1Console() {
   }, [kycDocs])
 
   return (
-    <div className="min-h-full p-3 sm:p-6" style={{ background: "#0B1120" }}>
+    <div className="console-root min-h-full p-3 sm:p-6">
       <div className="mx-auto max-w-[min(1400px,95%)]">
         {/* Tab switcher */}
         <div className="flex items-center gap-2 mb-5">
@@ -363,15 +364,12 @@ export default function S1Console() {
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
-            <h1
-              className="text-2xl font-bold"
-              style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
-            >
+            <h1 className="console-heading text-2xl font-bold">
               {tab === "kyc"
                 ? t("Vérification des documents KYC")
                 : `${t("Console de résolution — Litige")} #${selectedId ?? "—"}`}
             </h1>
-            <p className="text-sm mt-1" style={{ color: "#64748B" }}>
+            <p className="console-text-muted text-sm mt-1">
               {tab === "kyc"
                 ? kycLoading
                   ? t("Chargement des documents…")
@@ -390,14 +388,7 @@ export default function S1Console() {
             </p>
           </div>
           {tab !== "kyc" && (
-            <span
-              className="px-4 py-1.5 rounded-full text-sm font-semibold"
-              style={{
-                background: "rgba(245,158,11,0.12)",
-                color: "#F59E0B",
-                border: "1px solid rgba(245,158,11,0.3)",
-              }}
-            >
+            <span className="console-badge-warning px-4 py-1.5 rounded-full text-sm font-semibold">
               {detail ? `⚠ ${t("En attente de décision")}` : t("Sélectionnez un litige")}
             </span>
           )}
@@ -406,41 +397,23 @@ export default function S1Console() {
         {tab === "kyc" ? (
           <div className="flex flex-col gap-5">
             {kycLoading && kycDocs.length === 0 ? (
-              <div
-                className="p-10 rounded-2xl text-center"
-                style={{
-                  background: "#141C2F",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                <p className="text-sm" style={{ color: "#94A3B8" }}>
+              <div className="console-status-loading p-10 rounded-2xl text-center">
+                <p className="console-text-secondary text-sm">
                   {t("Chargement des documents KYC…")}
                 </p>
               </div>
             ) : kycError && kycDocs.length === 0 ? (
-              <div
-                className="p-10 rounded-2xl text-center"
-                style={{
-                  background: "rgba(239,68,68,0.06)",
-                  border: "1px solid rgba(239,68,68,0.25)",
-                }}
-              >
-                <p className="text-sm" style={{ color: "#EF4444" }}>
+              <div className="console-status-error p-10 rounded-2xl text-center">
+                <p className="console-text-danger text-sm">
                   {kycError}
                 </p>
               </div>
             ) : kycGroups.length === 0 ? (
-              <div
-                className="p-10 rounded-2xl text-center"
-                style={{
-                  background: "rgba(5,150,105,0.06)",
-                  border: "1px solid rgba(5,150,105,0.15)",
-                }}
-              >
-                <p className="text-lg" style={{ color: "#059669" }}>
+              <div className="console-status-success p-10 rounded-2xl text-center">
+                <p className="console-text-success text-lg">
                   ✓
                 </p>
-                <p className="text-sm mt-1" style={{ color: "#94A3B8" }}>
+                <p className="console-text-secondary text-sm mt-1">
                   {t("Aucun document KYC déposé pour le moment.")}
                 </p>
               </div>
@@ -453,43 +426,22 @@ export default function S1Console() {
                   return (
                     <div
                       key={userId}
-                      className="p-5 rounded-2xl"
-                      style={{
-                        background: "#141C2F",
-                        border: "1px solid rgba(255,255,255,0.06)",
-                      }}
+                      className="console-card p-5 rounded-2xl"
                     >
                       <div className="flex items-start justify-between gap-3 mb-4">
                         <div className="min-w-0">
-                          <p
-                            className="text-sm font-bold truncate"
-                            style={{
-                              fontFamily: "Poppins, sans-serif",
-                              color: "#E8EDF5",
-                            }}
-                          >
+                          <p className="console-heading text-sm font-bold truncate">
                             {user.userName || `${t("Utilisateur")} #${userId}`}
                           </p>
-                          <p className="text-xs font-mono mt-0.5" style={{ color: "#64748B" }}>
+                          <p className="console-text-muted text-xs font-mono mt-0.5">
                             @{user.username || "—"}
                             {user.technicianId ? ` · ${t("Technicien")} #${user.technicianId}` : ""}
                           </p>
                         </div>
                         <span
-                          className="px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap"
-                          style={
-                            user.verified
-                              ? {
-                                  background: "rgba(5,150,105,0.15)",
-                                  color: "#059669",
-                                  border: "1px solid rgba(5,150,105,0.3)",
-                                }
-                              : {
-                                  background: "rgba(245,158,11,0.12)",
-                                  color: "#F59E0B",
-                                  border: "1px solid rgba(245,158,11,0.3)",
-                                }
-                          }
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap ${
+                            user.verified ? "console-badge-success" : "console-badge-pending"
+                          }`}
                         >
                           {user.verified
                             ? `✓ ${t("Profil vérifié")}`
@@ -507,37 +459,24 @@ export default function S1Console() {
                           return (
                             <div
                               key={doc.id}
-                              className="rounded-xl p-3 flex items-center gap-3"
-                              style={{
-                                background: "#1E2A42",
-                                border: "1px solid rgba(255,255,255,0.06)",
-                              }}
+                              className="console-card-inner rounded-xl p-3 flex items-center gap-3"
                             >
                               {doc.fileUrl && /\.(jpg|jpeg|png|gif|webp)$/i.test(doc.fileUrl) ? (
                                 <img
                                   src={resolveKycUrl(doc.fileUrl)}
                                   alt={docTypeLabel(doc.docType, t)}
-                                  className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
-                                  style={{
-                                    border: "1px solid rgba(255,255,255,0.08)",
-                                  }}
+                                  className="console-img-thumb w-14 h-14 rounded-lg object-cover flex-shrink-0"
                                 />
                               ) : (
-                                <div
-                                  className="w-14 h-14 rounded-lg flex items-center justify-center text-xl flex-shrink-0"
-                                  style={{ background: "#141C2F" }}
-                                >
+                                <div className="console-card w-14 h-14 rounded-lg flex items-center justify-center text-xl flex-shrink-0">
                                   📄
                                 </div>
                               )}
                               <div className="flex-1 min-w-0">
-                                <p
-                                  className="text-xs font-semibold truncate"
-                                  style={{ color: "#E8EDF5" }}
-                                >
+                                <p className="console-text-primary text-xs font-semibold truncate">
                                   {docTypeLabel(doc.docType, t)}
                                 </p>
-                                <p className="text-[11px] truncate" style={{ color: "#64748B" }}>
+                                <p className="console-text-muted text-[11px] truncate">
                                   {fileNameFromUrl(doc.fileUrl)}
                                 </p>
                                 <span
@@ -556,11 +495,7 @@ export default function S1Console() {
                                     href={resolveKycUrl(doc.fileUrl)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-[11px] px-2.5 py-1.5 rounded-lg whitespace-nowrap"
-                                    style={{
-                                      background: "rgba(37,99,235,0.12)",
-                                      color: "#60A5FA",
-                                    }}
+                                    className="console-btn-link text-[11px] px-2.5 py-1.5 rounded-lg whitespace-nowrap"
                                   >
                                     {t("Voir")}
                                   </a>
@@ -570,21 +505,14 @@ export default function S1Console() {
                                     <button
                                       onClick={() => reviewKyc(doc.id, "approve")}
                                       disabled={kycBusy != null}
-                                      className="text-[11px] font-bold px-3 py-1.5 rounded-lg text-white disabled:opacity-50"
-                                      style={{
-                                        background: "linear-gradient(135deg, #059669, #047857)",
-                                      }}
+                                      className="console-btn-approve text-[11px] font-bold px-3 py-1.5 rounded-lg text-white disabled:opacity-50"
                                     >
                                       {t("Valider")}
                                     </button>
                                     <button
                                       onClick={() => reviewKyc(doc.id, "reject")}
                                       disabled={kycBusy != null}
-                                      className="text-[11px] font-bold px-3 py-1.5 rounded-lg disabled:opacity-50"
-                                      style={{
-                                        background: "rgba(239,68,68,0.15)",
-                                        color: "#F87171",
-                                      }}
+                                      className="console-text-error console-card-inner text-[11px] font-bold px-3 py-1.5 rounded-lg disabled:opacity-50"
                                     >
                                       {t("Rejeter")}
                                     </button>
@@ -601,7 +529,7 @@ export default function S1Console() {
               </div>
             )}
             {kycError && kycDocs.length > 0 && (
-              <p className="text-xs" style={{ color: "#F87171" }}>
+              <p className="console-text-error text-xs">
                 {kycError}
               </p>
             )}
@@ -609,63 +537,31 @@ export default function S1Console() {
         ) : (
           <>
             {loading && disputes.length === 0 ? (
-              <div
-                className="p-10 rounded-2xl text-center"
-                style={{
-                  background: "#141C2F",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                <p className="text-sm" style={{ color: "#94A3B8" }}>
+              <div className="console-status-loading p-10 rounded-2xl text-center">
+                <p className="console-text-secondary text-sm">
                   {t("Chargement des litiges en cours…")}
                 </p>
               </div>
             ) : error && disputes.length === 0 ? (
-              <div
-                className="p-10 rounded-2xl text-center"
-                style={{
-                  background: "rgba(239,68,68,0.06)",
-                  border: "1px solid rgba(239,68,68,0.25)",
-                }}
-              >
-                <p className="text-sm" style={{ color: "#EF4444" }}>
+              <div className="console-status-error p-10 rounded-2xl text-center">
+                <p className="console-text-danger text-sm">
                   {error}
                 </p>
               </div>
             ) : disputes.length === 0 ? (
-              <div
-                className="p-10 rounded-2xl text-center"
-                style={{
-                  background: "rgba(5,150,105,0.06)",
-                  border: "1px solid rgba(5,150,105,0.15)",
-                }}
-              >
-                <p className="text-lg" style={{ color: "#059669" }}>
+              <div className="console-status-success p-10 rounded-2xl text-center">
+                <p className="console-text-success text-lg">
                   ✓
                 </p>
-                <p className="text-sm mt-1" style={{ color: "#94A3B8" }}>
+                <p className="console-text-secondary text-sm mt-1">
                   {t("Aucun litige en cours. Tous les dossiers sont résolus.")}
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-5 xl:grid-cols-[280px_1fr_320px]">
-                {/* Col 1: Liste des litiges + dossier */}
                 <div className="flex flex-col gap-4">
-                  <div
-                    className="p-4 rounded-2xl"
-                    style={{
-                      background: "#141C2F",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    <h2
-                      className="text-xs font-semibold mb-3"
-                      style={{
-                        color: "#64748B",
-                        letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                      }}
-                    >
+                  <div className="console-card p-4 rounded-2xl">
+                    <h2 className="console-section-heading text-xs font-semibold mb-3">
                       {t("Litiges en attente")}
                     </h2>
                     <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
@@ -673,27 +569,24 @@ export default function S1Console() {
                         <button
                           key={d.requestId}
                           onClick={() => setSelectedId(d.requestId)}
-                          className="w-full text-left rounded-xl px-3 py-2.5 transition-colors"
-                          style={{
-                            background: selectedId === d.requestId ? "#1E3A6A" : "#0F172A",
-                            border:
-                              selectedId === d.requestId
-                                ? "1px solid rgba(37,99,235,0.35)"
-                                : "1px solid rgba(255,255,255,0.08)",
-                          }}
+                          className={`w-full text-left rounded-xl px-3 py-2.5 transition-colors ${
+                            selectedId === d.requestId
+                              ? "bg-[#1E3A6A] border border-blue-500/35"
+                              : "bg-[#0F172A] border border-white/8"
+                          }`}
                         >
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
+                            <span className="console-text-primary text-sm font-semibold">
                               #{d.requestId} · {d.category}
                             </span>
-                            <span className="text-xs font-mono" style={{ color: "#F59E0B" }}>
+                            <span className="console-text-warning text-xs font-mono">
                               {formatAmount(d.heldAmount, locale)} F
                             </span>
                           </div>
-                          <p className="text-xs truncate" style={{ color: "#94A3B8" }}>
+                          <p className="console-text-secondary text-xs truncate">
                             {d.description}
                           </p>
-                          <p className="text-[11px] mt-1" style={{ color: "#64748B" }}>
+                          <p className="console-text-muted text-[11px] mt-1">
                             {formatDay(d.disputeOpenAt, locale)}
                           </p>
                         </button>
@@ -703,84 +596,53 @@ export default function S1Console() {
 
                   {selected && detail && (
                     <>
-                      <div
-                        className="p-5 rounded-2xl"
-                        style={{
-                          background: "#141C2F",
-                          border: "1px solid rgba(255,255,255,0.06)",
-                        }}
-                      >
-                        <h2
-                          className="text-xs font-semibold mb-4"
-                          style={{
-                            color: "#64748B",
-                            letterSpacing: "0.1em",
-                            textTransform: "uppercase",
-                          }}
-                        >
+                      <div className="console-card p-5 rounded-2xl">
+                        <h2 className="console-section-heading text-xs font-semibold mb-4">
                           {t("Dossier")}
                         </h2>
                         <div className="mb-4">
-                          <p className="text-xs mb-1" style={{ color: "#94A3B8" }}>
+                          <p className="console-text-secondary text-xs mb-1">
                             {t("Client")}
                           </p>
-                          <p className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
+                          <p className="console-text-primary text-sm font-semibold">
                             {detail.client?.name || t("Client")}
                           </p>
-                          <p className="text-xs font-mono" style={{ color: "#64748B" }}>
+                          <p className="console-text-muted text-xs font-mono">
                             {detail.client?.username || "—"}
                           </p>
                         </div>
                         <div className="mb-4">
-                          <p className="text-xs mb-1" style={{ color: "#94A3B8" }}>
+                          <p className="console-text-secondary text-xs mb-1">
                             {t("Technicien")}
                           </p>
-                          <p className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
+                          <p className="console-text-primary text-sm font-semibold">
                             {detail.technician?.name || t("Non assigné")}
                           </p>
-                          <p className="text-xs font-mono" style={{ color: "#64748B" }}>
+                          <p className="console-text-muted text-xs font-mono">
                             {detail.technician?.username || "—"}
                           </p>
                         </div>
-                        <div
-                          className="pt-4"
-                          style={{
-                            borderTop: "1px solid rgba(255,255,255,0.06)",
-                          }}
-                        >
-                          <p className="text-xs mb-1" style={{ color: "#94A3B8" }}>
+                        <div className="console-divider pt-4">
+                          <p className="console-text-secondary text-xs mb-1">
                             {t("Montant en garde")}
                           </p>
-                          <p className="text-2xl font-bold font-mono" style={{ color: "#F59E0B" }}>
+                          <p className="console-text-warning text-2xl font-bold font-mono">
                             {formatAmount(detail.heldAmount, locale)}{" "}
-                            <span className="text-sm font-normal" style={{ color: "#64748B" }}>
+                            <span className="console-text-muted text-sm font-normal">
                               FCFA
                             </span>
                           </p>
                         </div>
                       </div>
 
-                      <div
-                        className="p-5 rounded-2xl"
-                        style={{
-                          background: "#141C2F",
-                          border: "1px solid rgba(255,255,255,0.06)",
-                        }}
-                      >
-                        <h2
-                          className="text-xs font-semibold mb-3"
-                          style={{
-                            color: "#64748B",
-                            letterSpacing: "0.1em",
-                            textTransform: "uppercase",
-                          }}
-                        >
+                      <div className="console-card p-5 rounded-2xl">
+                        <h2 className="console-section-heading text-xs font-semibold mb-3">
                           {t("Réclamation")}
                         </h2>
-                        <p className="text-sm leading-relaxed" style={{ color: "#94A3B8" }}>
+                        <p className="console-text-secondary text-sm leading-relaxed">
                           "{detail.description}"
                         </p>
-                        <p className="text-xs mt-2" style={{ color: "#64748B" }}>
+                        <p className="console-text-muted text-xs mt-2">
                           {t("Signalé par")} : {reporterName} (
                           {detail.reporterRole === "client" ? t("Client") : t("Technicien")}) ·{" "}
                           {formatDay(detail.disputeOpenAt, locale)}
@@ -806,26 +668,9 @@ export default function S1Console() {
                   )}
                 </div>
 
-                {/* Col 2: Chat */}
-                <div
-                  className="rounded-2xl overflow-hidden flex flex-col"
-                  style={{
-                    background: "#141C2F",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                  }}
-                >
-                  <div
-                    className="px-5 py-4"
-                    style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-                  >
-                    <h2
-                      className="text-xs font-semibold"
-                      style={{
-                        color: "#64748B",
-                        letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                      }}
-                    >
+                <div className="console-card rounded-2xl overflow-hidden flex flex-col">
+                  <div className="console-divider-bottom px-5 py-4">
+                    <h2 className="console-section-heading text-xs font-semibold">
                       {t("Historique de la conversation (lecture seule)")}
                     </h2>
                   </div>
@@ -835,7 +680,7 @@ export default function S1Console() {
                     style={{ maxHeight: "520px" }}
                   >
                     {detailMessages.length === 0 && (
-                      <p className="text-xs text-center" style={{ color: "#64748B" }}>
+                      <p className="console-text-muted text-xs text-center">
                         {t("Aucun message échangé sur cette demande.")}
                       </p>
                     )}
@@ -844,17 +689,11 @@ export default function S1Console() {
                         return (
                           <div key={m.id} className="flex justify-center">
                             <div className="max-w-[85%] text-center">
-                              <p className="text-[11px] mb-1" style={{ color: "#64748B" }}>
+                              <p className="console-text-muted text-[11px] mb-1">
                                 {m.senderName} · {formatDay(m.time, locale)}
                               </p>
-                              <div
-                                className="rounded-xl px-4 py-2"
-                                style={{
-                                  background: "#0F172A",
-                                  border: "1px solid rgba(255,255,255,0.06)",
-                                }}
-                              >
-                                <p className="text-xs" style={{ color: "#94A3B8" }}>
+                              <div className="console-message-system rounded-xl px-4 py-2">
+                                <p className="console-text-secondary text-xs">
                                   {m.text}
                                 </p>
                               </div>
@@ -869,7 +708,7 @@ export default function S1Console() {
                           className={`flex ${isClient ? "justify-end" : "justify-start"}`}
                         >
                           <div className="max-w-[85%] sm:max-w-[75%] min-w-0">
-                            <p className="text-xs mb-1" style={{ color: "#64748B" }}>
+                            <p className="console-text-muted text-xs mb-1">
                               {m.senderName} ({isClient ? t("client") : t("technicien")}) ·{" "}
                               {formatDay(m.time, locale)}
                             </p>
@@ -882,13 +721,7 @@ export default function S1Console() {
                               }}
                             >
                               {m.hasAttachment && (
-                                <div
-                                  className="rounded-xl mb-2 overflow-hidden"
-                                  style={{
-                                    height: "120px",
-                                    background: "#0B1120",
-                                  }}
-                                >
+                                <div className="console-root rounded-xl mb-2 overflow-hidden" style={{ height: "120px" }}>
                                   <img
                                     src={m.attachmentUrl ?? ""}
                                     alt={t("Preuve partagée")}
@@ -912,7 +745,7 @@ export default function S1Console() {
                                 </span>
                               )}
                               {m.text && (
-                                <p className="text-sm" style={{ color: "#E8EDF5" }}>
+                                <p className="console-text-primary text-sm">
                                   {m.text}
                                 </p>
                               )}
@@ -924,33 +757,19 @@ export default function S1Console() {
                   </div>
                 </div>
 
-                {/* Col 3: Preuves + décision */}
                 <div className="flex flex-col gap-4">
-                  <div
-                    className="p-5 rounded-2xl"
-                    style={{
-                      background: "#141C2F",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    <h2
-                      className="text-xs font-semibold mb-4"
-                      style={{
-                        color: "#64748B",
-                        letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                      }}
-                    >
+                  <div className="console-card p-5 rounded-2xl">
+                    <h2 className="console-section-heading text-xs font-semibold mb-4">
                       {t("Preuves partagées")}
                     </h2>
                     {proofMessages.length === 0 ? (
-                      <p className="text-xs" style={{ color: "#64748B" }}>
+                      <p className="console-text-muted text-xs">
                         {t("Aucune pièce jointe dans la discussion.")}
                       </p>
                     ) : (
                       proofMessages.slice(0, 4).map((m, i) => (
                         <div key={m.id} className="mb-3">
-                          <p className="text-xs mb-2" style={{ color: "#94A3B8" }}>
+                          <p className="console-text-secondary text-xs mb-2">
                             {m.senderName === detail?.client?.name || m.senderRole === "client"
                               ? t("Preuve client")
                               : t("Preuve technicien")}{" "}
@@ -959,11 +778,7 @@ export default function S1Console() {
                           <img
                             src={m.attachmentUrl ?? ""}
                             alt={`Preuve ${i + 1}`}
-                            className="w-full rounded-xl object-cover"
-                            style={{
-                              height: "110px",
-                              border: "1px solid rgba(255,255,255,0.08)",
-                            }}
+                            className="console-img-proof w-full rounded-xl object-cover"
                           />
                         </div>
                       ))
@@ -971,31 +786,14 @@ export default function S1Console() {
                   </div>
 
                   {!decisionDone ? (
-                    <div
-                      className="p-5 rounded-2xl flex flex-col gap-3"
-                      style={{
-                        background: "#141C2F",
-                        border: "1px solid rgba(255,255,255,0.06)",
-                      }}
-                    >
-                      <h2
-                        className="text-xs font-semibold mb-1"
-                        style={{
-                          color: "#64748B",
-                          letterSpacing: "0.1em",
-                          textTransform: "uppercase",
-                        }}
-                      >
+                    <div className="console-card p-5 rounded-2xl flex flex-col gap-3">
+                      <h2 className="console-section-heading text-xs font-semibold mb-1">
                         {t("Décision financière")}
                       </h2>
                       <button
                         onClick={() => decide("client")}
                         disabled={deciding != null}
-                        className="w-full py-3 rounded-xl font-bold text-sm text-white disabled:opacity-50"
-                        style={{
-                          background: "linear-gradient(135deg, #DC2626, #B91C1C)",
-                          boxShadow: "0 2px 12px rgba(220,38,38,0.3)",
-                        }}
+                        className="console-btn-refund w-full py-3 rounded-xl font-bold text-sm text-white disabled:opacity-50"
                       >
                         {deciding === "client"
                           ? t("Traitement…")
@@ -1004,23 +802,14 @@ export default function S1Console() {
                       <button
                         onClick={() => decide("tech")}
                         disabled={deciding != null}
-                        className="w-full py-3 rounded-xl font-bold text-sm text-white disabled:opacity-50"
-                        style={{
-                          background: "linear-gradient(135deg, #059669, #047857)",
-                          boxShadow: "0 2px 12px rgba(5,150,105,0.3)",
-                        }}
+                        className="console-btn-tech w-full py-3 rounded-xl font-bold text-sm text-white disabled:opacity-50"
                       >
                         {deciding === "tech" ? t("Traitement…") : t("Verser les fonds au technicien")}
                       </button>
                       <button
                         onClick={() => decide("split")}
                         disabled={deciding != null}
-                        className="w-full py-3 rounded-xl font-bold text-sm disabled:opacity-50"
-                        style={{
-                          background: "#1E2A42",
-                          color: "#94A3B8",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                        }}
+                        className="console-btn-split w-full py-3 rounded-xl font-bold text-sm disabled:opacity-50"
                       >
                         {deciding === "split" ? t("Traitement…") : t("Partager les fonds (50/50)")}
                       </button>
@@ -1045,7 +834,7 @@ export default function S1Console() {
                       }}
                     >
                       <p
-                        className="text-sm font-bold mb-1"
+                        className="console-heading text-sm font-bold mb-1"
                         style={{
                           color:
                             decisionDone === "client"
@@ -1053,7 +842,6 @@ export default function S1Console() {
                               : decisionDone === "tech"
                                 ? "#059669"
                                 : "#94A3B8",
-                          fontFamily: "Poppins, sans-serif",
                         }}
                       >
                         {decisionDone === "client"
@@ -1062,7 +850,7 @@ export default function S1Console() {
                             ? t("✓ Fonds versés au technicien")
                             : t("✓ Partage 50/50 déclenché")}
                       </p>
-                      <p className="text-xs" style={{ color: "#64748B" }}>
+                      <p className="console-text-muted text-xs">
                         {t("Litige clôturé · notifications envoyées aux parties.")}
                       </p>
                     </div>

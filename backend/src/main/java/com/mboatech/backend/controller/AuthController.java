@@ -18,6 +18,7 @@ import com.mboatech.backend.repository.TechnicianRecommendationRepository;
 import com.mboatech.backend.repository.UserRepository;
 import com.mboatech.backend.service.TechnicianEventService;
 import com.mboatech.backend.util.InputValidator;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+
+    private static final ConcurrentHashMap<String, List<Long>> loginAttempts = new ConcurrentHashMap<>();
 
     private final UserRepository userRepository;
     private final ClientProfileRepository clientProfileRepository;
@@ -75,7 +78,21 @@ public class AuthController {
     }
 
     @PostMapping("/auth/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
+        String clientIp = httpRequest.getHeader("X-Forwarded-For");
+        if (clientIp == null || clientIp.isBlank()) {
+            clientIp = httpRequest.getRemoteAddr();
+        } else {
+            clientIp = clientIp.split(",")[0].trim();
+        }
+
+        long fifteenMinutesAgo = System.currentTimeMillis() - 15 * 60 * 1000;
+        List<Long> attempts = loginAttempts.computeIfAbsent(clientIp, k -> new ArrayList<>());
+        attempts.removeIf(t -> t < fifteenMinutesAgo);
+        if (attempts.size() > 10) {
+            return ResponseEntity.status(429).body(Map.of("message", "Trop de tentatives. Réessayez dans 15 minutes."));
+        }
+
         if (request == null || request.getEmail() == null || request.getPassword() == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "Email et mot de passe requis."));
         }
@@ -83,14 +100,18 @@ public class AuthController {
         Optional<User> optionalUser = userRepository.findByEmail(request.getEmail());
         if (optionalUser.isEmpty()) {
             logger.warn("Tentative de connexion avec un email inconnu: {}", request.getEmail());
+            attempts.add(System.currentTimeMillis());
             return ResponseEntity.status(401).body(Map.of("message", "Identifiants invalides."));
         }
 
         User user = optionalUser.get();
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             logger.warn("Tentative de connexion avec mot de passe invalide pour l'utilisateur: {}", request.getEmail());
+            attempts.add(System.currentTimeMillis());
             return ResponseEntity.status(401).body(Map.of("message", "Identifiants invalides."));
         }
+
+        loginAttempts.remove(clientIp);
 
         if (user.getRole() == Role.technician) {
             Optional<TechnicianProfile> optionalTechnician = technicianProfileRepository.findByUser(user);
@@ -127,6 +148,10 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Le rôle est requis.");
         }
 
+        if (request.getRole() == Role.admin) {
+            request.setRole(Role.client);
+        }
+
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             logger.warn("Inscription échouée: nom d'utilisateur déjà utilisé: {}", request.getUsername());
             return ResponseEntity.badRequest().body("Nom d'utilisateur déjà utilisé.");
@@ -136,16 +161,18 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Email déjà utilisé.");
         }
 
-        if (request.getRole() == Role.admin) {
-            return ResponseEntity.badRequest().body("La création d'un compte administrateur se fait uniquement par connexion avec le compte prédéfini.");
-        }
-
         if (!InputValidator.isValidUsername(request.getUsername())) {
             return ResponseEntity.badRequest().body("Nom d'utilisateur invalide : 3 à 30 caractères (lettres, chiffres, point, tiret, underscore).");
         }
         if (request.getPassword() == null || request.getPassword().isBlank()
-                || request.getPassword().length() < 6) {
-            return ResponseEntity.badRequest().body("Le mot de passe doit contenir au moins 6 caractères.");
+                || request.getPassword().length() < 8) {
+            return ResponseEntity.badRequest().body("Le mot de passe doit contenir au moins 8 caractères.");
+        }
+        if (!request.getPassword().matches(".*[A-Z].*")) {
+            return ResponseEntity.badRequest().body("Le mot de passe doit contenir au moins une lettre majuscule.");
+        }
+        if (!request.getPassword().matches(".*\\d.*")) {
+            return ResponseEntity.badRequest().body("Le mot de passe doit contenir au moins un chiffre.");
         }
         if (request.getFirstName() != null && !request.getFirstName().isBlank()
                 && !InputValidator.isValidName(request.getFirstName())) {
@@ -167,8 +194,8 @@ public class AuthController {
             }
         }
 
-        String firstName = request.getFirstName() == null ? "" : request.getFirstName().trim();
-        String lastName = request.getLastName() == null ? "" : request.getLastName().trim();
+        String firstName = request.getFirstName() == null ? "" : InputValidator.sanitizeText(request.getFirstName().trim(), InputValidator.MAX_TEXT_LENGTH);
+        String lastName = request.getLastName() == null ? "" : InputValidator.sanitizeText(request.getLastName().trim(), InputValidator.MAX_TEXT_LENGTH);
 
         if (firstName.isBlank()) {
             firstName = request.getUsername();
@@ -306,7 +333,14 @@ public class AuthController {
         return ResponseEntity.ok(buildProfileResponse(user));
     }
 
+    private static final Set<String> ALLOWED_PHOTO_EXTENSIONS = Set.of(".jpg", ".jpeg", ".png", ".gif", ".pdf");
+    private static final long MAX_PHOTO_SIZE = 5L * 1024 * 1024;
+
     private String savePhoto(MultipartFile photo, Long userId) {
+        if (photo.getSize() > MAX_PHOTO_SIZE) {
+            logger.warn("Photo refusée: taille {} dépasse 5 Mo", photo.getSize());
+            return null;
+        }
         try {
             File dir = new File(uploadDir);
             if (!dir.exists() && !dir.mkdirs()) {
@@ -318,6 +352,10 @@ public class AuthController {
             int dot = original.lastIndexOf('.');
             if (dot >= 0 && dot < original.length() - 1) {
                 extension = original.substring(dot).toLowerCase(Locale.ROOT);
+            }
+            if (!ALLOWED_PHOTO_EXTENSIONS.contains(extension)) {
+                logger.warn("Photo refusée: extension '{}' non autorisée", extension);
+                return null;
             }
             String filename = "user-" + userId + "-" + UUID.randomUUID() + extension;
             Path target = Path.of(dir.getAbsolutePath(), filename).normalize();
@@ -333,19 +371,19 @@ public class AuthController {
     private void createClientProfile(User user, RegistrationRequest request) {
         ClientProfile profile = new ClientProfile();
         profile.setUser(user);
-        profile.setCity(request.getCity());
-        profile.setLocation(request.getLocation());
+        profile.setCity(request.getCity() != null ? InputValidator.sanitizeText(request.getCity(), InputValidator.MAX_TEXT_LENGTH) : null);
+        profile.setLocation(request.getLocation() != null ? InputValidator.sanitizeText(request.getLocation(), InputValidator.MAX_TEXT_LENGTH) : null);
         clientProfileRepository.save(profile);
     }
 
     private void createTechnicianProfile(User user, RegistrationRequest request) {
         TechnicianProfile profile = new TechnicianProfile();
         profile.setUser(user);
-        profile.setDomain(request.getDomain());
-        profile.setCity(request.getCity());
-        profile.setLocation(request.getLocation());
-        profile.setBio(request.getBio());
-        profile.setSpecialties(request.getSpecialties());
+        profile.setDomain(request.getDomain() != null ? InputValidator.sanitizeText(request.getDomain(), InputValidator.MAX_TEXT_LENGTH) : null);
+        profile.setCity(request.getCity() != null ? InputValidator.sanitizeText(request.getCity(), InputValidator.MAX_TEXT_LENGTH) : null);
+        profile.setLocation(request.getLocation() != null ? InputValidator.sanitizeText(request.getLocation(), InputValidator.MAX_TEXT_LENGTH) : null);
+        profile.setBio(request.getBio() != null ? InputValidator.sanitizeMultiline(request.getBio(), InputValidator.MAX_MULTILINE_LENGTH) : null);
+        profile.setSpecialties(request.getSpecialties() != null ? InputValidator.sanitizeMultiline(request.getSpecialties(), InputValidator.MAX_MULTILINE_LENGTH) : null);
         profile.setHourlyRate(request.getHourlyRate());
         profile.setExperienceYears(request.getExperienceYears());
         technicianProfileRepository.save(profile);
@@ -467,7 +505,7 @@ public class AuthController {
                 AuthSession session = new AuthSession();
                 session.setToken(token);
                 session.setUsername(user.getUsername());
-                session.setExpiresAt(LocalDateTime.now().plusDays(30));
+                session.setExpiresAt(LocalDateTime.now().plusDays(7));
                 authSessionRepository.save(session);
             } catch (Exception e) {
                 logger.warn("Impossible de persister la session: {}", e.getMessage());

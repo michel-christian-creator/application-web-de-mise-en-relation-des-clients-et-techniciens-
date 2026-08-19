@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react"
+import LandingPage from "./screens/landing/LandingPage"
 import C1Auth from "./screens/client/C1Auth"
 import C2Home from "./screens/client/C2Home"
 import C3Profile from "./screens/client/C3Profile"
@@ -18,6 +19,7 @@ import { useNotifications, type Notification as AppNotification } from "./hooks/
 import { resolvePhotoUrl } from "./utils/photoUrl"
 import { API_BASE_URL } from "./config"
 import { useI18n } from "./i18n"
+import { useTheme } from "./hooks/useTheme"
 
 type Space = "client" | "tech" | "support" | "admin"
 type UserRole = "client" | "technician" | "admin"
@@ -73,6 +75,7 @@ const techNav = [
 ]
 
 export default function App() {
+  const [showLanding, setShowLanding] = useState(true)
   const [space, setSpace] = useState<Space>("client")
   const [clientScreen, setClientScreen] = useState(0)
   const [techScreen, setTechScreen] = useState(0)
@@ -124,6 +127,7 @@ export default function App() {
       if (!profile) return
       setUserRole(profile.role)
       setUserProfile(profile)
+      setShowLanding(false)
       if (profile.role === "admin") {
         setSpace("admin")
         setTechScreen(0)
@@ -155,6 +159,7 @@ export default function App() {
   }, [])
 
   const { lang, setLang, t } = useI18n()
+  const { isDark, toggleTheme } = useTheme()
 
   const refreshPaymentsSetting = useCallback(async () => {
     try {
@@ -385,6 +390,20 @@ export default function App() {
   }
 
   const renderContent = () => {
+    if (showLanding) {
+      return (
+        <LandingPage
+          onLogin={() => {
+            setShowLanding(false)
+            setClientScreen(0)
+          }}
+          onRegister={() => {
+            setShowLanding(false)
+            setClientScreen(0)
+          }}
+        />
+      )
+    }
     if (space === "client") {
       switch (clientScreen) {
         case 0:
@@ -584,7 +603,7 @@ export default function App() {
   }
 
   const hasSubNav = space === "client" || space === "tech"
-  const showGlobalHeader = !(space === "client" && clientScreen === 0)
+  const showGlobalHeader = !showLanding && !(space === "client" && clientScreen === 0)
   const visibleSpaces = spaces
     .filter((s) => {
       if (s.key === "tech") return userRole === "technician"
@@ -602,11 +621,11 @@ export default function App() {
         onClick={() => openClientNav(firstScreen + i)}
         className="relative rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap"
         style={{
-          background: currentIdx === firstScreen + i ? "#141C2F" : "transparent",
-          color: currentIdx === firstScreen + i ? "#E8EDF5" : "#64748B",
+          background: currentIdx === firstScreen + i ? "var(--card)" : "transparent",
+          color: currentIdx === firstScreen + i ? "var(--foreground)" : "#64748B",
           border:
             currentIdx === firstScreen + i
-              ? "1px solid rgba(255,255,255,0.08)"
+              ? "1px solid var(--border)"
               : "1px solid transparent",
           fontFamily: "Inter, sans-serif",
         }}
@@ -628,7 +647,7 @@ export default function App() {
           <button
             type="button"
             onClick={toggleNotifications}
-            className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-[#141C2F] text-slate-100"
+            className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 mboa-dark-card text-slate-100"
             style={{ boxShadow: "inset 0 1px 2px rgba(255,255,255,0.04)" }}
             aria-label="Notifications"
           >
@@ -671,7 +690,7 @@ export default function App() {
             setTechScreen(0)
             setSelectedArtisan(null)
           }}
-          className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#141C2F] text-slate-100"
+          className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-white/10 mboa-dark-card text-slate-100"
           style={{ boxShadow: "inset 0 1px 2px rgba(255,255,255,0.04)" }}
         >
           {userProfile?.photoUrl ? (
@@ -710,9 +729,9 @@ export default function App() {
         onClick={handleLogout}
         className="w-full rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap sm:w-auto"
         style={{
-          background: "#1E2A42",
-          color: "#E8EDF5",
-          border: "1px solid rgba(255,255,255,0.08)",
+          background: "var(--secondary)",
+          color: "var(--foreground)",
+          border: "1px solid var(--border)",
           fontFamily: "Inter, sans-serif",
         }}
       >
@@ -722,9 +741,9 @@ export default function App() {
   )
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[#070D1A] text-slate-100">
+    <div className="flex min-h-screen w-full flex-col mboa-dark-bg text-slate-100">
       {showGlobalHeader && (
-        <header className="flex-shrink-0 border-b border-white/10 bg-[#0B1120]">
+        <header className="flex-shrink-0 border-b border-white/10 mboa-dark-card">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-2.5">
               <div
@@ -790,12 +809,62 @@ export default function App() {
               <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
                 {navPills}
                 <LanguageMenu />
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 mboa-dark-card text-slate-100 transition-colors hover:bg-[#1E2A42]"
+                  style={{ boxShadow: "inset 0 1px 2px rgba(255,255,255,0.04)" }}
+                  title={isDark ? "Passer au mode clair" : "Passer au mode sombre"}
+                >
+                  {isDark ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="5" />
+                      <line x1="12" y1="1" x2="12" y2="3" />
+                      <line x1="12" y1="21" x2="12" y2="23" />
+                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                      <line x1="1" y1="12" x2="3" y2="12" />
+                      <line x1="21" y1="12" x2="23" y2="12" />
+                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                  )}
+                </button>
                 {accountArea}
               </div>
             )}
             {!hasSubNav && (
               <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
                 <LanguageMenu />
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 mboa-dark-card text-slate-100 transition-colors hover:bg-[#1E2A42]"
+                  style={{ boxShadow: "inset 0 1px 2px rgba(255,255,255,0.04)" }}
+                  title={isDark ? "Passer au mode clair" : "Passer au mode sombre"}
+                >
+                  {isDark ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="5" />
+                      <line x1="12" y1="1" x2="12" y2="3" />
+                      <line x1="12" y1="21" x2="12" y2="23" />
+                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                      <line x1="1" y1="12" x2="3" y2="12" />
+                      <line x1="21" y1="12" x2="23" y2="12" />
+                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                  )}
+                </button>
                 {accountArea}
               </div>
             )}
@@ -805,16 +874,20 @@ export default function App() {
 
       <main
         className={
-          showGlobalHeader
-            ? "flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-6 sm:py-6"
-            : "flex-1 overflow-hidden"
+          showLanding
+            ? "flex-1"
+            : showGlobalHeader
+              ? "flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-6 sm:py-6"
+              : "flex-1 overflow-hidden"
         }
       >
         <div
           className={
-            showGlobalHeader
-              ? "mx-auto flex w-full max-w-[min(1400px,95%)] flex-col"
-              : "flex h-full w-full flex-col"
+            showLanding
+              ? "flex h-full w-full flex-col"
+              : showGlobalHeader
+                ? "mx-auto flex w-full max-w-[min(1400px,95%)] flex-col"
+                : "flex h-full w-full flex-col"
           }
         >
           {renderContent()}

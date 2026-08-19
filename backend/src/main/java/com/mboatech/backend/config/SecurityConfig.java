@@ -13,6 +13,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,6 +22,7 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
     private final TokenAuthenticationFilter tokenAuthenticationFilter;
     private final List<String> allowedOrigins;
 
@@ -44,6 +47,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/technicians/{id}/recommendations").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/technicians/{id}/portfolio").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/settings/payments").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/public/stats").permitAll()
                 .requestMatchers("/api/payments/webhook", "/uploads/**", "/error").permitAll()
                 .anyRequest().authenticated());
         http.addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -54,7 +58,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         if (allowedOrigins.isEmpty()) {
-            configuration.addAllowedOriginPattern("*");
+            logger.warn("Aucun origine CORS configuré. Autorisation des origines de développement uniquement. Configurez app.cors.allowed-origins pour la production.");
+            configuration.addAllowedOrigin("http://localhost:5173");
+            configuration.addAllowedOrigin("http://localhost:5174");
+            configuration.addAllowedOrigin("http://localhost:3000");
         } else {
             configuration.setAllowedOrigins(allowedOrigins);
         }

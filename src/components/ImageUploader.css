@@ -1,0 +1,51 @@
+.uploader-file-card {
+  background: #1E2A42;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+}
+.uploader-file-name {
+  color: #94A3B8;
+}
+.uploader-remove-btn {
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+}
+.uploader-file-bar {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+.uploader-file-size {
+  color: #94A3B8;
+}
+.uploader-drop-zone {
+  background: #1A2236;
+  transition: all 150ms;
+}
+.uploader-drop-icon {
+  background: rgba(37, 99, 235, 0.15);
+}
+.uploader-drop-label {
+  color: #94A3B8;
+}
+.uploader-camera-zone {
+  background: #1A2236;
+  border: 2px dashed rgba(255, 255, 255, 0.12);
+  transition: all 150ms;
+  cursor: pointer;
+}
+.uploader-camera-icon {
+  background: rgba(5, 150, 105, 0.15);
+}
+.uploader-camera-label {
+  color: #94A3B8;
+}
+
+/* ── Light theme ── */
+[data-theme="light"] .uploader-file-card { background: #e2e8f0; border-color: rgba(37,99,235,0.3); }
+[data-theme="light"] .uploader-file-name { color: #475569; }
+[data-theme="light"] .uploader-file-size { color: #475569; }
+[data-theme="light"] .uploader-drop-zone { background: #f1f5f9; }
+[data-theme="light"] .uploader-drop-label { color: #475569; }
+[data-theme="light"] .uploader-camera-zone { background: #f1f5f9; border-color: rgba(0,0,0,0.12); }
+[data-theme="light"] .uploader-camera-label { color: #475569; }
+[data-theme="light"] .uploader-remove-btn { border-color: rgba(0,0,0,0.1); }

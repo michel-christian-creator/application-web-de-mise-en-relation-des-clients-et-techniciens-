@@ -171,7 +171,7 @@ export function useNotifications({ requestId = null }: Options = {}) {
     fetch(`${API_BASE_URL}/api/notifications/read/${id}`, {
       method: "POST",
       headers: authHeaders(),
-    }).catch(() => {})
+    }).catch((err) => console.error("Erreur marquage notification lue:", err))
   }, [])
 
   const markAllRead = useCallback(() => {
@@ -179,7 +179,7 @@ export function useNotifications({ requestId = null }: Options = {}) {
     fetch(`${API_BASE_URL}/api/notifications/read-all`, {
       method: "POST",
       headers: authHeaders(),
-    }).catch(() => {})
+    }).catch((err) => console.error("Erreur marquage toutes notifications lues:", err))
   }, [])
 
   const clearAll = useCallback(() => {
@@ -187,7 +187,7 @@ export function useNotifications({ requestId = null }: Options = {}) {
     fetch(`${API_BASE_URL}/api/notifications`, {
       method: "DELETE",
       headers: authHeaders(),
-    }).catch(() => {})
+    }).catch((err) => console.error("Erreur suppression notifications:", err))
   }, [])
 
   const unreadCount = notifications.filter((n) => !n.read).length

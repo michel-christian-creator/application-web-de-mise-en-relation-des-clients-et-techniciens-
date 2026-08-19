@@ -37,7 +37,7 @@ public class RequestLoggingFilter implements Filter {
         if (auth == null || auth.isBlank()) {
             return "none";
         }
-        return auth.length() > 40 ? auth.substring(0, 40) + "..." : auth;
+        return auth.length() > 10 ? auth.substring(0, 10) + "***" : auth;
     }
 
     private static synchronized void logLine(String line) {

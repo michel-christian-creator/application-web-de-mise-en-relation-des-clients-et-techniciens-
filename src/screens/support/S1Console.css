@@ -1,0 +1,149 @@
+.console-root {
+  background: #0B1120;
+}
+
+.console-card {
+  background: #141C2F;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.console-card-inner {
+  background: #1E2A42;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.console-text-primary {
+  color: #E8EDF5;
+}
+
+.console-text-secondary {
+  color: #94A3B8;
+}
+
+.console-text-muted {
+  color: #64748B;
+}
+
+.console-text-success {
+  color: #059669;
+}
+
+.console-text-warning {
+  color: #F59E0B;
+}
+
+.console-text-danger {
+  color: #EF4444;
+}
+
+.console-text-error {
+  color: #F87171;
+}
+
+.console-heading {
+  font-family: Poppins, sans-serif;
+  color: #E8EDF5;
+}
+
+.console-section-heading {
+  color: #64748B;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.console-btn-approve {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+.console-btn-refund {
+  background: linear-gradient(135deg, #DC2626, #B91C1C);
+  box-shadow: 0 2px 12px rgba(220, 38, 38, 0.3);
+}
+
+.console-btn-tech {
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 2px 12px rgba(5, 150, 105, 0.3);
+}
+
+.console-btn-split {
+  background: #1E2A42;
+  color: #94A3B8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.console-btn-link {
+  background: rgba(37, 99, 235, 0.12);
+  color: #60A5FA;
+}
+
+.console-badge-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.console-badge-success {
+  background: rgba(5, 150, 105, 0.15);
+  color: #059669;
+  border: 1px solid rgba(5, 150, 105, 0.3);
+}
+
+.console-badge-pending {
+  background: rgba(245, 158, 11, 0.12);
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.console-status-loading {
+  background: #141C2F;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.console-status-error {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.console-status-success {
+  background: rgba(5, 150, 105, 0.06);
+  border: 1px solid rgba(5, 150, 105, 0.15);
+}
+
+.console-message-system {
+  background: #0F172A;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.console-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.console-divider-bottom {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.console-img-proof {
+  height: 110px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.console-img-thumb {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── Light theme ── */
+[data-theme="light"] .console-root { background: #f0f4f8 !important; }
+[data-theme="light"] .console-card { background: #ffffff !important; border: 1px solid rgba(0,0,0,0.06) !important; }
+[data-theme="light"] .console-card-inner { background: #e2e8f0 !important; border: 1px solid rgba(0,0,0,0.06) !important; }
+[data-theme="light"] .console-text-primary { color: #1a1a2e !important; }
+[data-theme="light"] .console-text-secondary { color: #64748b !important; }
+[data-theme="light"] .console-text-muted { color: #475569 !important; }
+[data-theme="light"] .console-heading { color: #1a1a2e !important; }
+[data-theme="light"] .console-section-heading { color: #475569 !important; }
+[data-theme="light"] .console-btn-split { background: #e2e8f0 !important; color: #64748b !important; border: 1px solid rgba(0,0,0,0.1) !important; }
+[data-theme="light"] .console-status-loading { background: #ffffff !important; border: 1px solid rgba(0,0,0,0.06) !important; }
+[data-theme="light"] .console-message-system { background: #f1f5f9 !important; border: 1px solid rgba(0,0,0,0.06) !important; }
+[data-theme="light"] .console-divider { border-top: 1px solid rgba(0,0,0,0.06) !important; }
+[data-theme="light"] .console-divider-bottom { border-bottom: 1px solid rgba(0,0,0,0.06) !important; }
+[data-theme="light"] .console-img-proof { border: 1px solid rgba(0,0,0,0.08) !important; }
+[data-theme="light"] .console-img-thumb { border: 1px solid rgba(0,0,0,0.08) !important; }

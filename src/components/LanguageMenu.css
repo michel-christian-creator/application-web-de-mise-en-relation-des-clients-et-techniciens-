@@ -1,0 +1,15 @@
+.langmenu-trigger {
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.04);
+  font-family: Inter, sans-serif;
+}
+.langmenu-section-label {
+  color: #64748B;
+  font-family: Inter, sans-serif;
+}
+.langmenu-item {
+  font-family: Inter, sans-serif;
+}
+
+/* ── Light theme ── */
+[data-theme="light"] .langmenu-trigger { box-shadow: inset 0 1px 2px rgba(0,0,0,0.04); }
+[data-theme="light"] .langmenu-section-label { color: #475569; }

@@ -1,4 +1,5 @@
 import React from "react"
+import "./NotificationsPanel.css"
 import type { Notification } from "../hooks/useNotifications"
 import { useI18n } from "../i18n"
 
@@ -77,16 +78,14 @@ export default function NotificationsPanel({
   }
   return (
     <div
-      style={{ right: 16, top: 64 }}
-      className="absolute z-50 w-80 rounded-2xl border border-white/10 bg-[#0B1120] shadow-lg"
+      className="absolute z-50 w-80 rounded-2xl border border-white/10 bg-[#0B1120] shadow-lg notif-panel"
     >
       <div className="flex flex-wrap items-center justify-between gap-2 p-3 border-b border-white/5">
-        <h3 className="text-sm font-semibold" style={{ color: "#E8EDF5" }}>
+        <h3 className="text-sm font-semibold notif-title">
           Notifications
           {notifications.filter((n) => !n.read).length > 0 && (
             <span
-              className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold"
-              style={{ background: "#EF4444", color: "white" }}
+              className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold notif-badge"
             >
               {notifications.filter((n) => !n.read).length}
             </span>
@@ -95,16 +94,14 @@ export default function NotificationsPanel({
         <div className="flex items-center gap-2">
           <button
             onClick={onMarkAllRead}
-            className="text-xs px-2 py-1 rounded-md"
-            style={{ background: "#1E2A42", color: "#94A3B8" }}
+            className="text-xs px-2 py-1 rounded-md notif-btn"
           >
             {t("Tout marquer lu")}
           </button>
           {onClearAll && (
             <button
               onClick={onClearAll}
-              className="text-xs px-2 py-1 rounded-md"
-              style={{ background: "transparent", color: "#64748B" }}
+              className="text-xs px-2 py-1 rounded-md notif-btn-clear"
               title={t("Vider les notifications")}
             >
               {t("Vider")}
@@ -116,8 +113,7 @@ export default function NotificationsPanel({
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
             <div
-              className="flex h-12 w-12 items-center justify-center rounded-full"
-              style={{ background: "#1E2A42" }}
+              className="flex h-12 w-12 items-center justify-center rounded-full notif-empty-icon"
             >
               <svg
                 width="20"
@@ -133,10 +129,10 @@ export default function NotificationsPanel({
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
             </div>
-            <p className="text-sm" style={{ color: "#94A3B8" }}>
+            <p className="text-sm notif-empty-text">
               {t("Aucune notification")}
             </p>
-            <p className="text-xs" style={{ color: "#64748B" }}>
+            <p className="text-xs notif-empty-subtext">
               {t("Les nouveaux événements apparaîtront ici en temps réel.")}
             </p>
           </div>
@@ -146,8 +142,7 @@ export default function NotificationsPanel({
             return (
               <div
                 key={n.id}
-                className="flex items-start gap-3 rounded-md p-3 hover:bg-white/2"
-                style={{ cursor: "pointer" }}
+                className="flex items-start gap-3 rounded-md p-3 hover:bg-white/2 notif-item"
                 onClick={() => handleClick(n)}
               >
                 <div className="flex-shrink-0">
@@ -163,21 +158,20 @@ export default function NotificationsPanel({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="text-sm font-medium truncate" style={{ color: "#E8EDF5" }}>
+                    <div className="text-sm font-medium truncate notif-item-title">
                       {n.title}
                     </div>
-                    <div className="flex-shrink-0 text-xs" style={{ color: "#94A3B8" }}>
+                    <div className="flex-shrink-0 text-xs notif-item-time">
                       {n.time || ""}
                     </div>
                   </div>
-                  <div className="mt-0.5 text-xs leading-relaxed" style={{ color: "#94A3B8" }}>
+                  <div className="mt-0.5 text-xs leading-relaxed notif-item-message">
                     {n.message}
                   </div>
                 </div>
                 {!n.read && (
                   <div
-                    className="mt-1.5 flex-shrink-0 h-2 w-2 rounded-full"
-                    style={{ background: "#3B82F6" }}
+                    className="mt-1.5 flex-shrink-0 h-2 w-2 rounded-full notif-unread-dot"
                   />
                 )}
               </div>

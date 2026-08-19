@@ -4,6 +4,7 @@ import { API_BASE_URL } from "../../config"
 import { sanitizeMultiline, hasSqlInjectionPattern } from "../../utils/validation"
 import { useI18n } from "../../i18n"
 import type { PaymentDevis } from "./C6Payment"
+import "./C5Chat.css"
 
 interface Props {
   requestId?: number
@@ -91,6 +92,7 @@ export default function C5Chat({
   const [loading, setLoading] = useState(false)
   const socketRef = useRef<ChatSocket | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const chatInputRef = useRef<HTMLTextAreaElement | null>(null)
   const [signalingDispute, setSignalingDispute] = useState(false)
   const [disputeDone, setDisputeDone] = useState(false)
   const [sendingImage, setSendingImage] = useState(false)
@@ -101,6 +103,7 @@ export default function C5Chat({
   } | null>(null)
   const [releasingFunds, setReleasingFunds] = useState(false)
   const [released, setReleased] = useState(false)
+  const [showReleaseConfirm, setShowReleaseConfirm] = useState(false)
   const [ratingToast, setRatingToast] = useState(false)
   const ratingToastTimer = useRef<number | null>(null)
 
@@ -109,6 +112,13 @@ export default function C5Chat({
       if (ratingToastTimer.current) window.clearTimeout(ratingToastTimer.current)
     }
   }, [])
+
+  useEffect(() => {
+    const el = chatInputRef.current
+    if (!el) return
+    el.style.height = "auto"
+    el.style.height = Math.min(el.scrollHeight, 200) + "px"
+  }, [input])
 
   useEffect(() => {
     if (!requestId) return
@@ -133,7 +143,7 @@ export default function C5Chat({
           }
         }
       })
-      .catch(() => {})
+      .catch((err) => console.error("Erreur chargement etat demande:", err))
     return () => {
       cancelled = true
     }
@@ -203,7 +213,7 @@ export default function C5Chat({
               })),
             )
           })
-          .catch(() => {})
+          .catch((err) => console.error("Erreur rechargement messages:", err))
       },
     })
     socketRef.current = socket
@@ -233,6 +243,7 @@ export default function C5Chat({
       })
       if (sent) {
         setInput("")
+        if (chatInputRef.current) chatInputRef.current.style.height = "auto"
         return
       }
     }
@@ -264,6 +275,7 @@ export default function C5Chat({
           : [...prev, { ...saved, time: formatChatTime(saved.timestamp, locale) }],
       )
       setInput("")
+      if (chatInputRef.current) chatInputRef.current.style.height = "auto"
     } catch (err) {
       console.error(err)
       setError(err instanceof Error ? err.message : t("Erreur réseau"))
@@ -428,40 +440,32 @@ export default function C5Chat({
   }
 
   return (
-    <div className="min-h-full p-3 sm:p-6" style={{ background: "#0B1120" }}>
+    <div className="min-h-full p-3 sm:p-6 chat-page">
       {ratingToast && (
         <div
-          className="fixed top-20 right-4 sm:right-6 z-50 max-w-sm w-[calc(100%-2rem)] sm:w-96 p-4 rounded-2xl"
-          style={{
-            background: "linear-gradient(135deg, #1E3A6A, #141C2F)",
-            border: "1px solid rgba(37,99,235,0.4)",
-            boxShadow: "0 16px 48px rgba(0,0,0,0.55), 0 0 24px rgba(37,99,235,0.25)",
-            animation: "fadeSlideIn 400ms ease",
-          }}
+          className="fixed top-20 right-4 sm:right-6 z-50 max-w-sm w-[calc(100%-2rem)] sm:w-96 p-4 rounded-2xl chat-toast"
         >
           <div className="flex items-start gap-3">
-            <span className="text-2xl leading-none" style={{ color: "#FBBF24" }}>
+            <span className="text-2xl leading-none chat-text-yellow">
               ⭐
             </span>
             <div className="flex-1">
               <p
-                className="text-sm font-bold"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                className="text-sm font-bold chat-font-poppins chat-text-light"
               >
                 {t("Intervention terminée — donnez votre avis")}
               </p>
-              <p className="text-xs mt-1 leading-relaxed" style={{ color: "#94A3B8" }}>
+              <p className="text-xs mt-1 leading-relaxed chat-text-muted">
                 {t("Vous pouvez noter")} {artisanName} {t("et laisser un commentaire. Allez sur")}{" "}
-                <span style={{ color: "#93C5FD" }}>{t("Accueil & Recherche")}</span>,{" "}
+                <span className="chat-text-blue">{t("Accueil & Recherche")}</span>,{" "}
                 {t("ouvrez le profil du technicien, puis utilisez la section")}{" "}
-                <span style={{ color: "#93C5FD" }}>{t("Votre avis")}</span>{" "}
+                <span className="chat-text-blue">{t("Votre avis")}</span>{" "}
                 {t("(étoiles + commentaire). Vous ne pouvez le faire qu'une seule fois.")}
               </p>
             </div>
             <button
               onClick={() => setRatingToast(false)}
-              className="flex-shrink-0 text-xs rounded-lg px-2 py-1"
-              style={{ background: "#1E2A42", color: "#94A3B8" }}
+              className="flex-shrink-0 text-xs rounded-lg px-2 py-1 chat-toast-close"
             >
               {t("Fermer")}
             </button>
@@ -472,67 +476,45 @@ export default function C5Chat({
         <div className="grid grid-cols-1 gap-5 h-full lg:grid-cols-[1fr_340px]">
           {/* Chat panel */}
           <div
-            className="flex flex-col rounded-2xl overflow-hidden"
-            style={{
-              background: "#141C2F",
-              border: "1px solid rgba(255,255,255,0.06)",
-              height: "65vh",
-              maxHeight: "calc(100vh - 140px)",
-            }}
+            className="flex flex-col rounded-2xl overflow-hidden chat-panel"
           >
             {/* Chat header */}
             <div
-              className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-4 flex-shrink-0"
-              style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+              className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-4 flex-shrink-0 chat-divider-bottom"
             >
               <div className="flex items-center gap-4 min-w-0">
                 <div className="relative flex-shrink-0">
                   <img
                     src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=48&h=48&fit=crop&auto=format"
                     alt={`${artisanName} — ${t("identité vérifiée")}`}
-                    className="w-11 h-11 rounded-full object-cover"
-                    style={{ border: "2px solid #059669" }}
+                    className="w-11 h-11 rounded-full object-cover chat-avatar-border"
                   />
                   <span
-                    className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500"
-                    style={{ border: "2px solid #141C2F" }}
+                    className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 chat-online-dot"
                   />
                 </div>
                 <div className="min-w-0">
                   <p
-                    className="text-sm font-semibold truncate"
-                    style={{
-                      fontFamily: "Poppins, sans-serif",
-                      color: "#E8EDF5",
-                    }}
+                    className="text-sm font-semibold truncate chat-font-poppins chat-text-light"
                   >
                     {artisanName}
                     <span
-                      className="ml-2 text-xs px-2 py-0.5 rounded-full whitespace-nowrap"
-                      style={{
-                        background: "rgba(5,150,105,0.15)",
-                        color: "#059669",
-                      }}
+                      className="ml-2 text-xs px-2 py-0.5 rounded-full whitespace-nowrap chat-badge-verified"
                     >
                       ✓ {t("Identité vérifiée")}
                     </span>
                   </p>
-                  <p className="text-xs" style={{ color: "#059669" }}>
+                  <p className="text-xs chat-text-green">
                     {t("En ligne")} · {artisanRole}
                   </p>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <span
-                  className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold"
-                  style={{
-                    background: "rgba(37,99,235,0.15)",
-                    color: "#93C5FD",
-                  }}
+                  className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold chat-badge-realtime"
                 >
                   <span
-                    className="h-1.5 w-1.5 animate-pulse rounded-full"
-                    style={{ background: "#60A5FA" }}
+                    className="h-1.5 w-1.5 animate-pulse rounded-full chat-realtime-dot"
                   />
                   {t("Temps réel")}
                 </span>
@@ -571,12 +553,12 @@ export default function C5Chat({
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-5 flex flex-col gap-4">
               {loading && (
-                <p className="text-sm" style={{ color: "#94A3B8" }}>
+                <p className="text-sm chat-text-muted">
                   {t("Chargement des messages...")}
                 </p>
               )}
               {!loading && messages.length === 0 && (
-                <p className="text-sm" style={{ color: "#94A3B8" }}>
+                <p className="text-sm chat-text-muted">
                   {t(
                     "Aucun message pour le moment. Envoyez le premier message pour démarrer la conversation.",
                   )}
@@ -587,12 +569,7 @@ export default function C5Chat({
                   return (
                     <div key={m.id} className="flex justify-center">
                       <span
-                        className="rounded-full px-3 py-1.5 text-[11px] font-medium"
-                        style={{
-                          background: "rgba(148,163,184,0.12)",
-                          color: "#94A3B8",
-                          border: "1px solid rgba(148,163,184,0.18)",
-                        }}
+                        className="rounded-full px-3 py-1.5 text-[11px] font-medium chat-system-msg"
                       >
                         {m.text}
                       </span>
@@ -604,35 +581,24 @@ export default function C5Chat({
                   <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                     <div className="max-w-[60%] min-w-0">
                       <div
-                        className="rounded-2xl px-5 py-3 break-words"
-                        style={{
-                          background: mine ? "#1E3A6A" : "#1E2A42",
-                          borderBottomRightRadius: mine ? "4px" : undefined,
-                          borderBottomLeftRadius: !mine ? "4px" : undefined,
-                        }}
+                        className={`rounded-2xl px-5 py-3 break-words ${mine ? "chat-bubble-mine" : "chat-bubble-other"}`}
                       >
                         {m.imageUrl && (
                           <img
                             src={m.imageUrl}
                             alt={t("Photo partagée dans le chat")}
-                            className="rounded-xl mb-3 w-full object-cover cursor-pointer"
-                            style={{ height: "140px" }}
+                            className="rounded-xl mb-3 w-full object-cover cursor-pointer chat-msg-image"
                           />
                         )}
                         <p
-                          className="text-sm leading-relaxed"
-                          style={{
-                            color: "#E8EDF5",
-                            fontFamily: "Inter, sans-serif",
-                          }}
+                          className="text-sm leading-relaxed chat-msg-text"
                         >
                           {m.text}
                         </p>
                       </div>
                       <p
-                        className="text-xs mt-1 px-1"
+                        className="text-xs mt-1 px-1 chat-text-dark-muted"
                         style={{
-                          color: "#64748B",
                           textAlign: mine ? "right" : "left",
                         }}
                       >
@@ -647,8 +613,7 @@ export default function C5Chat({
 
             {/* Input */}
             <div
-              className="flex items-center gap-2 px-3 sm:px-6 py-4 flex-shrink-0"
-              style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+              className="flex items-center gap-2 px-3 sm:px-6 py-4 flex-shrink-0 chat-divider-top"
             >
               <input
                 ref={fileInputRef}
@@ -664,9 +629,8 @@ export default function C5Chat({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={!requestId || sendingImage}
-                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 chat-input-btn"
                 style={{
-                  background: "#1E2A42",
                   opacity: !requestId || sendingImage ? 0.5 : 1,
                   cursor: !requestId ? "not-allowed" : "pointer",
                 }}
@@ -686,25 +650,35 @@ export default function C5Chat({
                 </svg>
               </button>
               <div
-                className="flex-1 flex items-center rounded-xl px-4 py-3"
-                style={{
-                  background: "#1E2A42",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}
+                className="flex-1 flex flex-col rounded-xl px-4 py-3 chat-input-container"
               >
-                <input
+                <textarea
+                  ref={chatInputRef}
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && send()}
+                  onChange={(e) => setInput(e.target.value.slice(0, 500))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault()
+                      send()
+                    }
+                  }}
                   placeholder={
                     requestId
                       ? t("Votre message...")
                       : t("Publiez d'abord une demande pour démarrer le chat")
                   }
                   disabled={!requestId}
-                  className="flex-1 bg-transparent outline-none text-sm"
-                  style={{ color: "#E8EDF5", fontFamily: "Inter, sans-serif" }}
+                  rows={1}
+                  className="w-full bg-transparent outline-none text-sm resize-none chat-textarea"
                 />
+                {requestId && (
+                  <span
+                    className="text-right text-[10px] mt-0.5"
+                    style={{ color: input.length > 450 ? "#EF4444" : "#475569" }}
+                  >
+                    {input.length}/500
+                  </span>
+                )}
               </div>
               <button
                 onClick={send}
@@ -730,7 +704,7 @@ export default function C5Chat({
               </button>
             </div>
             {error && (
-              <p className="px-6 pb-4 text-sm" style={{ color: "#F87171" }}>
+              <p className="px-6 pb-4 text-sm chat-text-error">
                 {error}
               </p>
             )}
@@ -740,20 +714,12 @@ export default function C5Chat({
           <div className="flex flex-col gap-4">
             {/* Devis */}
             <div
-              className="p-5 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(5,150,105,0.25)",
-              }}
+              className="p-5 rounded-2xl chat-card-green"
             >
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-lg">📋</span>
                 <p
-                  className="text-sm font-semibold"
-                  style={{
-                    fontFamily: "Poppins, sans-serif",
-                    color: "#E8EDF5",
-                  }}
+                  className="text-sm font-semibold chat-font-poppins chat-text-light"
                 >
                   {t("Devis")}
                 </p>
@@ -787,17 +753,17 @@ export default function C5Chat({
               </div>
               {devisMessage ? (
                 <>
-                  <div className="mb-4 p-3 rounded-xl" style={{ background: "#1E2A42" }}>
-                    <p className="text-xs mb-1" style={{ color: "#94A3B8" }}>
+                  <div className="mb-4 p-3 rounded-xl chat-surface">
+                    <p className="text-xs mb-1 chat-text-muted">
                       {devisMessage.text}
                     </p>
-                    <p className="text-2xl font-bold font-mono" style={{ color: "#E8EDF5" }}>
+                    <p className="text-2xl font-bold font-mono chat-text-light">
                       {formatAmount(devisAmount)}{" "}
-                      <span className="text-sm font-normal" style={{ color: "#64748B" }}>
+                      <span className="text-sm font-normal chat-text-dark-muted">
                         FCFA
                       </span>
                     </p>
-                    <p className="text-xs mt-1" style={{ color: "#64748B" }}>
+                    <p className="text-xs mt-1 chat-text-dark-muted">
                       {t("N° demande #")}
                       {requestId ?? "—"}
                     </p>
@@ -805,12 +771,7 @@ export default function C5Chat({
                   <button
                     onClick={() => devisMessage && acceptAndPay(devisMessage)}
                     disabled={devisRejected || !requestId}
-                    className="w-full py-3.5 rounded-xl font-bold text-sm text-white disabled:opacity-50"
-                    style={{
-                      background: "linear-gradient(135deg, #059669, #047857)",
-                      boxShadow: "0 2px 12px rgba(5,150,105,0.3)",
-                      fontFamily: "Poppins, sans-serif",
-                    }}
+                    className="w-full py-3.5 rounded-xl font-bold text-sm text-white disabled:opacity-50 chat-btn-green"
                   >
                     {devisAccepted
                       ? `🔐 ${t("Procéder au paiement sécurisé")}`
@@ -820,7 +781,7 @@ export default function C5Chat({
                   </button>
                 </>
               ) : (
-                <p className="text-xs" style={{ color: "#94A3B8" }}>
+                <p className="text-xs chat-text-muted">
                   {t(
                     "Aucun devis reçu pour le moment. Le technicien vous enverra une proposition chiffrée ici.",
                   )}
@@ -831,35 +792,22 @@ export default function C5Chat({
             {/* Validation des travaux */}
             {canValidateWork && (
               <div
-                className="p-5 rounded-2xl"
-                style={{
-                  background: "rgba(5,150,105,0.08)",
-                  border: "1px solid rgba(5,150,105,0.35)",
-                }}
+                className="p-5 rounded-2xl chat-validation-section"
               >
                 <p
-                  className="text-sm font-semibold mb-1.5"
-                  style={{
-                    fontFamily: "Poppins, sans-serif",
-                    color: "#E8EDF5",
-                  }}
+                  className="text-sm font-semibold mb-1.5 chat-font-poppins chat-text-light"
                 >
                   {t("Les travaux sont terminés")}
                 </p>
-                <p className="text-xs leading-relaxed mb-4" style={{ color: "#94A3B8" }}>
+                <p className="text-xs leading-relaxed mb-4 chat-text-muted">
                   {t(
                     "Confirmez la fin de la prestation pour libérer les fonds en garde au technicien.",
                   )}
                 </p>
                 <button
-                  onClick={releaseFunds}
+                  onClick={() => setShowReleaseConfirm(true)}
                   disabled={releasingFunds}
-                  className="w-full py-3.5 rounded-xl font-bold text-sm text-white disabled:opacity-60"
-                  style={{
-                    background: "linear-gradient(135deg, #059669, #047857)",
-                    boxShadow: "0 2px 12px rgba(5,150,105,0.3)",
-                    fontFamily: "Poppins, sans-serif",
-                  }}
+                  className="w-full py-3.5 rounded-xl font-bold text-sm text-white disabled:opacity-60 chat-btn-green"
                 >
                   {releasingFunds
                     ? t("Libération en cours…")
@@ -868,21 +816,70 @@ export default function C5Chat({
               </div>
             )}
 
+            {/* Modal de confirmation double */}
+            {showReleaseConfirm && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 chat-modal-overlay"
+                onClick={() => setShowReleaseConfirm(false)}
+              >
+                <div
+                  className="w-full max-w-sm rounded-2xl p-6 chat-modal-card"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <span
+                      className="flex items-center justify-center w-10 h-10 rounded-full text-lg chat-modal-icon"
+                    >
+                      ⚠
+                    </span>
+                    <h3
+                      className="text-base font-bold chat-font-poppins chat-modal-title"
+                    >
+                      {t("Confirmer la libération des fonds")}
+                    </h3>
+                  </div>
+                  <p
+                    className="text-sm leading-relaxed mb-2 chat-modal-desc"
+                  >
+                    {t(
+                      "Vous êtes sur le point de valider la fin de l'intervention et de libérer les fonds en garde au technicien.",
+                    )}
+                  </p>
+                  <p
+                    className="text-sm font-semibold leading-relaxed mb-6 chat-modal-warning"
+                  >
+                    {t(
+                      "Cette action est irréversible. Ne confirmez que si les travaux sont réellement terminés et conformes.",
+                    )}
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setShowReleaseConfirm(false)}
+                      className="flex-1 py-3 rounded-xl font-semibold text-sm chat-btn-cancel"
+                    >
+                      {t("Annuler")}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowReleaseConfirm(false)
+                        releaseFunds()
+                      }}
+                      disabled={releasingFunds}
+                      className="flex-1 py-3 rounded-xl font-bold text-sm text-white disabled:opacity-60 chat-btn-green"
+                    >
+                      {t("Oui, je confirme")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Info artisan */}
             <div
-              className="p-5 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
+              className="p-5 rounded-2xl chat-card"
             >
               <p
-                className="text-xs font-semibold mb-3"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
+                className="text-xs font-semibold mb-3 chat-section-label"
               >
                 {t("Artisan")}
               </p>
@@ -890,19 +887,18 @@ export default function C5Chat({
                 <img
                   src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=48&h=48&fit=crop&auto=format"
                   alt={artisanName}
-                  className="w-10 h-10 rounded-full object-cover"
-                  style={{ border: "2px solid #059669" }}
+                  className="w-10 h-10 rounded-full object-cover chat-avatar-border"
                 />
                 <div>
-                  <p className="text-sm font-medium" style={{ color: "#E8EDF5" }}>
+                  <p className="text-sm font-medium chat-text-light">
                     {artisanName}
                   </p>
-                  <p className="text-xs" style={{ color: "#64748B" }}>
+                  <p className="text-xs chat-text-dark-muted">
                     {artisanRole} · ⭐ 4.9
                   </p>
                 </div>
               </div>
-              <p className="text-xs" style={{ color: "#64748B" }}>
+              <p className="text-xs chat-text-dark-muted">
                 ✓ {t("Identité vérifiée par MboaTech")}
                 <br />✓ {t("Certifié par 5 artisans seniors")}
               </p>
@@ -910,14 +906,10 @@ export default function C5Chat({
 
             {/* Réassurance */}
             <div
-              className="p-4 rounded-2xl"
-              style={{
-                background: "rgba(5,150,105,0.06)",
-                border: "1px solid rgba(5,150,105,0.2)",
-              }}
+              className="p-4 rounded-2xl chat-reassurance"
             >
-              <p className="text-xs leading-relaxed" style={{ color: "#94A3B8" }}>
-                🔐 <strong style={{ color: "#059669" }}>{t("Paiement sécurisé.")}</strong>{" "}
+              <p className="text-xs leading-relaxed chat-text-muted">
+                🔐 <strong className="chat-text-green">{t("Paiement sécurisé.")}</strong>{" "}
                 {t(
                   "Vos fonds sont retenus en garde et ne sont versés qu'après votre validation des travaux.",
                 )}

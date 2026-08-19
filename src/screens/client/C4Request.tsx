@@ -9,6 +9,7 @@ import {
   MAX_TEXT_LENGTH,
 } from "../../utils/validation"
 import { useI18n } from "../../i18n"
+import "./C4Request.css"
 
 interface Props {
   domain?: string
@@ -117,36 +118,28 @@ export default function C4Request({
   ]
 
   return (
-    <div className="min-h-full p-4 sm:p-6" style={{ background: "#0B1120" }}>
+    <div className="min-h-full p-4 sm:p-6 req-page">
       <div className="mx-auto max-w-[min(1400px,95%)]">
         <div className="mb-6 sm:mb-8">
-          <h1
-            className="text-2xl font-bold mb-1"
-            style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
-          >
+          <h1 className="text-2xl font-bold mb-1 req-title">
             {t("Publier une demande d'intervention")}
           </h1>
-          <p className="text-sm" style={{ color: "#64748B" }}>
+          <p className="text-sm req-muted">
             {t("Décrivez votre problème pour qu'")}
             {artisan?.fullname || t("un artisan")}{" "}
             {t("puisse préparer son intervention")}
           </p>
-          <p className="text-sm mt-2" style={{ color: "#94A3B8" }}>
+          <p className="text-sm mt-2 req-text-secondary">
             {t("Domaine :")}{" "}
-            <span style={{ color: "#E8EDF5" }}>{domainValue || t("Non précisé")}</span>
+            <span className="req-text-light">{domainValue || t("Non précisé")}</span>
           </p>
         </div>
 
         {isSelf && artisan && (
           <div
-            className="mb-5 rounded-2xl p-4 text-sm"
-            style={{
-              background: "rgba(239,68,68,0.12)",
-              border: "1px solid rgba(239,68,68,0.4)",
-              color: "#FECACA",
-            }}
+            className="mb-5 rounded-2xl p-4 text-sm req-banner-red"
           >
-            <span className="font-semibold" style={{ color: "#FCA5A5" }}>
+            <span className="font-semibold req-text-red-light">
               {t("⛔ Intervention sur vous-même impossible")}
             </span>{" "}
             {t(" — vous êtes le technicien sélectionné (")}
@@ -156,14 +149,9 @@ export default function C4Request({
         )}
         {artisan && !isSelf && (
           <div
-            className="mb-5 rounded-2xl p-4 text-sm"
-            style={{
-              background: "rgba(37,99,235,0.10)",
-              border: "1px solid rgba(37,99,235,0.3)",
-              color: "#E8EDF5",
-            }}
+            className="mb-5 rounded-2xl p-4 text-sm req-banner-blue"
           >
-            <span className="font-semibold" style={{ color: "#93C5FD" }}>
+            <span className="font-semibold req-text-blue">
               {t("🎯 Demande réservée")}
             </span>{" "}
             {t(" — votre demande sera envoyée uniquement à ")}
@@ -179,43 +167,25 @@ export default function C4Request({
           <div className="flex flex-col gap-5">
             {/* Domaine */}
             <div
-              className="p-5 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
+              className="p-5 rounded-2xl req-card"
             >
               <p
-                className="text-xs font-semibold mb-3"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
+                className="text-xs font-semibold mb-3 req-label"
               >
                 {t("Domaine de l'intervention")}
               </p>
               {artisan ? (
                 <div
-                  className="w-full flex items-center gap-3 rounded-xl px-4 py-4 text-sm"
-                  style={{
-                    background: "#1E2A42",
-                    border: "1px solid rgba(37,99,235,0.4)",
-                    color: "#E8EDF5",
-                  }}
+                  className="w-full flex items-center gap-3 rounded-xl px-4 py-4 text-sm req-field-blue"
                 >
                   <span style={{ fontSize: "1.1rem" }}>{artisan.icon || "🛠️"}</span>
                   <div>
                     <p
-                      className="font-semibold"
-                      style={{
-                        fontFamily: "Poppins, sans-serif",
-                        color: "#93C5FD",
-                      }}
+                      className="font-semibold req-font-poppins req-text-blue"
                     >
                       {artisan.metier}
                     </p>
-                    <p className="text-xs" style={{ color: "#64748B" }}>
+                    <p className="text-xs req-muted">
                       {t("Domaine verrouillé sur le technicien sélectionné")}
                     </p>
                   </div>
@@ -225,13 +195,7 @@ export default function C4Request({
                   <select
                     value={domainValue}
                     onChange={(e) => setDomainValue(e.target.value)}
-                    className="w-full rounded-xl px-4 py-4 text-sm outline-none"
-                    style={{
-                      background: "#1E2A42",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                      color: "#E8EDF5",
-                      fontFamily: "Inter, sans-serif",
-                    }}
+                    className="w-full rounded-xl px-4 py-4 text-sm outline-none req-input"
                   >
                     <option value="">{t("Choisir un métier")}</option>
                     <option value="Général">{t("Aucune idée du domaine")}</option>
@@ -241,7 +205,7 @@ export default function C4Request({
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs mt-2" style={{ color: "#64748B" }}>
+                  <p className="text-xs mt-2 req-muted">
                     {t(
                       "Sélectionnez un métier existant ou choisissez « Aucune idée du domaine ». La liste s’actualise automatiquement quand un nouveau métier arrive.",
                     )}
@@ -252,19 +216,10 @@ export default function C4Request({
 
             {/* Description */}
             <div
-              className="p-5 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
+              className="p-5 rounded-2xl req-card"
             >
               <p
-                className="text-xs font-semibold mb-3"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
+                className="text-xs font-semibold mb-3 req-label"
               >
                 {t("Description du problème")}
               </p>
@@ -273,16 +228,10 @@ export default function C4Request({
                 onChange={(e) => setDesc(e.target.value)}
                 placeholder={t("Décrivez votre problème au technicien avec le plus de précisions possible : localisation exacte, depuis quand, symptômes observés...")}
                 rows={7}
-                className="w-full rounded-xl px-4 py-4 text-sm resize-none outline-none"
-                style={{
-                  background: "#1E2A42",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  color: "#E8EDF5",
-                  fontFamily: "Inter, sans-serif",
-                }}
+                className="w-full rounded-xl px-4 py-4 text-sm resize-none outline-none req-input"
               />
               <div className="flex justify-between mt-2">
-                <p className="text-xs" style={{ color: "#64748B" }}>
+                <p className="text-xs req-muted">
                   {t("Soyez le plus précis possible pour obtenir un devis juste")}
                 </p>
                 <p
@@ -296,20 +245,11 @@ export default function C4Request({
 
             {/* Media */}
             <div
-              className="p-5 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
+              className="p-5 rounded-2xl req-card"
             >
               <div className="flex items-center justify-between gap-3 mb-3">
                 <p
-                  className="text-xs font-semibold"
-                  style={{
-                    color: "#64748B",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                  }}
+                  className="text-xs font-semibold req-label"
                 >
                   {t("Photos & documents de la panne")}
                 </p>
@@ -330,15 +270,11 @@ export default function C4Request({
               <div className="flex gap-3 flex-wrap">
                 <ImageUploader files={files} onChange={(f) => setFiles(f)} maxFiles={MAX_FILES} />
               </div>
-              <p className="text-xs mt-3 flex items-center gap-1" style={{ color: "#64748B" }}>
+              <p className="text-xs mt-3 flex items-center gap-1 req-muted">
                 <span>{t("JPG, PNG, PDF · Glissez-déposez ou cliquez · Max 10 Mo par fichier")}</span>
                 {files.length === MAX_FILES && (
                   <span
-                    className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                    style={{
-                      background: "rgba(245,158,11,0.15)",
-                      color: "#FBBF24",
-                    }}
+                    className="rounded-full px-2 py-0.5 text-[10px] font-semibold req-badge-warn"
                   >
                     {t("Limite atteinte")}
                   </span>
@@ -351,19 +287,10 @@ export default function C4Request({
           <div className="flex flex-col gap-5">
             {/* Urgence */}
             <div
-              className="p-5 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
+              className="p-5 rounded-2xl req-card"
             >
               <p
-                className="text-xs font-semibold mb-4"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
+                className="text-xs font-semibold mb-4 req-label"
               >
                 {t("Niveau d'urgence")}
               </p>
@@ -388,15 +315,14 @@ export default function C4Request({
                     </div>
                     <div>
                       <p
-                        className="text-sm font-semibold"
+                        className="text-sm font-semibold req-font-poppins"
                         style={{
                           color: urgence === opt.key ? opt.color : "#E8EDF5",
-                          fontFamily: "Poppins, sans-serif",
                         }}
                       >
                         {opt.label}
                       </p>
-                      <p className="text-xs mt-0.5" style={{ color: "#64748B" }}>
+                      <p className="text-xs mt-0.5 req-muted">
                         {opt.desc}
                       </p>
                     </div>
@@ -407,25 +333,16 @@ export default function C4Request({
 
             {/* Recap */}
             <div
-              className="p-5 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
+              className="p-5 rounded-2xl req-card"
             >
               <p
-                className="text-xs font-semibold mb-3"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
+                className="text-xs font-semibold mb-3 req-label"
               >
                 {t("Récapitulatif")}
               </p>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs" style={{ color: "#94A3B8" }}>
+                  <span className="text-xs req-text-secondary">
                     {t("Urgence")}
                   </span>
                   <span
@@ -438,10 +355,10 @@ export default function C4Request({
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs" style={{ color: "#94A3B8" }}>
+                  <span className="text-xs req-text-secondary">
                     {t("Photos")}
                   </span>
-                  <span className="text-xs font-mono" style={{ color: "#E8EDF5" }}>
+                  <span className="text-xs font-mono req-text-light">
                     {files.length} {t("fichier(s)")}
                   </span>
                 </div>
@@ -530,7 +447,7 @@ export default function C4Request({
                 domainValue.trim().length === 0 ||
                 submitting
               }
-              className="w-full py-4 rounded-xl font-bold text-base text-white"
+              className="w-full py-4 rounded-xl font-bold text-base text-white req-font-poppins"
               style={{
                 background:
                   isSelf
@@ -538,7 +455,6 @@ export default function C4Request({
                     : desc.trim().length > 0 && domainValue.trim().length > 0
                       ? "linear-gradient(135deg, #2563EB, #1D4ED8)"
                       : "#1E2A42",
-                fontFamily: "Poppins, sans-serif",
                 boxShadow:
                   !isSelf && desc.trim().length > 0 && domainValue.trim().length > 0
                     ? "0 4px 20px rgba(37,99,235,0.35)"
@@ -556,7 +472,7 @@ export default function C4Request({
                   : t("Publier et trouver un artisan")}
             </button>
             {error && (
-              <p className="mt-3 text-sm" style={{ color: "#F87171" }}>
+              <p className="mt-3 text-sm req-text-red">
                 {error}
               </p>
             )}

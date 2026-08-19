@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -143,7 +144,14 @@ public class PortfolioController {
         return data;
     }
 
+    private static final Set<String> ALLOWED_PORTFOLIO_EXTENSIONS = Set.of(".jpg", ".jpeg", ".png", ".gif");
+    private static final long MAX_PORTFOLIO_SIZE = 5L * 1024 * 1024;
+
     private String saveFile(MultipartFile file, String prefix) {
+        if (file.getSize() > MAX_PORTFOLIO_SIZE) {
+            logger.warn("Fichier portfolio refusé: taille {} dépasse 5 Mo", file.getSize());
+            return null;
+        }
         try {
             File dir = new File(uploadDir);
             if (!dir.exists() && !dir.mkdirs()) {
@@ -155,6 +163,10 @@ public class PortfolioController {
             int dot = original.lastIndexOf('.');
             if (dot >= 0 && dot < original.length() - 1) {
                 extension = original.substring(dot).toLowerCase(Locale.ROOT);
+            }
+            if (!ALLOWED_PORTFOLIO_EXTENSIONS.contains(extension)) {
+                logger.warn("Fichier portfolio refusé: extension '{}' non autorisée", extension);
+                return null;
             }
             String filename = prefix + "-" + UUID.randomUUID() + extension;
             Path target = Path.of(dir.getAbsolutePath(), filename).normalize();

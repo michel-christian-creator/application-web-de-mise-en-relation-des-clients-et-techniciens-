@@ -1,0 +1,108 @@
+.req-page {
+  background: #0B1120;
+}
+
+.req-title {
+  font-family: Poppins, sans-serif;
+  color: #E8EDF5;
+}
+
+.req-muted {
+  color: #64748B;
+}
+
+.req-text-secondary {
+  color: #94A3B8;
+}
+
+.req-text-light {
+  color: #E8EDF5;
+}
+
+.req-text-blue {
+  color: #93C5FD;
+}
+
+.req-text-red-light {
+  color: #FCA5A5;
+}
+
+.req-text-red {
+  color: #F87171;
+}
+
+.req-label {
+  color: #64748B;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.req-card {
+  background: #141C2F;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.req-input {
+  background: #1E2A42;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #E8EDF5;
+  font-family: Inter, sans-serif;
+}
+
+.req-banner-red {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #FECACA;
+}
+
+.req-banner-blue {
+  background: rgba(37, 99, 235, 0.10);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  color: #E8EDF5;
+}
+
+.req-field-blue {
+  background: #1E2A42;
+  border: 1px solid rgba(37, 99, 235, 0.4);
+  color: #E8EDF5;
+}
+
+.req-font-poppins {
+  font-family: Poppins, sans-serif;
+}
+
+.req-badge-warn {
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+}
+
+/* ── Light theme ── */
+[data-theme="light"] .req-label { color: #475569; }
+[data-theme="light"] .req-banner-red { background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.2); color: #991b1b; }
+[data-theme="light"] .req-banner-blue { background: rgba(37,99,235,0.06); border-color: rgba(37,99,235,0.2); color: #1a1a2e; }
+[data-theme="light"] .req-text-blue { color: #2563EB; }
+[data-theme="light"] .req-text-red-light { color: #dc2626; }
+[data-theme="light"] .req-text-red { color: #dc2626; }
+
+/* ── Light theme ── */
+[data-theme="light"] .req-page { background: #f0f4f8 !important; }
+[data-theme="light"] .req-title { color: #1a1a2e !important; }
+[data-theme="light"] .req-muted { color: #475569 !important; }
+[data-theme="light"] .req-text-secondary { color: #64748b !important; }
+[data-theme="light"] .req-text-light { color: #1a1a2e !important; }
+[data-theme="light"] .req-card {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+[data-theme="light"] .req-input {
+  background: #e2e8f0 !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+  color: #1a1a2e !important;
+}
+[data-theme="light"] .req-banner-blue {
+  color: #1a1a2e !important;
+}
+[data-theme="light"] .req-field-blue {
+  background: #e2e8f0 !important;
+  color: #1a1a2e !important;
+}

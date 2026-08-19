@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -180,7 +181,14 @@ public class KycController {
         return data;
     }
 
+    private static final Set<String> ALLOWED_KYC_EXTENSIONS = Set.of(".jpg", ".jpeg", ".png", ".gif", ".pdf");
+    private static final long MAX_KYC_SIZE = 10L * 1024 * 1024;
+
     private String saveFile(MultipartFile file, Long userId, String docType) {
+        if (file.getSize() > MAX_KYC_SIZE) {
+            logger.warn("Document KYC refusé: taille {} dépasse 10 Mo", file.getSize());
+            return null;
+        }
         try {
             File dir = new File(privateUploadDir, "kyc");
             if (!dir.exists() && !dir.mkdirs()) {
@@ -192,6 +200,10 @@ public class KycController {
             int dot = original.lastIndexOf('.');
             if (dot >= 0 && dot < original.length() - 1) {
                 extension = original.substring(dot).toLowerCase(Locale.ROOT);
+            }
+            if (!ALLOWED_KYC_EXTENSIONS.contains(extension)) {
+                logger.warn("Document KYC refusé: extension '{}' non autorisée", extension);
+                return null;
             }
             String safeType = docType.replaceAll("[^a-zA-Z0-9_-]", "");
             String filename = "kyc-" + userId + "-" + safeType + "-" + UUID.randomUUID() + extension;

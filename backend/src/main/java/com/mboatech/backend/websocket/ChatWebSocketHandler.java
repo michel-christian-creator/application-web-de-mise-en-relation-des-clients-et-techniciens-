@@ -80,7 +80,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         chatMessage.setRequestId(requestId);
         chatMessage.setSenderUserId(user.getId());
         chatMessage.setText(node.path("text").asText(""));
-        chatMessage.setImageUrl(node.hasNonNull("imageUrl") ? node.path("imageUrl").asText() : null);
+        String imageUrl = node.hasNonNull("imageUrl") ? node.path("imageUrl").asText(null) : null;
+        if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.startsWith("/uploads/")) {
+            sendError(session, "imageUrl invalide");
+            return;
+        }
+        chatMessage.setImageUrl(imageUrl);
         if (node.hasNonNull("devisAmount")) {
             chatMessage.setDevisAmount(node.path("devisAmount").decimalValue());
             chatMessage.setDevisStatus("pending");

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import "./LanguageMenu.css"
 import { LANGUAGES, tr, useI18n } from "../i18n"
 
 function GlobeIcon({ className = "" }: { className?: string }) {
@@ -55,8 +56,7 @@ export default function LanguageMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-label={tr(lang, "aria.language")}
         title={tr(lang, "aria.language")}
-        className="flex h-9 items-center gap-1.5 rounded-lg border border-white/10 bg-[#141C2F] px-2.5 text-xs font-semibold text-slate-100"
-        style={{ boxShadow: "inset 0 1px 2px rgba(255,255,255,0.04)", fontFamily: "Inter, sans-serif" }}
+        className="flex h-9 items-center gap-1.5 rounded-lg border border-white/10 bg-[#141C2F] px-2.5 text-xs font-semibold text-slate-100 langmenu-trigger"
       >
         <GlobeIcon className="h-4 w-4 text-slate-300" />
         <span>{current.short}</span>
@@ -65,10 +65,7 @@ export default function LanguageMenu() {
 
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-white/10 bg-[#141C2F] py-1.5 shadow-2xl">
-          <p
-            className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wider"
-            style={{ color: "#64748B", fontFamily: "Inter, sans-serif" }}
-          >
+          <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wider langmenu-section-label">
             {lang === "fr" ? "Langue" : "Language"}
           </p>
           {LANGUAGES.map((l) => {
@@ -78,11 +75,10 @@ export default function LanguageMenu() {
                 key={l.code}
                 type="button"
                 onClick={() => setLang(l.code)}
-                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs font-medium"
+                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs font-medium langmenu-item"
                 style={{
                   background: active ? "rgba(37,99,235,0.18)" : "transparent",
                   color: active ? "#93C5FD" : "#E8EDF5",
-                  fontFamily: "Inter, sans-serif",
                 }}
               >
                 <span>{l.label}</span>

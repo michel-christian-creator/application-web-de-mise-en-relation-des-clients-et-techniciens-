@@ -185,7 +185,7 @@ public class TechnicianCatalogController {
 
         String recommenderName = body != null && body.get("recommenderName") != null ? body.get("recommenderName").toString().trim() : "";
         String comment = body != null && body.get("comment") != null ? body.get("comment").toString() : "";
-        boolean verified = body != null && Boolean.TRUE.equals(body.get("verified"));
+
         Integer rating = null;
         if (body != null && body.get("rating") != null) {
             try {
@@ -224,7 +224,7 @@ public class TechnicianCatalogController {
         rec.setRecommenderUserId(recommenderUserId);
         rec.setComment(comment);
         rec.setRating(rating);
-        rec.setVerified(verified);
+        rec.setVerified(false);
         rec = technicianRecommendationRepository.save(rec);
 
         long count = technicianRecommendationRepository.countByTechnicianId(id);
@@ -272,7 +272,7 @@ public class TechnicianCatalogController {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("id", rec.getId());
         data.put("recommenderName", rec.getRecommenderName());
-        data.put("recommenderUserId", rec.getRecommenderUserId());
+
         data.put("comment", rec.getComment());
         data.put("rating", rec.getRating());
         data.put("verified", rec.isVerified());

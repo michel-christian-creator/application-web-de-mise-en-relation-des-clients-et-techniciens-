@@ -1,0 +1,103 @@
+.home-page {
+  background: #0B1120;
+}
+
+.home-text {
+  color: #E8EDF5;
+}
+
+.home-text-muted {
+  color: #94A3B8;
+}
+
+.home-text-dim {
+  color: #64748B;
+}
+
+.home-text-desc {
+  color: #CBD5E1;
+}
+
+.home-text-accent {
+  color: #D9FAEE;
+}
+
+.home-title {
+  font-family: "Poppins", sans-serif;
+  color: #E8EDF5;
+}
+
+.home-search-bar {
+  background: #141C2F;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.home-search-input {
+  color: #94A3B8;
+  font-family: "Inter", sans-serif;
+}
+
+.home-badge-blue {
+  background: rgba(37, 99, 235, 0.12);
+  color: #93C5FD;
+}
+
+.home-badge-amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: #FBBF24;
+}
+
+.home-badge-green {
+  background: rgba(5, 150, 105, 0.12);
+  color: #6EE7B7;
+}
+
+.home-card-hover {
+  transition: background-color 0.2s;
+}
+
+.home-filter-btn {
+  font-family: "Inter", sans-serif;
+}
+
+/* ── Light theme ── */
+[data-theme="light"] .home-page {
+  background: #f0f4f8;
+}
+
+[data-theme="light"] .home-text {
+  color: #1a1a2e;
+}
+
+[data-theme="light"] .home-text-muted {
+  color: #64748b;
+}
+
+[data-theme="light"] .home-text-dim {
+  color: #475569;
+}
+
+[data-theme="light"] .home-text-desc {
+  color: #475569;
+}
+
+[data-theme="light"] .home-text-accent {
+  color: #065f46;
+}
+
+[data-theme="light"] .home-title {
+  color: #1a1a2e;
+}
+
+[data-theme="light"] .home-search-bar {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .home-search-input {
+  color: #64748b;
+}
+
+[data-theme="light"] .home-filter-btn {
+  color: #64748b;
+}

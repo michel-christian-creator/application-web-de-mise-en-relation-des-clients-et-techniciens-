@@ -3,6 +3,7 @@ import orangeLogo from "../../../orange-money-logo-png_seeklogo-440383.png"
 import { API_BASE_URL } from "../../config"
 import { isValidAmount } from "../../utils/validation"
 import { useI18n } from "../../i18n"
+import "./C6Payment.css"
 
 export type PaymentDevis = {
   requestId?: number
@@ -67,6 +68,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
   const [txRef, setTxRef] = useState<string | null>(null)
   const [history, setHistory] = useState<PaymentHistoryItem[]>([])
   const [historyLoading, setHistoryLoading] = useState(true)
+  const [historyOpen, setHistoryOpen] = useState(false)
   const [pendingInfo, setPendingInfo] = useState<{
     txRef: string | null
     paymentUrl: string
@@ -447,47 +449,29 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
 
   if (confirmed) {
     return (
-      <div
-        className="min-h-full flex items-center justify-center"
-        style={{ background: "#0B1120" }}
-      >
+      <div className="min-h-full flex items-center justify-center payment-page-bg">
         <div className="text-center max-w-md">
-          <div
-            className="w-24 h-24 rounded-full flex items-center justify-center text-5xl mx-auto mb-6"
-            style={{
-              background: "rgba(5,150,105,0.15)",
-              border: "2px solid #059669",
-            }}
-          >
+          <div className="w-24 h-24 rounded-full flex items-center justify-center text-5xl mx-auto mb-6 payment-icon-circle-green">
             🔒
           </div>
-          <h2
-            className="text-3xl font-bold mb-3"
-            style={{ fontFamily: "Poppins, sans-serif", color: "#059669" }}
-          >
+          <h2 className="text-3xl font-bold mb-3 payment-font payment-text-green">
             {t("Fonds sécurisés !")}
           </h2>
-          <p className="text-base mb-2" style={{ color: "#94A3B8" }}>
+          <p className="text-base mb-2 payment-text-secondary">
             {devis ? `${formatAmount(devis.amount)} FCFA` : t("Vos fonds")}{" "}
             {t("sont maintenant conservés en garde par MboaTech.")}
           </p>
-          <p className="text-sm" style={{ color: "#64748B" }}>
+          <p className="text-sm payment-text-muted">
             {devis?.technicianName
               ? `${t("Artisan")} ${devis.technicianName} ${t("sera notifié et interviendra suite à votre demande.")}`
               : t("L'artisan sera notifié et interviendra suite à votre demande.")}
           </p>
           {txRef && (
-            <p
-              className="text-xs font-mono mt-2 px-3 py-1.5 rounded-lg inline-block"
-              style={{ background: "rgba(5,150,105,0.1)", color: "#059669" }}
-            >
+            <p className="text-xs font-mono mt-2 px-3 py-1.5 rounded-lg inline-block payment-green-subtle">
               {t("Réf. transaction")} : {txRef}
             </p>
           )}
-          <div
-            className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin mx-auto mt-8"
-            style={{ borderColor: "#059669", borderTopColor: "transparent" }}
-          />
+          <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin mx-auto mt-8 payment-spinner-green" />
         </div>
       </div>
     )
@@ -497,14 +481,10 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
     const waiting = pendingStatus === "pending"
     const failed = pendingStatus === "failed"
     return (
-      <div
-        className="min-h-full flex items-center justify-center p-4"
-        style={{ background: "#0B1120" }}
-      >
+      <div className="min-h-full flex items-center justify-center p-4 payment-page-bg">
         <div
-          className="w-full max-w-md rounded-2xl p-8 text-center"
+          className="w-full max-w-md rounded-2xl p-8 text-center payment-card"
           style={{
-            background: "#141C2F",
             border: `1px solid ${failed ? "rgba(239,68,68,0.3)" : "rgba(37,99,235,0.3)"}`,
           }}
         >
@@ -518,9 +498,8 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
             {failed ? "✕" : "💳"}
           </div>
           <h2
-            className="text-2xl font-bold mb-2"
+            className="text-2xl font-bold mb-2 payment-font"
             style={{
-              fontFamily: "Poppins, sans-serif",
               color: failed ? "#F87171" : "#E8EDF5",
             }}
           >
@@ -530,7 +509,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                 ? t("Paiement en attente de confirmation")
                 : t("Paiement confirmé !")}
           </h2>
-          <p className="text-sm leading-relaxed mb-4" style={{ color: "#94A3B8" }}>
+          <p className="text-sm leading-relaxed mb-4 payment-text-secondary">
             {failed
               ? t(
                   "Le paiement Paymee a été refusé ou annulé. Aucun fonds n'a été prélevé. Vous pouvez réessayer.",
@@ -544,21 +523,14 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                   )}
           </p>
           {txRef && (
-            <p
-              className="text-xs font-mono mb-4 px-3 py-1.5 rounded-lg inline-block"
-              style={{ background: "rgba(37,99,235,0.1)", color: "#2563EB" }}
-            >
+            <p className="text-xs font-mono mb-4 px-3 py-1.5 rounded-lg inline-block payment-badge-blue">
               {t("Réf. transaction")} : {txRef}
             </p>
           )}
           {failed ? (
             <button
               onClick={cancelPending}
-              className="w-full py-3 rounded-xl font-bold text-sm text-white"
-              style={{
-                background: "linear-gradient(135deg, #059669, #047857)",
-                fontFamily: "Poppins, sans-serif",
-              }}
+              className="w-full py-3 rounded-xl font-bold text-sm text-white payment-btn-green"
             >
               {t("Réessayer le paiement")}
             </button>
@@ -567,39 +539,23 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
               <button
                 onClick={recheckPayment}
                 disabled={checking}
-                className="w-full py-3 rounded-xl font-bold text-sm text-white disabled:opacity-60"
-                style={{
-                  background: "linear-gradient(135deg, #2563EB, #1D4ED8)",
-                  fontFamily: "Poppins, sans-serif",
-                }}
+                className="w-full py-3 rounded-xl font-bold text-sm text-white disabled:opacity-60 payment-btn-blue"
               >
                 {checking ? t("Vérification…") : t("J'ai payé — vérifier")}
               </button>
               <button
                 onClick={reopenPaymee}
-                className="w-full py-3 rounded-xl font-bold text-sm disabled:opacity-60"
-                style={{
-                  background: "#1E2A42",
-                  color: "#94A3B8",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                }}
+                className="w-full py-3 rounded-xl font-bold text-sm disabled:opacity-60 payment-btn-outline"
               >
                 {t("Rouvrir la page Paymee")}
               </button>
               <button
                 onClick={cancelPending}
-                className="w-full py-2 text-xs"
-                style={{ color: "#64748B" }}
+                className="w-full py-2 text-xs payment-text-muted"
               >
                 {t("Annuler et revenir")}
               </button>
-              <div
-                className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin mx-auto mt-1"
-                style={{
-                  borderColor: "#2563EB",
-                  borderTopColor: "transparent",
-                }}
-              />
+              <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin mx-auto mt-1 payment-spinner-blue" />
             </div>
           ) : (
             <div>
@@ -607,21 +563,11 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                 onClick={() => {
                   setConfirmed(true)
                 }}
-                className="w-full py-3 rounded-xl font-bold text-sm text-white"
-                style={{
-                  background: "linear-gradient(135deg, #059669, #047857)",
-                  fontFamily: "Poppins, sans-serif",
-                }}
+                className="w-full py-3 rounded-xl font-bold text-sm text-white payment-btn-green"
               >
                 {t("Continuer")}
               </button>
-              <div
-                className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin mx-auto mt-3"
-                style={{
-                  borderColor: "#059669",
-                  borderTopColor: "transparent",
-                }}
-              />
+              <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin mx-auto mt-3 payment-spinner-green" />
             </div>
           )}
         </div>
@@ -630,16 +576,13 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
   }
 
   return (
-    <div className="min-h-full p-3 sm:p-6" style={{ background: "#0B1120" }}>
+    <div className="min-h-full p-3 sm:p-6 payment-page-bg">
       <div className="mx-auto max-w-[min(1400px,95%)]">
         <div className="mb-8">
-          <h1
-            className="text-2xl font-bold mb-1"
-            style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
-          >
+          <h1 className="text-2xl font-bold mb-1 payment-font payment-text-bright">
             {t("Paiement en garde")}
           </h1>
-          <p className="text-sm" style={{ color: "#64748B" }}>
+          <p className="text-sm payment-text-muted">
             {t("Vos fonds sont protégés jusqu'à validation des travaux")}
           </p>
         </div>
@@ -648,63 +591,38 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
           {/* Left */}
           <div className="flex flex-col gap-5">
             {/* Devis recap */}
-            <div
-              className="p-6 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
-              <p
-                className="text-xs font-semibold mb-4"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
+            <div className="p-6 rounded-2xl payment-card">
+              <p className="text-xs font-semibold mb-4 payment-section-label">
                 {t("Récapitulatif du devis")}
               </p>
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p
-                    className="text-base font-semibold"
-                    style={{
-                      color: "#E8EDF5",
-                      fontFamily: "Poppins, sans-serif",
-                    }}
-                  >
+                  <p className="text-base font-semibold payment-text-bright payment-font">
                     {devis?.description || t("Intervention")}
                   </p>
-                  <p className="text-sm mt-1" style={{ color: "#64748B" }}>
+                  <p className="text-sm mt-1 payment-text-muted">
                     {t("Artisan")} {devis?.technicianName || "MboaTech"}
                     {devis?.category ? ` · ${devis.category}` : ""}
                   </p>
                 </div>
-                <span
-                  className="px-3 py-1 rounded-full text-xs font-bold"
-                  style={{
-                    background: "rgba(5,150,105,0.15)",
-                    color: "#059669",
-                  }}
-                >
+                <span className="px-3 py-1 rounded-full text-xs font-bold payment-badge-green">
                   {t("Devis accepté")}
                 </span>
               </div>
-              <div className="pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="pt-4 payment-divider-top">
                 <div className="flex items-baseline gap-3">
-                  <p className="text-4xl font-bold font-mono" style={{ color: "#E8EDF5" }}>
+                  <p className="text-4xl font-bold font-mono payment-text-bright">
                     {devis ? formatAmount(devis.amount) : "—"}
                   </p>
-                  <p className="text-base" style={{ color: "#64748B" }}>
+                  <p className="text-base payment-text-muted">
                     FCFA
                   </p>
                 </div>
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs" style={{ color: "#64748B" }}>
+                  <span className="text-xs payment-text-muted">
                     {t("Frais de service MboaTech")}
                   </span>
-                  <span className="text-xs font-mono" style={{ color: "#059669" }}>
+                  <span className="text-xs font-mono payment-text-green">
                     {t("0 FCFA (offerts)")}
                   </span>
                 </div>
@@ -712,21 +630,8 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
             </div>
 
             {/* Payment modes */}
-            <div
-              className="p-6 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
-              <p
-                className="text-xs font-semibold mb-4"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
+            <div className="p-6 rounded-2xl payment-card">
+              <p className="text-xs font-semibold mb-4 payment-section-label">
                 {t("Mode de paiement")}
               </p>
               <div className="flex flex-col gap-3">
@@ -741,25 +646,16 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                       boxShadow: mode === m.key ? "0 0 0 1px rgba(37,99,235,0.2)" : "none",
                     }}
                   >
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                      style={{ background: "#141C2F" }}
-                    >
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 payment-icon-container">
                       {typeof m.icon === "string" ? m.icon : m.icon}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p
-                          className="text-sm font-semibold"
-                          style={{
-                            fontFamily: "Poppins, sans-serif",
-                            color: "#E8EDF5",
-                          }}
-                        >
+                        <p className="text-sm font-semibold payment-font payment-text-bright">
                           {m.label}
                         </p>
                       </div>
-                      <p className="text-xs font-mono mt-0.5" style={{ color: "#64748B" }}>
+                      <p className="text-xs font-mono mt-0.5 payment-text-muted">
                         {displayNumber(m.key)}
                       </p>
                     </div>
@@ -788,30 +684,18 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
           {/* Right sidebar */}
           <div className="flex flex-col gap-4">
             {/* Réassurance */}
-            <div
-              className="p-5 rounded-2xl"
-              style={{
-                background: "rgba(5,150,105,0.08)",
-                border: "1px solid rgba(5,150,105,0.25)",
-              }}
-            >
+            <div className="p-5 rounded-2xl payment-card-green">
               <div className="flex items-start gap-3">
                 <span className="text-2xl flex-shrink-0"></span>
                 <div>
-                  <p
-                    className="text-sm font-bold mb-2"
-                    style={{
-                      color: "#059669",
-                      fontFamily: "Poppins, sans-serif",
-                    }}
-                  >
+                  <p className="text-sm font-bold mb-2 payment-font payment-text-green">
                     {t("Votre argent est en sécurité")}
                   </p>
-                  <p className="text-xs leading-relaxed" style={{ color: "#94A3B8" }}>
+                  <p className="text-xs leading-relaxed payment-text-secondary">
                     {t(
                       "MboaTech conserve vos fonds en garde sécurisée. Le paiement n'est libéré à l'artisan que lorsque",
                     )}{" "}
-                    <strong style={{ color: "#E8EDF5" }}>{t("vous validez explicitement")}</strong>{" "}
+                    <strong className="payment-text-bright">{t("vous validez explicitement")}</strong>{" "}
                     {t("la fin et la qualité des travaux.")}
                   </p>
                 </div>
@@ -819,21 +703,8 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
             </div>
 
             {/* Summary */}
-            <div
-              className="p-5 rounded-2xl"
-              style={{
-                background: "#141C2F",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
-              <p
-                className="text-xs font-semibold mb-3"
-                style={{
-                  color: "#64748B",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
+            <div className="p-5 rounded-2xl payment-card">
+              <p className="text-xs font-semibold mb-3 payment-section-label">
                 {t("Résumé")}
               </p>
               <div className="flex flex-col gap-2.5">
@@ -865,7 +736,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                   },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between">
-                    <span className="text-xs" style={{ color: "#64748B" }}>
+                    <span className="text-xs payment-text-muted">
                       {row.label}
                     </span>
                     <span
@@ -923,32 +794,38 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
         </div>
 
         {/* Historique des transactions */}
-        <div
-          className="mt-6 p-6 rounded-2xl"
-          style={{
-            background: "#141C2F",
-            border: "1px solid rgba(255,255,255,0.06)",
-          }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p
-                className="text-sm font-semibold"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
-              >
+        <div className="mt-6 p-6 rounded-2xl payment-card">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold flex items-center gap-2 payment-font payment-text-bright">
                 {t("Historique de vos transactions")}
+                {history.length > 0 && (
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full payment-count-badge">
+                    {history.length}
+                  </span>
+                )}
               </p>
-              <p className="text-xs" style={{ color: "#64748B" }}>
+              <p className="text-xs payment-text-muted">
                 {t("Dépôts, remboursements et versements")}
               </p>
             </div>
+            {history.length > 0 && (
+              <button
+                onClick={() => setHistoryOpen((o) => !o)}
+                aria-expanded={historyOpen}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold flex-shrink-0 payment-toggle-history"
+              >
+                {t(historyOpen ? "Masquer l'historique" : "Afficher l'historique")}
+                <span className="text-[10px]">{historyOpen ? "▲" : "▼"}</span>
+              </button>
+            )}
           </div>
-          {historyLoading ? (
-            <p className="text-sm" style={{ color: "#64748B" }}>
+          {!historyOpen ? null : historyLoading ? (
+            <p className="text-sm payment-text-muted">
               {t("Chargement…")}
             </p>
           ) : history.length === 0 ? (
-            <p className="text-sm" style={{ color: "#64748B" }}>
+            <p className="text-sm payment-text-muted">
               {t("Aucune transaction pour le moment.")}
             </p>
           ) : (
@@ -959,11 +836,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                 return (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between gap-3 p-3.5 rounded-xl"
-                    style={{
-                      background: "#1E2A42",
-                      border: "1px solid rgba(255,255,255,0.05)",
-                    }}
+                    className="flex items-center justify-between gap-3 p-3.5 rounded-xl payment-row"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <span
@@ -976,17 +849,14 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                         {incoming ? "↓" : "↑"}
                       </span>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold truncate" style={{ color: "#E8EDF5" }}>
+                        <p className="text-sm font-semibold truncate payment-text-bright">
                           {item.typeLabel}
                         </p>
-                        <p className="text-xs truncate" style={{ color: "#64748B" }}>
+                        <p className="text-xs truncate payment-text-muted">
                           {item.counterparty || "MboaTech"}
                           {item.requestId ? ` · ${t("Demande")} #${item.requestId}` : ""}
                         </p>
-                        <p
-                          className="text-[11px] font-mono mt-0.5 truncate"
-                          style={{ color: "#475569" }}
-                        >
+                        <p className="text-[11px] font-mono mt-0.5 truncate payment-text-dim">
                           {formatDate(item.createdAt)}
                           {item.transactionRef ? ` · ${item.transactionRef}` : ""}
                         </p>
@@ -1015,22 +885,13 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
         </div>
 
         {/* Remboursements disponibles */}
-        <div
-          className="mt-6 p-6 rounded-2xl"
-          style={{
-            background: "#141C2F",
-            border: "1px solid rgba(255,255,255,0.06)",
-          }}
-        >
+        <div className="mt-6 p-6 rounded-2xl payment-card">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p
-                className="text-sm font-semibold"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
-              >
+              <p className="text-sm font-semibold payment-font payment-text-bright">
                 {t("Remboursements disponibles")}
               </p>
-              <p className="text-xs" style={{ color: "#64748B" }}>
+              <p className="text-xs payment-text-muted">
                 {t("Fonds remboursés suite à un litige résolu")}
               </p>
             </div>
@@ -1042,11 +903,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                   setWithdrawSuccess(null)
                 }}
                 disabled={withdrawSubmitting}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white disabled:opacity-60"
-                style={{
-                  background: "linear-gradient(135deg, #059669, #047857)",
-                  boxShadow: "0 4px 16px rgba(5,150,105,0.35)",
-                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white disabled:opacity-60 payment-btn-green-glow"
               >
                 {t("Retirer mes fonds")}
               </button>
@@ -1055,33 +912,21 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
 
           {refundBalance > 0 ? (
             <>
-              <div
-                className="flex items-center justify-between p-4 rounded-xl"
-                style={{
-                  background: "rgba(5,150,105,0.08)",
-                  border: "1px solid rgba(5,150,105,0.25)",
-                }}
-              >
+              <div className="flex items-center justify-between p-4 rounded-xl payment-card-green">
                 <div>
-                  <p
-                    className="text-[11px] font-semibold uppercase tracking-wider"
-                    style={{ color: "#34D399" }}
-                  >
+                  <p className="text-[11px] font-semibold uppercase tracking-wider payment-text-emerald">
                     {t("Solde de remboursement")}
                   </p>
-                  <p
-                    className="text-2xl font-bold font-mono"
-                    style={{ color: "#34D399", fontFamily: "Poppins, sans-serif" }}
-                  >
+                  <p className="text-2xl font-bold font-mono payment-text-emerald payment-font">
                     {formatAmount(refundBalance)} FCFA
                   </p>
                 </div>
                 {refundPendingTotal > 0 && (
                   <div className="text-right">
-                    <p className="text-[11px]" style={{ color: "#F59E0B" }}>
+                    <p className="text-[11px] payment-text-amber">
                       {t("En attente de validation")}
                     </p>
-                    <p className="text-sm font-bold font-mono" style={{ color: "#F59E0B" }}>
+                    <p className="text-sm font-bold font-mono payment-text-amber">
                       {formatAmount(refundPendingTotal)} FCFA
                     </p>
                   </div>
@@ -1089,14 +934,8 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
               </div>
 
               {withdrawOpen && (
-                <div
-                  className="mt-4 p-4 rounded-xl"
-                  style={{ background: "#1E2A42", border: "1px solid rgba(255,255,255,0.05)" }}
-                >
-                  <p
-                    className="text-xs font-semibold mb-3"
-                    style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
-                  >
+                <div className="mt-4 p-4 rounded-xl payment-row">
+                  <p className="text-xs font-semibold mb-3 payment-font payment-text-bright">
                     {t("Retirer un remboursement")}
                   </p>
                   <div className="flex flex-col gap-3">
@@ -1132,12 +971,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                         value={withdrawAmount}
                         onChange={(e) => setWithdrawAmount(e.target.value)}
                         placeholder={t("Montant (FCFA)")}
-                        className="px-3 py-2.5 rounded-lg text-sm w-full outline-none"
-                        style={{
-                          background: "#0F172A",
-                          color: "#E8EDF5",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                        }}
+                        className="px-3 py-2.5 rounded-lg text-sm w-full outline-none payment-input"
                       />
                       <input
                         value={withdrawAccount}
@@ -1145,27 +979,18 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                           setWithdrawAccount(sanitizeWithdrawAccount(e.target.value))
                         }
                         placeholder={t("Numéro de compte")}
-                        className="px-3 py-2.5 rounded-lg text-sm w-full outline-none"
-                        style={{
-                          background: "#0F172A",
-                          color: "#E8EDF5",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                        }}
+                        className="px-3 py-2.5 rounded-lg text-sm w-full outline-none payment-input"
                       />
                     </div>
                     {withdrawError && (
-                      <p className="text-xs" style={{ color: "#F87171" }}>
+                      <p className="text-xs payment-text-red">
                         {withdrawError}
                       </p>
                     )}
                     <button
                       onClick={handleSubmitWithdraw}
                       disabled={withdrawSubmitting}
-                      className="w-full py-3 rounded-xl font-bold text-sm text-white disabled:opacity-60"
-                      style={{
-                        background: "linear-gradient(135deg, #059669, #047857)",
-                        boxShadow: "0 4px 16px rgba(5,150,105,0.3)",
-                      }}
+                      className="w-full py-3 rounded-xl font-bold text-sm text-white disabled:opacity-60 payment-btn-green-glow"
                     >
                       {withdrawSubmitting ? t("Envoi…") : t("Demander le retrait")}
                     </button>
@@ -1178,23 +1003,19 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                   {clientWithdrawals.map((w) => (
                     <div
                       key={w.id}
-                      className="flex items-center justify-between gap-3 p-3 rounded-xl"
-                      style={{
-                        background: "#1E2A42",
-                        border: "1px solid rgba(255,255,255,0.05)",
-                      }}
+                      className="flex items-center justify-between gap-3 p-3 rounded-xl payment-row"
                     >
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold truncate" style={{ color: "#E8EDF5" }}>
+                        <p className="text-sm font-semibold truncate payment-text-bright">
                           {t("Retrait")} · {t(withdrawMethodLabel(w.method))}
                         </p>
-                        <p className="text-xs truncate" style={{ color: "#64748B" }}>
+                        <p className="text-xs truncate payment-text-muted">
                           {w.account}
                           {w.createdAt ? ` · ${formatDate(w.createdAt)}` : ""}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                        <p className="text-sm font-bold font-mono" style={{ color: "#E8EDF5" }}>
+                        <p className="text-sm font-bold font-mono payment-text-bright">
                           −{formatAmount(w.amount)} FCFA
                         </p>
                         <span
@@ -1220,16 +1041,13 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
               )}
 
               {withdrawSuccess && (
-                <p
-                  className="mt-4 text-xs font-semibold px-3 py-2 rounded-lg"
-                  style={{ background: "rgba(5,150,105,0.12)", color: "#34D399" }}
-                >
+                <p className="mt-4 text-xs font-semibold px-3 py-2 rounded-lg payment-msg-success">
                   {withdrawSuccess}
                 </p>
               )}
             </>
           ) : (
-            <p className="text-sm" style={{ color: "#64748B" }}>
+            <p className="text-sm payment-text-muted">
               {t("Aucun remboursement disponible pour le moment.")}
             </p>
           )}

@@ -89,7 +89,11 @@ export const EN_DICT: Record<string, string> = {
   "Veuillez préciser votre métier.": "Please specify your trade.",
   "Veuillez préciser votre ville.": "Please specify your city.",
   "Veuillez préciser votre domaine d'expertise.": "Please specify your field of expertise.",
+  "Veuillez sélectionner au moins un métier.":
+    "Please select at least one trade.",
   "Sélectionner un métier": "Select a trade",
+  "métier(s) sélectionné(s)": "trade(s) selected",
+  "Maximum 3 métiers atteint.": "Maximum 3 trades reached.",
   "Sélectionner une ville": "Select a city",
   "Sélectionner votre sexe": "Select your gender",
   Sexe: "Gender",
@@ -534,6 +538,8 @@ export const EN_DICT: Record<string, string> = {
   " FCFA).": " FCFA).",
   "Historique de vos transactions": "Your transaction history",
   "Dépôts, remboursements et versements": "Deposits, refunds and payouts",
+  "Afficher l'historique": "Show history",
+  "Masquer l'historique": "Hide history",
   "Aucune transaction pour le moment.": "No transactions yet.",
   "Réf. transaction": "Transaction ref.",
   Résumé: "Overview",
@@ -577,6 +583,12 @@ export const EN_DICT: Record<string, string> = {
   "Sécuriser les fonds et lancer les travaux": "Secure the funds and start the work",
   "Sécurisation des fonds…": "Securing funds…",
   "Valider les travaux · libérer les fonds": "Validate the work · release the funds",
+  "Confirmer la libération des fonds": "Confirm fund release",
+  "Vous êtes sur le point de valider la fin de l'intervention et de libérer les fonds en garde au technicien.":
+    "You are about to confirm the intervention is complete and release the funds held for the technician.",
+  "Cette action est irréversible. Ne confirmez que si les travaux sont réellement terminés et conformes.":
+    "This action is irreversible. Only confirm if the work is truly completed and up to standard.",
+  "Oui, je confirme": "Yes, I confirm",
   "Travaux validés : les fonds en garde ont été libérés et versés au technicien.":
     "Work validated: the escrowed funds were released and paid to the technician.",
   "Impossible de sécuriser les fonds.": "Unable to secure the funds.",

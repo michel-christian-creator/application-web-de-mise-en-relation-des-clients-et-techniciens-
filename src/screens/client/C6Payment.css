@@ -1,0 +1,178 @@
+.payment-page-bg {
+  background: #0B1120;
+}
+
+.payment-card {
+  background: #141C2F;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.payment-card-green {
+  background: rgba(5, 150, 105, 0.08);
+  border: 1px solid rgba(5, 150, 105, 0.25);
+}
+
+.payment-row {
+  background: #1E2A42;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.payment-input {
+  background: #0F172A;
+  color: #E8EDF5;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.payment-divider-top {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.payment-font {
+  font-family: "Poppins", sans-serif;
+}
+
+.payment-text-bright {
+  color: #E8EDF5;
+}
+
+.payment-text-secondary {
+  color: #94A3B8;
+}
+
+.payment-text-muted {
+  color: #64748B;
+}
+
+.payment-text-dim {
+  color: #475569;
+}
+
+.payment-text-green {
+  color: #059669;
+}
+
+.payment-text-emerald {
+  color: #34D399;
+}
+
+.payment-text-amber {
+  color: #F59E0B;
+}
+
+.payment-text-red {
+  color: #F87171;
+}
+
+.payment-section-label {
+  color: #64748B;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.payment-badge-green {
+  background: rgba(5, 150, 105, 0.15);
+  color: #059669;
+}
+
+.payment-badge-blue {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563EB;
+}
+
+.payment-green-subtle {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.payment-btn-green {
+  background: linear-gradient(135deg, #059669, #047857);
+  font-family: "Poppins", sans-serif;
+}
+
+.payment-btn-blue {
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
+  font-family: "Poppins", sans-serif;
+}
+
+.payment-btn-outline {
+  background: #1E2A42;
+  color: #94A3B8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.payment-btn-green-glow {
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.35);
+}
+
+.payment-icon-container {
+  background: #141C2F;
+}
+
+.payment-icon-circle-green {
+  background: rgba(5, 150, 105, 0.15);
+  border: 2px solid #059669;
+}
+
+.payment-spinner-green {
+  border-color: #059669;
+  border-top-color: transparent;
+}
+
+.payment-spinner-blue {
+  border-color: #2563EB;
+  border-top-color: transparent;
+}
+
+.payment-count-badge {
+  color: #94A3B8;
+  background: rgba(100, 116, 139, 0.15);
+}
+
+.payment-toggle-history {
+  color: #93C5FD;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.payment-msg-success {
+  background: rgba(5, 150, 105, 0.12);
+  color: #34D399;
+}
+
+/* ── Light theme ── */
+[data-theme="light"] .payment-count-badge { color: #475569; background: rgba(100,116,139,0.08); }
+[data-theme="light"] .payment-toggle-history { color: #2563EB; background: rgba(37,99,235,0.06); }
+[data-theme="light"] .payment-msg-success { background: rgba(5,150,105,0.06); color: #059669; }
+[data-theme="light"] .payment-badge-green { background: rgba(5,150,105,0.08); }
+[data-theme="light"] .payment-badge-blue { background: rgba(37,99,235,0.06); }
+[data-theme="light"] .payment-green-subtle { background: rgba(5,150,105,0.06); }
+[data-theme="light"] .payment-card-green { background: rgba(5,150,105,0.04); border-color: rgba(5,150,105,0.15); }
+[data-theme="light"] .payment-icon-circle-green { background: rgba(5,150,105,0.08); border-color: #059669; }
+
+/* ── Light theme ── */
+[data-theme="light"] .payment-page-bg { background: #f0f4f8 !important; }
+[data-theme="light"] .payment-card {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+[data-theme="light"] .payment-row {
+  background: #e2e8f0 !important;
+  border-color: rgba(0, 0, 0, 0.05) !important;
+}
+[data-theme="light"] .payment-input {
+  background: #f1f5f9 !important;
+  color: #1a1a2e !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+[data-theme="light"] .payment-divider-top { border-top-color: rgba(0, 0, 0, 0.06) !important; }
+[data-theme="light"] .payment-text-bright { color: #1a1a2e !important; }
+[data-theme="light"] .payment-text-secondary { color: #64748b !important; }
+[data-theme="light"] .payment-text-muted { color: #475569 !important; }
+[data-theme="light"] .payment-text-dim { color: #475569 !important; }
+[data-theme="light"] .payment-section-label { color: #475569 !important; }
+[data-theme="light"] .payment-btn-outline {
+  background: #e2e8f0 !important;
+  color: #64748b !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+[data-theme="light"] .payment-icon-container { background: #ffffff !important; }
