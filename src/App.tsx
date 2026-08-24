@@ -624,9 +624,7 @@ export default function App() {
           background: currentIdx === firstScreen + i ? "var(--card)" : "transparent",
           color: currentIdx === firstScreen + i ? "var(--foreground)" : "#64748B",
           border:
-            currentIdx === firstScreen + i
-              ? "1px solid var(--border)"
-              : "1px solid transparent",
+            currentIdx === firstScreen + i ? "1px solid var(--border)" : "1px solid transparent",
           fontFamily: "Inter, sans-serif",
         }}
       >
@@ -778,8 +776,8 @@ export default function App() {
                 </svg>
               </div>
               <span
-                className="text-sm font-bold"
-                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
+                className="text-sm font-bold text-[#E8EDF5]"
+                style={{ fontFamily: "Poppins, sans-serif" }}
               >
                 MboaTech
               </span>
@@ -817,7 +815,16 @@ export default function App() {
                   title={isDark ? "Passer au mode clair" : "Passer au mode sombre"}
                 >
                   {isDark ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <circle cx="12" cy="12" r="5" />
                       <line x1="12" y1="1" x2="12" y2="3" />
                       <line x1="12" y1="21" x2="12" y2="23" />
@@ -829,7 +836,16 @@ export default function App() {
                       <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
                     </svg>
                   ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                     </svg>
                   )}
@@ -848,7 +864,16 @@ export default function App() {
                   title={isDark ? "Passer au mode clair" : "Passer au mode sombre"}
                 >
                   {isDark ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <circle cx="12" cy="12" r="5" />
                       <line x1="12" y1="1" x2="12" y2="3" />
                       <line x1="12" y1="21" x2="12" y2="23" />
@@ -860,7 +885,16 @@ export default function App() {
                       <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
                     </svg>
                   ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                     </svg>
                   )}

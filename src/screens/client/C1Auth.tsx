@@ -140,7 +140,10 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
       profile.domain === "Autre"
         ? customDomain
         : profile.domain === "Multi-métier"
-          ? selectedDomains.join(", ")
+          ? [
+              ...selectedDomains.filter((d) => d !== "Autre"),
+              ...customMultiDomains.filter((d) => d.trim()),
+            ].join(", ")
           : profile.domain,
       MAX_MULTILINE_LENGTH,
     )
@@ -297,6 +300,10 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
     }
     if (profile.role === "technician" && profile.domain === "Multi-métier" && selectedDomains.length === 0) {
       setError(t("Veuillez sélectionner au moins un métier."))
+      return
+    }
+    if (profile.role === "technician" && profile.domain === "Multi-métier" && selectedDomains.includes("Autre") && customMultiDomains.every((d) => !d.trim())) {
+      setError(t("Veuillez préciser au moins un métier personnalisé."))
       return
     }
     if (profile.role === "technician" && profile.domain === "Autre" && !customDomain.trim()) {

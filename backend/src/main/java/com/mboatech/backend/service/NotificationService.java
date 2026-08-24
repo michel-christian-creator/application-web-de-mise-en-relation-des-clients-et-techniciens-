@@ -45,6 +45,13 @@ public class NotificationService {
         return notificationRepository.existsRecentSimilar(userId, title, message, LocalDateTime.now().minus(window));
     }
 
+    public boolean existsForRequest(Long userId, String title, Long requestId) {
+        if (userId == null || title == null || title.isBlank() || requestId == null) {
+            return false;
+        }
+        return notificationRepository.existsByUserIdAndTitleAndRequestId(userId, title, requestId);
+    }
+
     @Transactional(readOnly = true)
     public List<Notification> listForUser(Long userId) {
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);

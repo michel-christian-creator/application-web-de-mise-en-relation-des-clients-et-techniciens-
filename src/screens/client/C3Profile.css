@@ -1,38 +1,38 @@
 .profile-page {
-  background: #0B1120;
+  background: #0b1120;
 }
 
 .profile-card {
-  background: #141C2F;
+  background: #141c2f;
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .profile-title {
   font-family: "Poppins, sans-serif";
-  color: #E8EDF5;
+  color: #e8edf5;
 }
 
 .profile-subtitle {
-  color: #94A3B8;
+  color: #94a3b8;
 }
 
 .profile-text {
-  color: #64748B;
+  color: #64748b;
 }
 
 .profile-btn {
-  background: #1E2A42;
-  color: #94A3B8;
+  background: #1e2a42;
+  color: #94a3b8;
 }
 
 .profile-btn-primary {
-  background: #2563EB;
-  color: #E8EDF5;
+  background: #2563eb;
+  color: #e8edf5;
 }
 
 .profile-btn-save {
   background: #059669;
-  color: #E8EDF5;
+  color: #e8edf5;
 }
 
 .profile-btn-action {
@@ -43,37 +43,37 @@
 }
 
 .profile-label {
-  color: #E8EDF5;
+  color: #e8edf5;
 }
 
 .profile-section {
-  background: #1E2A42;
+  background: #1e2a42;
 }
 
 .profile-section-header {
-  color: #64748B;
+  color: #64748b;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .profile-info-row {
-  color: #94A3B8;
+  color: #94a3b8;
 }
 
 .profile-input {
-  background: #0F172A;
+  background: #0f172a;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .profile-avatar {
-  background: #1E3A6A;
-  border: 2px solid #0B1120;
+  background: #1e3a6a;
+  border: 2px solid #0b1120;
   color: #059669;
 }
 
 .profile-avatar-empty {
   background: #111827;
-  color: #64748B;
+  color: #64748b;
 }
 
 .profile-badge {
@@ -86,23 +86,23 @@
 }
 
 .profile-status-busy {
-  color: #94A3B8;
+  color: #94a3b8;
 }
 
 .profile-text-light {
-  color: #93C5FD;
+  color: #93c5fd;
 }
 
 .profile-text-error {
-  color: #F87171;
+  color: #f87171;
 }
 
 .profile-text-success {
-  color: #34D399;
+  color: #34d399;
 }
 
 .profile-text-star {
-  color: #F59E0B;
+  color: #f59e0b;
 }
 
 .profile-text-mono {
@@ -119,13 +119,13 @@
 }
 
 .profile-card-section {
-  background: #141C2F;
+  background: #141c2f;
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .profile-tag {
-  background: #1E3A6A;
-  border: 2px solid #0B1120;
+  background: #1e3a6a;
+  border: 2px solid #0b1120;
   color: #059669;
 }
 
@@ -155,16 +155,26 @@
 }
 
 .profile-gallery-empty {
-  background: #1E2A42;
+  background: #1e2a42;
   border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
 .profile-gallery-item {
-  background: #1E2A42;
+  background: #1e2a42;
 }
 
 .profile-gallery-img {
   height: 180px;
+}
+
+.cert-view-btn {
+  background: #1e3a6a;
+  color: #e8edf5;
+}
+
+.cert-modal {
+  background: #141c2f;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .profile-gallery-compare {
@@ -177,7 +187,7 @@
 }
 
 .profile-modal {
-  background: #141C2F;
+  background: #141c2f;
   width: min(640px, calc(100vw - 32px));
 }
 
@@ -199,12 +209,12 @@
 }
 
 .profile-modal-close {
-  background: #1E2A42;
-  color: #94A3B8;
+  background: #1e2a42;
+  color: #94a3b8;
 }
 
 .profile-range {
-  color: #0B1120;
+  color: #0b1120;
   font-size: 14px;
 }
 
@@ -217,12 +227,12 @@
 }
 
 .profile-review-form {
-  background: #1E2A42;
+  background: #1e2a42;
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .profile-star-active {
-  color: #F59E0B;
+  color: #f59e0b;
 }
 
 .profile-star-inactive {
@@ -230,14 +240,30 @@
 }
 
 /* ── Light theme ── */
-[data-theme="light"] .profile-btn-primary { color: #1a1a2e; }
-[data-theme="light"] .profile-btn-save { color: #ffffff; }
-[data-theme="light"] .profile-status-busy { color: #475569; }
-[data-theme="light"] .profile-text-mono { color: #334155; }
-[data-theme="light"] .profile-img { border-color: rgba(0,0,0,0.06); }
-[data-theme="light"] .profile-star-inactive { color: rgba(0,0,0,0.15); }
-[data-theme="light"] .profile-modal-label { background: rgba(0,0,0,0.6); }
-[data-theme="light"] .profile-modal-divider { background: #1a1a2e; }
+[data-theme="light"] .profile-btn-primary {
+  color: #1a1a2e;
+}
+[data-theme="light"] .profile-btn-save {
+  color: #ffffff;
+}
+[data-theme="light"] .profile-status-busy {
+  color: #475569;
+}
+[data-theme="light"] .profile-text-mono {
+  color: #334155;
+}
+[data-theme="light"] .profile-img {
+  border-color: rgba(0, 0, 0, 0.06);
+}
+[data-theme="light"] .profile-star-inactive {
+  color: rgba(0, 0, 0, 0.15);
+}
+[data-theme="light"] .profile-modal-label {
+  background: rgba(0, 0, 0, 0.6);
+}
+[data-theme="light"] .profile-modal-divider {
+  background: #1a1a2e;
+}
 
 /* ── Light theme ── */
 [data-theme="light"] .profile-page {
@@ -348,4 +374,14 @@
 
 [data-theme="light"] .profile-text-light {
   color: #3b82f6;
+}
+
+[data-theme="light"] .cert-view-btn {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+[data-theme="light"] .cert-modal {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }

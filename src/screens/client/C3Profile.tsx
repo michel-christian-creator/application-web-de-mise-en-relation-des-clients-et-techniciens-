@@ -5,6 +5,11 @@ import LocationMarker from "../../components/LocationMarker"
 import { resolvePhotoUrl } from "../../utils/photoUrl"
 import { API_BASE_URL } from "../../config"
 import {
+  ATTESTATION_LEVELS,
+  attestationLevelMeta,
+  type AttestationLevel,
+} from "../../hooks/useAttestation"
+import {
   sanitizeText,
   sanitizeMultiline,
   sanitizeLetters,
@@ -69,6 +74,29 @@ type PortfolioItem = {
   label: string
   beforeUrl?: string | null
   afterUrl?: string | null
+}
+
+type TechAttestation = {
+  id: number
+  attestationNumber: string
+  level: AttestationLevel
+  interventionCount: number
+  avgRating: number
+  generatedAt: string | null
+}
+
+function highestLevel(list: TechAttestation[]): AttestationLevel | null {
+  let best: AttestationLevel | null = null
+  for (const a of list) {
+    if (
+      best === null ||
+      ATTESTATION_LEVELS.findIndex((l) => l.key === a.level) >
+        ATTESTATION_LEVELS.findIndex((l) => l.key === best)
+    ) {
+      best = a.level
+    }
+  }
+  return best
 }
 
 function getInitials(name?: string): string {
@@ -141,6 +169,8 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [loadingRecommendations, setLoadingRecommendations] = useState(false)
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([])
+  const [attestations, setAttestations] = useState<TechAttestation[]>([])
+  const [viewingAttestation, setViewingAttestation] = useState<TechAttestation | null>(null)
   const [ratingInput, setRatingInput] = useState(0)
   const [reviewerName, setReviewerName] = useState("")
   const [reviewComment, setReviewComment] = useState("")
@@ -206,8 +236,7 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
     es.addEventListener("recommendation", refresh)
     es.addEventListener("connected", refresh)
     es.onmessage = refresh
-    es.onerror = () => {
-    }
+    es.onerror = () => {}
     return () => es.close()
   }, [artisan, fetchRecommendations])
 
@@ -217,6 +246,14 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
       .then((res) => (res.ok ? res.json() : []))
       .then((items) => setPortfolio(Array.isArray(items) ? items : []))
       .catch(() => setPortfolio([]))
+  }, [artisan])
+
+  useEffect(() => {
+    if (!artisan) return
+    fetch(`${API_BASE_URL}/api/technicians/${artisan.id}/attestations`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((items) => setAttestations(Array.isArray(items) ? (items as TechAttestation[]) : []))
+      .catch(() => setAttestations([]))
   }, [artisan])
 
   useEffect(() => {
@@ -340,7 +377,9 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
     if (!isValidUsername(form.username)) {
       setEditing(true)
       setSaveError(
-        t("Nom d'utilisateur invalide : 3 à 30 caractères (lettres, chiffres, point, tiret, underscore)."),
+        t(
+          "Nom d'utilisateur invalide : 3 à 30 caractères (lettres, chiffres, point, tiret, underscore).",
+        ),
       )
       return
     }
@@ -492,12 +531,8 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-medium profile-text">
-                    {t("Mon profil")}
-                  </p>
-                  <h1
-                    className="mt-1 text-2xl font-bold profile-title"
-                  >
+                  <p className="text-sm font-medium profile-text">{t("Mon profil")}</p>
+                  <h1 className="mt-1 text-2xl font-bold profile-title">
                     {profile
                       ? `${profile.firstName} ${profile.lastName}`.trim() || profile.username
                       : t("Profil personnel")}
@@ -554,9 +589,7 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                   </p>
                 )}
                 {saveError && !uploadingPhoto && (
-                  <p className="text-xs profile-text-error">
-                    {saveError}
-                  </p>
+                  <p className="text-xs profile-text-error">{saveError}</p>
                 )}
               </div>
             </div>
@@ -564,9 +597,7 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-2xl border border-white/10 p-5 profile-card">
-              <h2
-                className="text-sm font-semibold uppercase tracking-[0.2em] profile-text"
-              >
+              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] profile-text">
                 {t("Informations personnelles")}
               </h2>
               <div className="mt-4 space-y-3 text-sm profile-info-row">
@@ -634,16 +665,12 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
             </div>
 
             <div className="rounded-2xl border border-white/10 p-5 profile-card">
-              <h2
-                className="text-sm font-semibold uppercase tracking-[0.2em] profile-text"
-              >
+              <h2 className="text-sm font-semibold uppercase tracking-[0.2em] profile-text">
                 {t("Activité récente")}
               </h2>
               <div className="mt-4 space-y-3 text-sm profile-info-row">
                 <div className="rounded-xl p-3 profile-section">
-                  <p className="font-medium profile-label">
-                    {t("Profil complété")}
-                  </p>
+                  <p className="font-medium profile-label">{t("Profil complété")}</p>
                   <p className="mt-1">
                     {Math.min(
                       100,
@@ -663,9 +690,7 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                   </p>
                 </div>
                 <div className="rounded-xl p-3 profile-section">
-                  <p className="font-medium profile-label">
-                    {t("Compte")}
-                  </p>
+                  <p className="font-medium profile-label">{t("Compte")}</p>
                   <p className="mt-1">
                     {profile?.role === "technician"
                       ? t("Technicien")
@@ -685,6 +710,8 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
 
   const reviews = recommendations.filter((r) => r.rating != null)
   const endorsements = recommendations.filter((r) => r.rating == null)
+  const topAttestationLevel = highestLevel(attestations)
+  const topAttestationMeta = attestationLevelMeta(topAttestationLevel)
 
   const computedNote =
     reviews.length > 0
@@ -749,7 +776,8 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
       setReviewComment("")
       await fetchRecommendations()
     } catch (error) {
-      const message = error instanceof Error ? error.message : t("Erreur lors de l'envoi de l'avis.")
+      const message =
+        error instanceof Error ? error.message : t("Erreur lors de l'envoi de l'avis.")
       setReviewError(message)
     } finally {
       setSubmittingReview(false)
@@ -768,11 +796,7 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
             />
             <div>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
-                <h1
-                  className="text-2xl font-bold profile-title"
-                >
-                  {artisan.fullname}
-                </h1>
+                <h1 className="text-2xl font-bold profile-title">{artisan.fullname}</h1>
                 <span
                   className="px-3 py-1 rounded-full text-xs font-bold"
                   style={{
@@ -783,22 +807,30 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                 >
                   {artisan.dispo ? t("✓ Disponible maintenant") : t("○ Occupé")}
                 </span>
+                {topAttestationMeta && (
+                  <span
+                    className="px-3 py-1 rounded-full text-xs font-bold"
+                    style={{
+                      background: `${topAttestationMeta.color}22`,
+                      color: topAttestationMeta.color,
+                      border: `1px solid ${topAttestationMeta.color}55`,
+                    }}
+                  >
+                    {topAttestationMeta.icon} {t("Certifié")} {topAttestationMeta.label}
+                  </span>
+                )}
               </div>
               <p className="text-sm mb-2 profile-text">
                 {artisan.metier} · {artisan.experience}
               </p>
-              <p className="text-sm mb-2 profile-subtitle">
-                {artisan.description}
-              </p>
+              <p className="text-sm mb-2 profile-subtitle">{artisan.description}</p>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                 <span className="profile-text-star">⭐ {computedNote}</span>
                 <span className="text-sm profile-text">
                   {computedMissions} {t("missions réalisées")}
                 </span>
                 <LocationMarker className="h-4 w-4 text-slate-300" />
-                <span className="text-sm profile-text">
-                  {artisan.quartier}
-                </span>
+                <span className="text-sm profile-text">{artisan.quartier}</span>
                 <span className="text-sm profile-status-available">
                   {artisan.dispo ? t("● Disponible") : t("○ Occupé")}
                 </span>
@@ -824,18 +856,12 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
 
         <div className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
           <div className="flex flex-col gap-4">
-            <div
-              className="p-5 rounded-2xl profile-card-section"
-            >
-              <h2
-                className="text-xs font-semibold mb-4 profile-section-header"
-              >
+            <div className="p-5 rounded-2xl profile-card-section">
+              <h2 className="text-xs font-semibold mb-4 profile-section-header">
                 {t("Profil de")} {artisan.fullname}
               </h2>
               {loadingRecommendations ? (
-                <p className="text-sm profile-subtitle">
-                  {t("Chargement des recommandations...")}
-                </p>
+                <p className="text-sm profile-subtitle">{t("Chargement des recommandations...")}</p>
               ) : endorsements.length > 0 ? (
                 <>
                   <div className="flex items-center gap-3 mb-4">
@@ -866,17 +892,13 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                                 : t("Artisan senior"))}
                           </span>
                           {r.verified && (
-                            <span
-                              className="text-[10px] px-2 py-0.5 rounded-full profile-badge"
-                            >
+                            <span className="text-[10px] px-2 py-0.5 rounded-full profile-badge">
                               {t("✓ Certifié")}
                             </span>
                           )}
                         </div>
                         {r.comment && (
-                          <p className="text-xs leading-relaxed profile-subtitle">
-                            {r.comment}
-                          </p>
+                          <p className="text-xs leading-relaxed profile-subtitle">{r.comment}</p>
                         )}
                       </div>
                     ))}
@@ -891,17 +913,64 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                 </>
               ) : (
                 <p className="text-sm profile-subtitle">
-                  {t("Aucune recommandation pour le moment. Ce technicien n'a pas encore été recommandé par un artisan senior.")}
+                  {t(
+                    "Aucune recommandation pour le moment. Ce technicien n'a pas encore été recommandé par un artisan senior.",
+                  )}
                 </p>
               )}
             </div>
 
-            <div
-              className="p-5 rounded-2xl profile-card-section"
-            >
-              <h2
-                className="text-xs font-semibold mb-4 profile-section-header"
-              >
+            {attestations.length > 0 && (
+              <div className="p-5 rounded-2xl profile-card-section">
+                <h2 className="text-xs font-semibold mb-4 profile-section-header">
+                  {t("Certifications MboaTech")}
+                </h2>
+                <div className="flex flex-col gap-3">
+                  {attestations.map((a) => {
+                    const meta = attestationLevelMeta(a.level)
+                    if (!meta) return null
+                    return (
+                      <div
+                        key={a.id}
+                        className="p-3 rounded-xl profile-section flex items-center gap-3"
+                      >
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0"
+                          style={{
+                            background: `${meta.color}22`,
+                            border: `1px solid ${meta.color}55`,
+                          }}
+                        >
+                          {meta.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold" style={{ color: meta.color }}>
+                            {t("Attestation")} {meta.label}
+                          </p>
+                          <p className="text-xs profile-subtitle truncate">
+                            {a.attestationNumber} ·{" "}
+                            {formatReviewDate(a.generatedAt ?? undefined, locale)}
+                          </p>
+                          <p className="text-xs profile-subtitle">
+                            {a.interventionCount} {t("interventions")} · ⭐ {a.avgRating}/5
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setViewingAttestation(a)}
+                          className="cert-view-btn text-xs px-3 py-1.5 rounded-lg font-semibold flex-shrink-0"
+                        >
+                          {t("Consulter")}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="p-5 rounded-2xl profile-card-section">
+              <h2 className="text-xs font-semibold mb-4 profile-section-header">
                 {t("Statistiques")}
               </h2>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -918,36 +987,23 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                   },
                 ].map((s) => (
                   <div key={s.label} className="p-3 rounded-xl profile-section">
-                    <p className="text-lg font-bold font-mono profile-label">
-                      {s.value}
-                    </p>
-                    <p className="text-xs profile-text">
-                      {s.label}
-                    </p>
+                    <p className="text-lg font-bold font-mono profile-label">{s.value}</p>
+                    <p className="text-xs profile-text">{s.label}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div
-              className="p-5 rounded-2xl profile-card-section"
-            >
-              <h2
-                className="text-xs font-semibold mb-4 profile-section-header"
-              >
+            <div className="p-5 rounded-2xl profile-card-section">
+              <h2 className="text-xs font-semibold mb-4 profile-section-header">
                 {t("Derniers avis")}
               </h2>
               {loadingRecommendations ? (
-                <p className="text-sm profile-subtitle">
-                  {t("Chargement des avis...")}
-                </p>
+                <p className="text-sm profile-subtitle">{t("Chargement des avis...")}</p>
               ) : reviews.length > 0 ? (
                 <div className="flex flex-col gap-4">
                   {reviews.slice(0, 6).map((r) => (
-                    <div
-                      key={r.id}
-                      className="pb-4 profile-review-border"
-                    >
+                    <div key={r.id} className="pb-4 profile-review-border">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs font-medium profile-subtitle">
                           {r.recommenderName ||
@@ -960,13 +1016,9 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                         </span>
                       </div>
                       {r.comment && (
-                        <p className="text-xs leading-relaxed profile-text">
-                          {r.comment}
-                        </p>
+                        <p className="text-xs leading-relaxed profile-text">{r.comment}</p>
                       )}
-                      <p
-                        className="text-xs mt-1 profile-text-mono"
-                      >
+                      <p className="text-xs mt-1 profile-text-mono">
                         {formatReviewDate(r.createdAt, locale)}
                       </p>
                     </div>
@@ -974,24 +1026,24 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                 </div>
               ) : (
                 <p className="text-sm mb-4 profile-subtitle">
-                  {t("Aucun avis pour le moment. Les avis sont publiés par les clients après une intervention terminée.")}
+                  {t(
+                    "Aucun avis pour le moment. Les avis sont publiés par les clients après une intervention terminée.",
+                  )}
                 </p>
               )}
 
-              <div
-                className="mt-4 p-4 rounded-xl profile-review-form"
-              >
+              <div className="mt-4 p-4 rounded-xl profile-review-form">
                 {reviewEligibility === "checking" ? (
                   <p className="text-sm profile-subtitle">
                     {t("Vérification de vos interventions avec ce technicien…")}
                   </p>
                 ) : reviewEligibility === "blocked" ? (
                   <div className="text-center py-2">
-                    <p className="text-sm font-semibold profile-label">
-                      {t("Notation réservée")}
-                    </p>
+                    <p className="text-sm font-semibold profile-label">{t("Notation réservée")}</p>
                     <p className="text-xs mt-1 leading-relaxed profile-subtitle">
-                      {t("Pour éviter la fraude, vous pouvez noter ce technicien uniquement après une intervention terminée avec lui.")}
+                      {t(
+                        "Pour éviter la fraude, vous pouvez noter ce technicien uniquement après une intervention terminée avec lui.",
+                      )}
                     </p>
                   </div>
                 ) : (
@@ -1039,14 +1091,10 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                       className="w-full mb-3 rounded-lg px-3 py-2 text-sm text-white outline-none resize-none profile-input"
                     />
                     {reviewError && (
-                      <p className="text-xs mb-2 profile-text-error">
-                        {reviewError}
-                      </p>
+                      <p className="text-xs mb-2 profile-text-error">{reviewError}</p>
                     )}
                     {reviewSuccess && (
-                      <p className="text-xs mb-2 profile-text-success">
-                        {reviewSuccess}
-                      </p>
+                      <p className="text-xs mb-2 profile-text-success">{reviewSuccess}</p>
                     )}
                     <button
                       type="button"
@@ -1067,24 +1115,20 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
           </div>
 
           <div>
-            <div
-              className="p-5 rounded-2xl profile-card-section"
-            >
-              <h2
-                className="text-xs font-semibold mb-4 profile-section-header"
-              >
+            <div className="p-5 rounded-2xl profile-card-section">
+              <h2 className="text-xs font-semibold mb-4 profile-section-header">
                 {t("Catalogue Avant / Après — Cliquez pour comparer")}
               </h2>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {portfolio.length === 0 ? (
-                  <div
-                    className="rounded-xl p-8 text-center sm:col-span-2 profile-gallery-empty"
-                  >
+                  <div className="rounded-xl p-8 text-center sm:col-span-2 profile-gallery-empty">
                     <p className="text-sm font-medium profile-label">
                       {t("Aucune réalisation publiée")}
                     </p>
                     <p className="text-xs mt-1 profile-text">
-                      {t("Les photos avant / après des chantiers de ce technicien apparaîtront ici.")}
+                      {t(
+                        "Les photos avant / après des chantiers de ce technicien apparaîtront ici.",
+                      )}
                     </p>
                   </div>
                 ) : (
@@ -1102,14 +1146,10 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                         alt={p.label}
                         className="w-full object-cover profile-gallery-img"
                       />
-                      <div
-                        className="absolute inset-0 flex items-end p-3 opacity-0 hover:opacity-100 profile-gallery-overlay"
-                      >
+                      <div className="absolute inset-0 flex items-end p-3 opacity-0 hover:opacity-100 profile-gallery-overlay">
                         <div className="flex items-center justify-between w-full">
                           <span className="text-xs text-white font-medium">{p.label}</span>
-                          <span
-                            className="text-xs px-2 py-0.5 rounded profile-gallery-compare"
-                          >
+                          <span className="text-xs px-2 py-0.5 rounded profile-gallery-compare">
                             {t("Comparer →")}
                           </span>
                         </div>
@@ -1181,24 +1221,18 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                 className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize"
               />
               {portfolio[selected].beforeUrl && (
-                <span
-                  className="absolute top-4 left-4 text-xs font-bold text-white px-3 py-1.5 rounded-lg profile-modal-label"
-                >
+                <span className="absolute top-4 left-4 text-xs font-bold text-white px-3 py-1.5 rounded-lg profile-modal-label">
                   {t("AVANT")}
                 </span>
               )}
               {portfolio[selected].afterUrl && (
-                <span
-                  className="absolute top-4 right-4 text-xs font-bold text-white px-3 py-1.5 rounded-lg profile-modal-label-after"
-                >
+                <span className="absolute top-4 right-4 text-xs font-bold text-white px-3 py-1.5 rounded-lg profile-modal-label-after">
                   {t("APRÈS")}
                 </span>
               )}
             </div>
             <div className="p-4 flex items-center justify-between">
-              <p className="text-sm font-medium profile-label">
-                {portfolio[selected].label}
-              </p>
+              <p className="text-sm font-medium profile-label">{portfolio[selected].label}</p>
               <button
                 onClick={() => setSelected(null)}
                 className="text-xs px-4 py-2 rounded-lg profile-modal-close"
@@ -1206,6 +1240,47 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                 {t("Fermer")}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {viewingAttestation && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 profile-modal-overlay"
+          onClick={() => setViewingAttestation(null)}
+        >
+          <div
+            className="rounded-2xl overflow-hidden w-full max-w-3xl cert-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {(() => {
+              const meta = attestationLevelMeta(viewingAttestation.level)
+              return (
+                <>
+                  <div className="flex items-center justify-between gap-3 p-4">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-lg flex-shrink-0">{meta?.icon}</span>
+                      <p className="text-sm font-semibold profile-label truncate">
+                        {t("Attestation")} {meta?.label} · {viewingAttestation.attestationNumber}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setViewingAttestation(null)}
+                        className="text-xs px-4 py-2 rounded-lg profile-modal-close"
+                      >
+                        {t("Fermer")}
+                      </button>
+                    </div>
+                  </div>
+                  <iframe
+                    src={`${API_BASE_URL}/api/attestation/${viewingAttestation.id}/download#toolbar=0&navpanes=0&view=FitH`}
+                    title={t("Aperçu de l'attestation")}
+                    className="w-full h-[70vh] bg-white cert-pdf-frame"
+                  />
+                </>
+              )
+            })()}
           </div>
         </div>
       )}

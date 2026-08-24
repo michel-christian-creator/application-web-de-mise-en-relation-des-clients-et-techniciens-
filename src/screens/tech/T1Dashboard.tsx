@@ -7,6 +7,12 @@ import TiltCard from "../../components/animations/TiltCard"
 import { API_BASE_URL } from "../../config"
 import { sanitizeDigits } from "../../utils/validation"
 import { useI18n } from "../../i18n"
+import {
+  ATTESTATION_LEVELS,
+  attestationLevelMeta,
+  useAttestation,
+  type AttestationLevel,
+} from "../../hooks/useAttestation"
 import orangeLogo from "../../../orange-money-logo-png_seeklogo-440383.png"
 import "./T1Dashboard.css"
 
@@ -274,6 +280,30 @@ function formatResponse(sec: number, t: (key: string) => string): string {
   return `${(sec / 3600).toFixed(1)} ${t("h")}`
 }
 
+function StarRating({ rating, size = "text-[11px]" }: { rating: number; size?: string }) {
+  const full = Math.floor(rating)
+  const half = rating - full >= 0.25 && rating - full < 0.75
+  const ceil = rating - full >= 0.75 ? 1 : 0
+  const fullStars = full + ceil
+  const halfStar = half ? 1 : 0
+  const empty = 5 - fullStars - halfStar
+  return (
+    <span className={`inline-flex items-center gap-0 ${size}`}>
+      {Array.from({ length: fullStars }).map((_, i) => (
+        <span key={`f${i}`} style={{ color: "#F59E0B" }}>
+          ★
+        </span>
+      ))}
+      {halfStar > 0 && <span style={{ color: "#F59E0B", opacity: 0.5 }}>★</span>}
+      {Array.from({ length: empty }).map((_, i) => (
+        <span key={`e${i}`} style={{ color: "#475569" }}>
+          ★
+        </span>
+      ))}
+    </span>
+  )
+}
+
 export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
   const { t, locale } = useI18n()
   const [online, setOnline] = useState(true)
@@ -297,6 +327,15 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
   const [withdrawError, setWithdrawError] = useState<string | null>(null)
   const [withdrawSubmitting, setWithdrawSubmitting] = useState(false)
   const [withdrawSuccess, setWithdrawSuccess] = useState<string | null>(null)
+  const [attestationOpen, setAttestationOpen] = useState(false)
+  const [attestationError, setAttestationError] = useState<string | null>(null)
+  const [attestationChoice, setAttestationChoice] = useState<AttestationLevel | null>(null)
+  const {
+    eligibility,
+    history: attestationHistory,
+    loading: attestationLoading,
+    download: downloadAttestation,
+  } = useAttestation()
 
   useEffect(() => {
     if (!focusRequestId) return
@@ -628,11 +667,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
           <div>
-            <h1
-              className="dash-page-title text-2xl font-bold mb-0.5"
-            >
-              {t("Tableau de bord")}
-            </h1>
+            <h1 className="dash-page-title text-2xl font-bold mb-0.5">{t("Tableau de bord")}</h1>
             <p className="dash-text-muted text-sm">
               {t("Demandes d'intervention qui vous sont réservées")}
             </p>
@@ -711,33 +746,21 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
           {/* Left — wallet + stats */}
           <div className="flex flex-col gap-4">
             {/* Wallet */}
-            <TiltCard
-              maxTilt={6}
-              hoverScale={1.02}
-              className="dash-card-wallet p-6 rounded-2xl"
-            >
-              <p className="dash-text-secondary text-xs mb-2">
-                {t("Solde disponible")}
-              </p>
+            <TiltCard maxTilt={6} hoverScale={1.02} className="dash-card-wallet p-6 rounded-2xl">
+              <p className="dash-text-secondary text-xs mb-2">{t("Solde disponible")}</p>
               <p className="dash-text-primary text-4xl font-bold font-mono mb-1">
                 {formatAmount(stats?.balance ?? 0, locale)}
               </p>
-              <p className="dash-text-muted text-sm mb-4">
-                FCFA
-              </p>
+              <p className="dash-text-muted text-sm mb-4">FCFA</p>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <span className="dash-text-muted text-xs">
-                    {t("Chantiers terminés")}
-                  </span>
+                  <span className="dash-text-muted text-xs">{t("Chantiers terminés")}</span>
                   <span className="dash-text-success text-xs font-mono">
                     {stats?.completedThisMonth ?? 0} {t("ce mois")}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="dash-text-muted text-xs">
-                    {t("En garde")}
-                  </span>
+                  <span className="dash-text-muted text-xs">{t("En garde")}</span>
                   <span className="dash-text-amber text-xs font-mono">
                     {formatAmount(stats?.held ?? 0, locale)} FCFA
                   </span>
@@ -752,14 +775,8 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
             </TiltCard>
 
             {/* Stats */}
-                <div
-                  className="dash-modal-balance mb-5 rounded-xl p-4"
-                >
-              <p
-                className="dash-section-label text-xs font-semibold mb-4"
-              >
-                {t("Performance")}
-              </p>
+            <div className="dash-modal-balance mb-5 rounded-xl p-4">
+              <p className="dash-section-label text-xs font-semibold mb-4">{t("Performance")}</p>
               <Stagger className="grid grid-cols-2 gap-3" staggerDelay={0.08}>
                 {[
                   {
@@ -780,28 +797,76 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                     value: formatResponse(stats?.avgResponseTimeSec ?? 0, t),
                   },
                 ].map((s) => (
-                  <StaggerItem
-                    key={s.label}
-                    className="dash-card-stat p-3 rounded-xl"
-                  >
-                    <p className="dash-text-primary text-xl font-bold font-mono">
-                      {s.value}
-                    </p>
-                    <p className="dash-text-muted text-xs">
-                      {s.label}
-                    </p>
+                  <StaggerItem key={s.label} className="dash-card-stat p-3 rounded-xl">
+                    <p className="dash-text-primary text-xl font-bold font-mono">{s.value}</p>
+                    <p className="dash-text-muted text-xs">{s.label}</p>
                   </StaggerItem>
                 ))}
               </Stagger>
             </div>
 
-            {/* Quick nav */}
-            <div
-              className="dash-card p-5 rounded-2xl"
-            >
-              <p
-                className="dash-section-label text-xs font-semibold mb-3"
+            {/* Attestation de service — résumé cliquable */}
+            {!attestationLoading && eligibility && (
+              <button
+                type="button"
+                onClick={() => setAttestationOpen(true)}
+                className="dash-attestation rounded-2xl p-5 text-left w-full hover:opacity-90 transition-opacity cursor-pointer"
               >
+                <div className="flex items-center justify-between mb-3">
+                  <p className="dash-section-label text-xs font-semibold">
+                    {t("Attestation de service")}
+                  </p>
+                  <span className="dash-text-blue text-xs font-bold">{t("Voir détails")} →</span>
+                </div>
+                {(() => {
+                  const idx = ATTESTATION_LEVELS.findIndex(
+                    (l) => eligibility.completedCount < l.threshold,
+                  )
+                  const nextLevel = idx === -1 ? null : ATTESTATION_LEVELS[idx]
+                  const current = attestationLevelMeta(eligibility.currentLevel)
+                  const minTh = idx <= 0 ? 0 : ATTESTATION_LEVELS[idx - 1].threshold
+                  const maxTh = nextLevel?.threshold ?? 5
+                  const pct = Math.min(
+                    100,
+                    ((eligibility.completedCount - minTh) / (maxTh - minTh)) * 100,
+                  )
+                  const barColor = nextLevel?.color ?? current?.color ?? "#64748B"
+                  return (
+                    <>
+                      <div
+                        className="dash-attestation-progress-track rounded-full overflow-hidden mb-2"
+                        style={{ height: 5 }}
+                      >
+                        <div
+                          className="dash-attestation-progress-fill h-full rounded-full"
+                          style={{ width: `${pct}%`, background: barColor }}
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="dash-attestation-badge text-[10px] font-bold px-2 py-0.5 rounded-full"
+                          style={{
+                            background: current ? `${current.color}22` : "rgba(100,116,139,0.12)",
+                            color: current ? current.color : "#64748B",
+                            border: `1px solid ${current ? `${current.color}44` : "rgba(100,116,139,0.2)"}`,
+                          }}
+                        >
+                          {current ? current.icon : ""} {current ? current.label : t("Aucun")}
+                        </span>
+                        <span className="dash-text-muted text-[11px] font-mono">
+                          {eligibility.completedCount} {t("missions")} ·{" "}
+                          <StarRating rating={eligibility.avgRating} />
+                        </span>
+                      </div>
+                    </>
+                  )
+                })()}
+              </button>
+            )}
+
+            {/* Quick nav */}
+            <div className="dash-card p-5 rounded-2xl">
+              <p className="dash-section-label text-xs font-semibold mb-3">
                 {t("Mes chantiers actifs")}
               </p>
               <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -824,18 +889,14 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   )
                 })}
                 {frozen && (
-                  <span
-                    className="dash-badge-freeze text-xs px-2.5 py-1 rounded-full font-semibold"
-                  >
+                  <span className="dash-badge-freeze text-xs px-2.5 py-1 rounded-full font-semibold">
                     {t("Gel ")}
                     {formatFreeze(freezeSec)}
                   </span>
                 )}
               </div>
               {(stats?.activeChantiers?.length ?? 0) === 0 ? (
-                <div
-                  className="dash-card-stat dash-text-muted p-3 rounded-xl text-sm"
-                >
+                <div className="dash-card-stat dash-text-muted p-3 rounded-xl text-sm">
                   {t("Aucun chantier actif pour le moment")}
                 </div>
               ) : (
@@ -881,14 +942,8 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
             {/* Ma journée */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
-                <h2
-                  className="dash-page-title text-base font-semibold"
-                >
-                  {t("Ma journée")}
-                </h2>
-                <span
-                  className="dash-day-badge text-xs px-3 py-1 rounded-full font-mono capitalize"
-                >
+                <h2 className="dash-page-title text-base font-semibold">{t("Ma journée")}</h2>
+                <span className="dash-day-badge text-xs px-3 py-1 rounded-full font-mono capitalize">
                   {day ? formatDayLabel(day.date, locale) : ""}
                 </span>
               </div>
@@ -897,40 +952,31 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
               (day.inProgress.length === 0 &&
                 day.planned.length === 0 &&
                 day.completedToday.length === 0) ? (
-                <div
-                  className="dash-card dash-text-muted p-4 rounded-2xl text-sm"
-                >
+                <div className="dash-card dash-text-muted p-4 rounded-2xl text-sm">
                   {t("Aucune intervention prévue aujourd'hui")}
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
                   {day.inProgress.length > 0 && (
                     <div className="flex flex-col gap-2">
-                      <p
-                        className="dash-section-label-amber text-xs font-semibold"
-                      >
+                      <p className="dash-section-label-amber text-xs font-semibold">
                         {t("● En cours")}
                       </p>
                       {day.inProgress.map((item) => (
-                        <div
-                          key={item.id}
-                          className="dash-card-in-progress p-4 rounded-2xl"
-                        >
+                        <div key={item.id} className="dash-card-in-progress p-4 rounded-2xl">
                           <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0">
-                              <p
-                                className="dash-text-primary text-sm font-semibold truncate"
-                              >
+                              <p className="dash-text-primary text-sm font-semibold truncate">
                                 {item.clientName} · {item.category}
                               </p>
                               <p className="dash-text-secondary text-xs mt-0.5">
                                 {formatScheduled(item.scheduledAt, t, locale)}
                               </p>
                             </div>
-                              <button
-                                onClick={() => completeRequest(item.id)}
-                                className="dash-btn-success px-4 py-2 rounded-lg text-sm font-bold text-white flex-shrink-0"
-                              >
+                            <button
+                              onClick={() => completeRequest(item.id)}
+                              className="dash-btn-success px-4 py-2 rounded-lg text-sm font-bold text-white flex-shrink-0"
+                            >
                               {t("Terminer")}
                             </button>
                           </div>
@@ -941,9 +987,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
 
                   {day.planned.length > 0 && (
                     <div className="flex flex-col gap-2">
-                      <p
-                        className="dash-section-label-alt text-xs font-semibold"
-                      >
+                      <p className="dash-section-label-alt text-xs font-semibold">
                         {t("À venir aujourd'hui")}
                       </p>
                       {day.planned.map((item) => {
@@ -965,23 +1009,16 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                               boxShadow: "0 2px 10px rgba(37,99,235,0.3)",
                             }
                         return (
-                          <div
-                            key={item.id}
-                            className="dash-card-planned p-4 rounded-2xl"
-                          >
+                          <div key={item.id} className="dash-card-planned p-4 rounded-2xl">
                             <div className="flex items-center justify-between gap-3">
                               <div className="min-w-0">
-                                <p
-                                  className="dash-text-primary text-sm font-semibold truncate"
-                                >
+                                <p className="dash-text-primary text-sm font-semibold truncate">
                                   {item.clientName} · {item.category}
                                 </p>
                                 <p className="dash-text-secondary text-xs mt-0.5">
                                   {formatScheduled(item.scheduledAt, t, locale)}
                                 </p>
-                                <p className="dash-text-muted text-xs mt-1">
-                                  {item.description}
-                                </p>
+                                <p className="dash-text-muted text-xs mt-1">{item.description}</p>
                                 {imminent && (
                                   <p
                                     className="text-xs mt-1 font-mono font-semibold"
@@ -1009,9 +1046,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
 
                   {day.completedToday.length > 0 && (
                     <div className="flex flex-col gap-2">
-                      <p
-                        className="dash-section-label-success text-xs font-semibold"
-                      >
+                      <p className="dash-section-label-success text-xs font-semibold">
                         {t("Terminées aujourd'hui")}
                       </p>
                       {day.completedToday.map((item) => (
@@ -1045,11 +1080,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
             </div>
 
             <div className="flex items-center justify-between mb-4">
-              <h2
-                className="dash-page-title text-base font-semibold"
-              >
-                {t("Nouvelles demandes")}
-              </h2>
+              <h2 className="dash-page-title text-base font-semibold">{t("Nouvelles demandes")}</h2>
               <span
                 className={`text-xs px-3 py-1 rounded-full font-mono ${visible.length > 0 ? "dash-badge-red" : "dash-badge-green"}`}
               >
@@ -1058,27 +1089,21 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
             </div>
 
             {frozen && (
-              <div
-                className="dash-frozen-box mb-4 p-4 rounded-2xl text-sm flex items-start gap-3"
-              >
+              <div className="dash-frozen-box mb-4 p-4 rounded-2xl text-sm flex items-start gap-3">
                 <span className="text-lg leading-none">⚠</span>
                 <div>
                   <p className="font-semibold">{t("Acceptations gelées")}</p>
                   <p className="mt-0.5 text-xs opacity-90">
-                    {t("Vous avez décliné trop de demandes récemment. Nouvelle acceptation possible dans ")}
+                    {t(
+                      "Vous avez décliné trop de demandes récemment. Nouvelle acceptation possible dans ",
+                    )}
                     {formatFreeze(freezeSec)}.
                   </p>
                 </div>
               </div>
             )}
 
-            {error && (
-              <div
-                className="dash-error-box mb-4 p-3 rounded-xl text-sm"
-              >
-                {error}
-              </div>
-            )}
+            {error && <div className="dash-error-box mb-4 p-3 rounded-xl text-sm">{error}</div>}
 
             {loading && visible.length === 0 ? (
               <div className="dash-text-muted text-center py-16">
@@ -1119,14 +1144,10 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                           <div className="flex-1">
                             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-1">
                               <div className="min-w-0">
-                                <p
-                                  className="dash-page-title text-sm font-semibold"
-                                >
+                                <p className="dash-page-title text-sm font-semibold">
                                   {a.domain || a.category}
                                 </p>
-                                <div
-                                  className="dash-text-muted flex flex-wrap items-center gap-x-2 text-xs"
-                                >
+                                <div className="dash-text-muted flex flex-wrap items-center gap-x-2 text-xs">
                                   <LocationMarker className="h-3 w-3 text-slate-300 flex-shrink-0" />
                                   <span className="min-w-0">
                                     {a.clientName}
@@ -1184,13 +1205,9 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                 </span>
                               </div>
                             </div>
-                            <p className="dash-text-secondary text-sm mb-3">
-                              {a.description}
-                            </p>
+                            <p className="dash-text-secondary text-sm mb-3">{a.description}</p>
                             <div className="flex flex-wrap items-center justify-between gap-3">
-                              <span
-                                className="dash-text-link text-xs font-medium truncate min-w-0"
-                              >
+                              <span className="dash-text-link text-xs font-medium truncate min-w-0">
                                 {t("Client : ")}
                                 {a.clientName}
                               </span>
@@ -1253,7 +1270,9 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                       {t("Aucune demande pour le moment")}
                     </p>
                     <p className="text-sm mt-1">
-                      {t("Les demandes réservées pour vous et celles de votre domaine apparaîtront ici")}
+                      {t(
+                        "Les demandes réservées pour vous et celles de votre domaine apparaîtront ici",
+                      )}
                     </p>
                   </div>
                 )}
@@ -1285,7 +1304,9 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
               <p className="dash-text-secondary text-xs mt-1 leading-relaxed">
                 {t("Réservation de ")}
                 {formatHours(toast.hours, t)}
-                {t(" : si l'intervention n'est pas traitée et approuvée dans ce délai, la demande sera libérée automatiquement pour les autres techniciens.")}
+                {t(
+                  " : si l'intervention n'est pas traitée et approuvée dans ce délai, la demande sera libérée automatiquement pour les autres techniciens.",
+                )}
               </p>
               <div className="mt-2 flex items-center justify-between gap-4">
                 <span className="dash-text-muted text-[10px] font-mono">
@@ -1303,6 +1324,290 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
         </div>
       )}
 
+      {/* ── Modal Attestation de service ── */}
+      {attestationOpen && eligibility && (
+        <div
+          className="dash-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={() => setAttestationOpen(false)}
+        >
+          <div
+            className="dash-modal-panel w-full max-w-lg rounded-2xl p-6 max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="dash-page-title text-lg font-bold">{t("Attestation de service")}</h2>
+              <button
+                onClick={() => setAttestationOpen(false)}
+                className="dash-text-muted text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Statistiques globales */}
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="dash-card-stat rounded-xl p-3 text-center">
+                <p className="dash-text-primary text-2xl font-bold font-mono">
+                  {eligibility.completedCount}
+                </p>
+                <p className="dash-text-muted text-[10px] uppercase tracking-wide">
+                  {t("Interventions")}
+                </p>
+              </div>
+              <div className="dash-card-stat rounded-xl p-3 text-center">
+                <p className="dash-text-primary text-lg font-bold" style={{ letterSpacing: 2 }}>
+                  <StarRating rating={eligibility.avgRating} size="text-lg" />
+                </p>
+                <p className="dash-text-muted text-[10px] uppercase tracking-wide">
+                  {t("Note moyenne")}
+                </p>
+              </div>
+              <div className="dash-card-stat rounded-xl p-3 text-center">
+                <p
+                  className="text-2xl font-bold font-mono"
+                  style={{ color: eligibility.ratingMet ? "#059669" : "#EF4444" }}
+                >
+                  {eligibility.ratingMet ? "✓" : "✗"}
+                </p>
+                <p className="dash-text-muted text-[10px] uppercase tracking-wide">
+                  {t("Note ≥ 3.5")}
+                </p>
+              </div>
+            </div>
+
+            {/* Progression par niveau */}
+            {(() => {
+              const levels = ATTESTATION_LEVELS
+              const currentLevelIdx = levels.findIndex((l) => l.key === eligibility.currentLevel)
+              const nextLevelIdx = levels.findIndex((l) => l.key === eligibility.nextLevel)
+              const prevThreshold = 0
+
+              return (
+                <div className="flex flex-col gap-3 mb-5">
+                  <p className="dash-section-label text-xs font-semibold">
+                    {t("Progression vers les badges")}
+                  </p>
+                  {levels.map((level, i) => {
+                    const isCurrentOrPast = currentLevelIdx >= i
+                    const isNext = nextLevelIdx === i
+                    const prev = i === 0 ? 0 : levels[i - 1].threshold
+                    const progress = Math.min(
+                      100,
+                      Math.max(
+                        0,
+                        ((eligibility.completedCount - prev) / (level.threshold - prev)) * 100,
+                      ),
+                    )
+                    const isActive = level.key === eligibility.currentLevel
+
+                    return (
+                      <div
+                        key={level.key}
+                        className={`rounded-xl p-3 border transition-all ${
+                          isActive
+                            ? "dash-attestation-active"
+                            : isCurrentOrPast
+                              ? "dash-attestation-done"
+                              : "dash-attestation-pending"
+                        }`}
+                        style={
+                          isActive
+                            ? { borderColor: `${level.color}55`, background: `${level.color}11` }
+                            : undefined
+                        }
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{level.icon}</span>
+                            <span
+                              className="text-sm font-bold"
+                              style={{ color: isCurrentOrPast ? level.color : "#64748B" }}
+                            >
+                              {level.label}
+                            </span>
+                            {isActive && (
+                              <span
+                                className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase"
+                                style={{ background: `${level.color}22`, color: level.color }}
+                              >
+                                {t("Actuel")}
+                              </span>
+                            )}
+                            {isCurrentOrPast && !isActive && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase dash-badge-green">
+                                {t("Obtenu")}
+                              </span>
+                            )}
+                          </div>
+                          <span className="dash-text-muted text-xs font-mono">
+                            {Math.min(eligibility.completedCount, level.threshold)}/
+                            {level.threshold}
+                          </span>
+                        </div>
+                        <div
+                          className="dash-attestation-progress-track rounded-full overflow-hidden"
+                          style={{ height: 4 }}
+                        >
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${progress}%`, background: level.color }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
+
+            {/* Éligibilité */}
+            <div
+              className={`rounded-xl p-4 mb-5 border ${
+                eligibility.eligible ? "dash-badge-green" : "dash-badge-red"
+              }`}
+              style={
+                eligibility.eligible
+                  ? { background: "rgba(5,150,105,0.08)", borderColor: "rgba(5,150,105,0.25)" }
+                  : { background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.25)" }
+              }
+            >
+              {eligibility.eligible ? (
+                <div className="flex items-center gap-3">
+                  <div>
+                    <p className="dash-text-success text-sm font-semibold">
+                      {t("Éligible au téléchargement")}
+                    </p>
+                    <p className="dash-text-muted text-xs mt-1">
+                      {t("Vous pouvez télécharger le certificat de chaque niveau atteint")}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <p className="dash-text-red text-sm font-semibold">{t("Pas encore éligible")}</p>
+                  <p className="dash-text-muted text-xs mt-1">
+                    {t("Encore")}{" "}
+                    <strong className="dash-text-primary">{eligibility.interventionsNeeded}</strong>{" "}
+                    {t("missions pour")}{" "}
+                    <strong className="dash-text-primary">
+                      {t(eligibility.nextLevel || "Bronze")}
+                    </strong>
+                    {!eligibility.ratingMet && <span> · {t("Note ≥ 3.5 requise")}</span>}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Sélecteur + bouton téléchargement : un seul bouton qui
+                s'adapte au niveau sélectionné parmi les niveaux atteints */}
+            {eligibility.eligible && (
+              <>
+                {(() => {
+                  const reachable: AttestationLevel[] =
+                    eligibility.reachedLevels && eligibility.reachedLevels.length > 0
+                      ? eligibility.reachedLevels
+                      : eligibility.currentLevel
+                        ? [eligibility.currentLevel]
+                        : []
+                  const chosen =
+                    attestationChoice && reachable.includes(attestationChoice)
+                      ? attestationChoice
+                      : (eligibility.currentLevel ?? reachable[reachable.length - 1] ?? null)
+                  const chosenMeta = attestationLevelMeta(chosen)
+                  return (
+                    <>
+                      <label className="dash-section-label text-xs font-semibold mb-2 block">
+                        {t("Choisissez l'attestation à télécharger")}
+                      </label>
+                      <select
+                        value={chosen ?? ""}
+                        onChange={(e) => setAttestationChoice(e.target.value as AttestationLevel)}
+                        className="dash-select w-full py-3 px-3 rounded-xl text-sm font-semibold mb-2"
+                      >
+                        {reachable.map((lv) => {
+                          const meta = attestationLevelMeta(lv)
+                          if (!meta) return null
+                          return (
+                            <option key={lv} value={lv}>
+                              {meta.icon} {t("Attestation")} {meta.label}
+                            </option>
+                          )
+                        })}
+                      </select>
+                      <button
+                        onClick={() => {
+                          if (!chosen) return
+                          setAttestationError(null)
+                          downloadAttestation(chosen).catch((e: unknown) =>
+                            setAttestationError(
+                              e instanceof Error ? e.message : t("Erreur lors de la génération."),
+                            ),
+                          )
+                        }}
+                        disabled={!chosen}
+                        className="dash-attestation-download-btn w-full py-3 rounded-xl text-sm font-semibold mb-5"
+                      >
+                        {t("Télécharger l'attestation")}{" "}
+                        {chosenMeta ? `${chosenMeta.icon} ${chosenMeta.label}` : ""}
+                      </button>
+                      {attestationError && (
+                        <p className="dash-text-red text-xs text-center -mt-3 mb-4">
+                          {attestationError}
+                        </p>
+                      )}
+                    </>
+                  )
+                })()}
+              </>
+            )}
+
+            {/* Historique */}
+            {attestationHistory.length > 0 && (
+              <div>
+                <p className="dash-section-label text-xs font-semibold mb-3">{t("Historique")}</p>
+                <div className="flex flex-col gap-2">
+                  {attestationHistory.map((a) => {
+                    const c = attestationLevelMeta(a.level)?.color ?? "#64748B"
+                    return (
+                      <div
+                        key={a.id}
+                        className="flex items-center justify-between rounded-lg p-2.5"
+                        style={{ background: `${c}08`, border: `1px solid ${c}22` }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                            style={{ background: `${c}22`, color: c }}
+                          >
+                            {a.level}
+                          </span>
+                          <span className="dash-text-primary text-xs font-mono">
+                            {a.attestationNumber}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <p className="dash-text-muted text-[10px]">
+                            {new Date(a.generatedAt).toLocaleDateString(locale, {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </p>
+                          <p className="dash-text-secondary text-[10px] font-mono">
+                            {a.interventionCount} {t("missions")} ·{" "}
+                            <StarRating rating={a.avgRating} />
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {withdrawOpen && (
         <div
           className="dash-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -1313,11 +1618,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-5">
-              <h2
-                className="dash-page-title text-lg font-bold"
-              >
-                {t("Retirer les fonds")}
-              </h2>
+              <h2 className="dash-page-title text-lg font-bold">{t("Retirer les fonds")}</h2>
               <button
                 onClick={handleWithdrawClose}
                 disabled={withdrawSubmitting}
@@ -1329,29 +1630,19 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
 
             {withdrawSuccess ? (
               <div className="text-center py-8">
-                <p className="dash-text-green text-sm">
-                  {withdrawSuccess}
-                </p>
+                <p className="dash-text-green text-sm">{withdrawSuccess}</p>
               </div>
             ) : withdrawStep === "form" ? (
               <>
-            <div
-              className="dash-card p-5 rounded-2xl"
-            >
-                  <p className="dash-text-secondary text-xs mb-1">
-                    {t("Solde disponible")}
-                  </p>
+                <div className="dash-card p-5 rounded-2xl">
+                  <p className="dash-text-secondary text-xs mb-1">{t("Solde disponible")}</p>
                   <p className="dash-text-primary text-2xl font-bold font-mono">
                     {formatAmount(balance, locale)}{" "}
-                    <span className="dash-text-muted text-sm font-normal">
-                      FCFA
-                    </span>
+                    <span className="dash-text-muted text-sm font-normal">FCFA</span>
                   </p>
                 </div>
 
-                <p
-                  className="dash-section-label-alt text-xs font-semibold mb-2"
-                >
+                <p className="dash-section-label-alt text-xs font-semibold mb-2">
                   {t("Méthode de retrait")}
                 </p>
                 <div className="grid grid-cols-3 gap-2 mb-5">
@@ -1373,11 +1664,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   ))}
                 </div>
 
-                <p
-                  className="dash-section-label-alt text-xs font-semibold mb-2"
-                >
-                  {t("Montant")}
-                </p>
+                <p className="dash-section-label-alt text-xs font-semibold mb-2">{t("Montant")}</p>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -1387,12 +1674,8 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   className="dash-input w-full rounded-xl px-4 py-3 text-sm outline-none mb-5"
                 />
 
-                <p
-                  className="dash-section-label-alt text-xs font-semibold mb-2"
-                >
-                  {withdrawMethod === "bank"
-                    ? t("Numéro de compte")
-                    : t("Numéro de téléphone")}
+                <p className="dash-section-label-alt text-xs font-semibold mb-2">
+                  {withdrawMethod === "bank" ? t("Numéro de compte") : t("Numéro de téléphone")}
                 </p>
                 <input
                   type="text"
@@ -1407,11 +1690,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                   className="dash-input w-full rounded-xl px-4 py-3 text-sm outline-none mb-5"
                 />
 
-                {withdrawError && (
-                  <p className="dash-text-red text-sm mb-4">
-                    {withdrawError}
-                  </p>
-                )}
+                {withdrawError && <p className="dash-text-red text-sm mb-4">{withdrawError}</p>}
 
                 <button
                   onClick={goToConfirm}
@@ -1422,40 +1701,28 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
               </>
             ) : (
               <>
-                <div
-                  className="dash-confirm-summary rounded-xl p-4 mb-4 space-y-2"
-                >
+                <div className="dash-confirm-summary rounded-xl p-4 mb-4 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="dash-text-secondary text-xs">
-                      {t("Méthode")}
-                    </span>
+                    <span className="dash-text-secondary text-xs">{t("Méthode")}</span>
                     <span className="dash-text-primary text-xs font-semibold">
                       {t(withdrawMethods.find((m) => m.key === withdrawMethod)?.label ?? "")}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="dash-text-secondary text-xs">
-                      {t("Compte")}
-                    </span>
+                    <span className="dash-text-secondary text-xs">{t("Compte")}</span>
                     <span className="dash-text-primary text-xs font-mono font-semibold">
                       {withdrawAccount}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="dash-text-secondary text-xs">
-                      {t("Montant")}
-                    </span>
+                    <span className="dash-text-secondary text-xs">{t("Montant")}</span>
                     <span className="dash-text-green text-sm font-bold font-mono">
                       {formatAmount(Number(withdrawAmount), locale)} FCFA
                     </span>
                   </div>
                 </div>
 
-                {withdrawError && (
-                  <p className="dash-text-red text-sm mb-4">
-                    {withdrawError}
-                  </p>
-                )}
+                {withdrawError && <p className="dash-text-red text-sm mb-4">{withdrawError}</p>}
 
                 <div className="flex gap-3">
                   <button

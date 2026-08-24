@@ -10,6 +10,7 @@ import com.mboatech.backend.repository.TechnicianProfileRepository;
 import com.mboatech.backend.repository.TechnicianRecommendationRepository;
 import com.mboatech.backend.repository.TechnicianRecommendationRepository.RecommendationStats;
 import com.mboatech.backend.repository.UserRepository;
+import com.mboatech.backend.service.AttestationService;
 import com.mboatech.backend.service.NotificationService;
 import com.mboatech.backend.service.TechnicianEventService;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -42,6 +43,7 @@ public class TechnicianCatalogController {
     private final ClientRequestRepository clientRequestRepository;
     private final ClientProfileRepository clientProfileRepository;
     private final UserRepository userRepository;
+    private final AttestationService attestationService;
 
     public TechnicianCatalogController(TechnicianProfileRepository technicianProfileRepository,
                                        TechnicianEventService technicianEventService,
@@ -49,7 +51,8 @@ public class TechnicianCatalogController {
                                        NotificationService notificationService,
                                        ClientRequestRepository clientRequestRepository,
                                        ClientProfileRepository clientProfileRepository,
-                                       UserRepository userRepository) {
+                                       UserRepository userRepository,
+                                       AttestationService attestationService) {
         this.technicianProfileRepository = technicianProfileRepository;
         this.technicianEventService = technicianEventService;
         this.technicianRecommendationRepository = technicianRecommendationRepository;
@@ -57,6 +60,7 @@ public class TechnicianCatalogController {
         this.clientRequestRepository = clientRequestRepository;
         this.clientProfileRepository = clientProfileRepository;
         this.userRepository = userRepository;
+        this.attestationService = attestationService;
     }
 
     @GetMapping("/categories")
@@ -67,8 +71,15 @@ public class TechnicianCatalogController {
         technicianProfileRepository.findAll().stream()
                 .map(TechnicianProfile::getDomain)
                 .filter(domain -> domain != null && !domain.isBlank())
-                .map(String::trim)
-                .forEach(domain -> uniqueCategories.computeIfAbsent(normalizeDomain(domain), ignored -> domain));
+                .forEach(domain -> {
+                    String[] parts = domain.split(",");
+                    for (String part : parts) {
+                        String trimmed = part.trim();
+                        if (!trimmed.isEmpty()) {
+                            uniqueCategories.computeIfAbsent(normalizeDomain(trimmed), ignored -> trimmed);
+                        }
+                    }
+                });
 
         List<String> categories = uniqueCategories.values().stream()
                 .sorted(Comparator.comparing(this::normalizeDomain))
@@ -93,12 +104,16 @@ public class TechnicianCatalogController {
 
         List<TechnicianProfile> filteredProfiles = profiles.stream()
                 .filter(profile -> {
-                    String profileDomain = normalizeDomain(profile.getDomain());
-                    boolean matches = selectedDomain.isBlank() || profileDomain.equals(selectedDomain) || profileDomain.contains(selectedDomain);
-                    if (matches) {
-                        logger.debug("Profile id={} domain='{}' matches selected='{}'", profile.getId(), profile.getDomain(), selectedDomain);
+                    if (selectedDomain.isBlank()) return true;
+                    String[] parts = (profile.getDomain() != null ? profile.getDomain() : "").split(",");
+                    for (String part : parts) {
+                        String profileDomain = normalizeDomain(part);
+                        if (!profileDomain.isEmpty() && (profileDomain.equals(selectedDomain) || profileDomain.contains(selectedDomain) || selectedDomain.contains(profileDomain))) {
+                            logger.debug("Profile id={} domain='{}' matches selected='{}'", profile.getId(), profile.getDomain(), selectedDomain);
+                            return true;
+                        }
                     }
-                    return matches;
+                    return false;
                 })
                 .toList();
 
@@ -170,6 +185,23 @@ public class TechnicianCatalogController {
                 .map(this::mapRecommendationToDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Attestations publiques du technicien : affichées sur son profil pour
+     * rassurer les clients (toutes catégories confondues).
+     */
+    @GetMapping("/{id}/attestations")
+    public ResponseEntity<List<Map<String, Object>>> getAttestations(@PathVariable("id") Long id) {
+        if (technicianProfileRepository.findById(id).isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+        try {
+            return ResponseEntity.ok(attestationService.getHistory(id));
+        } catch (Exception e) {
+            logger.error("Erreur chargement attestations du technicien {}", id, e);
+            return ResponseEntity.ok(List.of());
+        }
     }
 
     @PostMapping("/{id}/recommendations")

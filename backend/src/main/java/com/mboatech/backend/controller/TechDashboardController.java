@@ -118,6 +118,9 @@ public class TechDashboardController {
         Long missions = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM service_requests WHERE technician_id = ?",
                 Long.class, techProfileId);
+        Long completedMissions = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM service_requests WHERE technician_id = ? AND status = 'completed'",
+                Long.class, techProfileId);
 
         List<Map<String, Object>> activeChantiers = new ArrayList<>();
         requestRepository.findByTechnicianIdOrderByCreatedAtDesc(techProfileId).stream()
@@ -149,6 +152,7 @@ public class TechDashboardController {
         data.put("held", held);
         data.put("completedThisMonth", completedThisMonth);
         data.put("missions", missions);
+        data.put("completedMissions", completedMissions);
         data.put("ratingAvg", liveRatingAvg(profile));
         data.put("ratingCount", liveRatingCount(profile));
         data.put("successRate", profile.getSuccessRate());

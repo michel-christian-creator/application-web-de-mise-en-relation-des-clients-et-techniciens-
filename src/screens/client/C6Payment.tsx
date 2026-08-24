@@ -549,10 +549,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
               >
                 {t("Rouvrir la page Paymee")}
               </button>
-              <button
-                onClick={cancelPending}
-                className="w-full py-2 text-xs payment-text-muted"
-              >
+              <button onClick={cancelPending} className="w-full py-2 text-xs payment-text-muted">
                 {t("Annuler et revenir")}
               </button>
               <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin mx-auto mt-1 payment-spinner-blue" />
@@ -614,9 +611,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                   <p className="text-4xl font-bold font-mono payment-text-bright">
                     {devis ? formatAmount(devis.amount) : "—"}
                   </p>
-                  <p className="text-base payment-text-muted">
-                    FCFA
-                  </p>
+                  <p className="text-base payment-text-muted">FCFA</p>
                 </div>
                 <div className="flex items-center justify-between mt-2">
                   <span className="text-xs payment-text-muted">
@@ -639,12 +634,9 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                   <button
                     key={m.key}
                     onClick={() => setMode(m.key)}
-                    className="flex items-center gap-4 p-4 rounded-xl text-left"
-                    style={{
-                      background: mode === m.key ? "#1E3A6A" : "#1E2A42",
-                      border: `1px solid ${mode === m.key ? "rgba(37,99,235,0.5)" : "transparent"}`,
-                      boxShadow: mode === m.key ? "0 0 0 1px rgba(37,99,235,0.2)" : "none",
-                    }}
+                    className={`flex items-center gap-4 p-4 rounded-xl text-left ${
+                      mode === m.key ? "payment-mode-option-selected" : "payment-mode-option"
+                    }`}
                   >
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 payment-icon-container">
                       {typeof m.icon === "string" ? m.icon : m.icon}
@@ -660,10 +652,9 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                       </p>
                     </div>
                     <div
-                      className="w-5 h-5 rounded-full flex-shrink-0"
-                      style={{
-                        border: `2px solid ${mode === m.key ? "#2563EB" : "rgba(255,255,255,0.2)"}`,
-                      }}
+                      className={`w-5 h-5 rounded-full flex-shrink-0 ${
+                        mode === m.key ? "payment-mode-radio-selected" : "payment-mode-radio"
+                      }`}
                     >
                       {mode === m.key && (
                         <div
@@ -695,7 +686,9 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                     {t(
                       "MboaTech conserve vos fonds en garde sécurisée. Le paiement n'est libéré à l'artisan que lorsque",
                     )}{" "}
-                    <strong className="payment-text-bright">{t("vous validez explicitement")}</strong>{" "}
+                    <strong className="payment-text-bright">
+                      {t("vous validez explicitement")}
+                    </strong>{" "}
                     {t("la fin et la qualité des travaux.")}
                   </p>
                 </div>
@@ -704,9 +697,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
 
             {/* Summary */}
             <div className="p-5 rounded-2xl payment-card">
-              <p className="text-xs font-semibold mb-3 payment-section-label">
-                {t("Résumé")}
-              </p>
+              <p className="text-xs font-semibold mb-3 payment-section-label">{t("Résumé")}</p>
               <div className="flex flex-col gap-2.5">
                 {[
                   {
@@ -736,9 +727,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                   },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between">
-                    <span className="text-xs payment-text-muted">
-                      {row.label}
-                    </span>
+                    <span className="text-xs payment-text-muted">{row.label}</span>
                     <span
                       className="text-xs font-medium font-mono"
                       style={{ color: row.highlight ? "#E8EDF5" : "#94A3B8" }}
@@ -767,22 +756,15 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
               disabled={
                 !mode || !paymentsEnabled || !devis?.requestId || !devis.amount || submitting
               }
-              className="w-full py-4 rounded-xl font-bold text-base text-white"
-              style={{
-                background: !paymentsEnabled
-                  ? "#6B7280"
+              className={`w-full py-4 rounded-xl font-bold text-base text-white payment-font disabled:cursor-not-allowed ${
+                !paymentsEnabled
+                  ? "payment-btn-confirm-disabled"
                   : submitting
-                    ? "#1E3A6A"
+                    ? "payment-btn-confirm-submitting"
                     : mode
-                      ? "linear-gradient(135deg, #059669, #047857)"
-                      : "#1E2A42",
-                fontFamily: "Poppins, sans-serif",
-                boxShadow:
-                  mode && paymentsEnabled && !submitting
-                    ? "0 4px 20px rgba(5,150,105,0.4)"
-                    : "none",
-                cursor: mode && paymentsEnabled && !submitting ? "pointer" : "not-allowed",
-              }}
+                      ? "payment-btn-confirm-ready"
+                      : "payment-btn-confirm-empty"
+              }`}
             >
               {submitting
                 ? t("Sécurisation des fonds…")
@@ -821,13 +803,9 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
             )}
           </div>
           {!historyOpen ? null : historyLoading ? (
-            <p className="text-sm payment-text-muted">
-              {t("Chargement…")}
-            </p>
+            <p className="text-sm payment-text-muted">{t("Chargement…")}</p>
           ) : history.length === 0 ? (
-            <p className="text-sm payment-text-muted">
-              {t("Aucune transaction pour le moment.")}
-            </p>
+            <p className="text-sm payment-text-muted">{t("Aucune transaction pour le moment.")}</p>
           ) : (
             <div className="flex flex-col gap-2.5">
               {history.map((item) => {
@@ -982,11 +960,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
                         className="px-3 py-2.5 rounded-lg text-sm w-full outline-none payment-input"
                       />
                     </div>
-                    {withdrawError && (
-                      <p className="text-xs payment-text-red">
-                        {withdrawError}
-                      </p>
-                    )}
+                    {withdrawError && <p className="text-xs payment-text-red">{withdrawError}</p>}
                     <button
                       onClick={handleSubmitWithdraw}
                       disabled={withdrawSubmitting}

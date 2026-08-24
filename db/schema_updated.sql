@@ -184,3 +184,17 @@ CREATE TABLE IF NOT EXISTS `disputes` (
   CONSTRAINT `fk_disputes_request` FOREIGN KEY (`service_request_id`) REFERENCES `service_requests` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_disputes_reported_by` FOREIGN KEY (`reported_by_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `attestations` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `technician_id` BIGINT UNSIGNED NOT NULL,
+  `intervention_count` INT UNSIGNED NOT NULL,
+  `avg_rating` DECIMAL(3,1) NOT NULL,
+  `level` ENUM('BRONZE','SILVER','GOLD','DIAMOND') NOT NULL,
+  `attestation_number` VARCHAR(30) NOT NULL,
+  `generated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_attestation_number` (`attestation_number`),
+  KEY `idx_attestation_technician` (`technician_id`),
+  CONSTRAINT `fk_attestation_technician` FOREIGN KEY (`technician_id`) REFERENCES `technicians` (`id`) ON DELETE CASCADE
+) ENGINE = InnoDB;

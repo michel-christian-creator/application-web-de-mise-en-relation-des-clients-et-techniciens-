@@ -126,8 +126,7 @@ export default function C4Request({
           </h1>
           <p className="text-sm req-muted">
             {t("Décrivez votre problème pour qu'")}
-            {artisan?.fullname || t("un artisan")}{" "}
-            {t("puisse préparer son intervention")}
+            {artisan?.fullname || t("un artisan")} {t("puisse préparer son intervention")}
           </p>
           <p className="text-sm mt-2 req-text-secondary">
             {t("Domaine :")}{" "}
@@ -136,24 +135,20 @@ export default function C4Request({
         </div>
 
         {isSelf && artisan && (
-          <div
-            className="mb-5 rounded-2xl p-4 text-sm req-banner-red"
-          >
+          <div className="mb-5 rounded-2xl p-4 text-sm req-banner-red">
             <span className="font-semibold req-text-red-light">
               {t("⛔ Intervention sur vous-même impossible")}
             </span>{" "}
             {t(" — vous êtes le technicien sélectionné (")}
             <strong>{artisan.fullname}</strong>
-            {t("). Un technicien ne peut pas se demander une intervention à lui-même. Choisissez un autre technicien pour publier votre demande.")}
+            {t(
+              "). Un technicien ne peut pas se demander une intervention à lui-même. Choisissez un autre technicien pour publier votre demande.",
+            )}
           </div>
         )}
         {artisan && !isSelf && (
-          <div
-            className="mb-5 rounded-2xl p-4 text-sm req-banner-blue"
-          >
-            <span className="font-semibold req-text-blue">
-              {t("🎯 Demande réservée")}
-            </span>{" "}
+          <div className="mb-5 rounded-2xl p-4 text-sm req-banner-blue">
+            <span className="font-semibold req-text-blue">{t("🎯 Demande réservée")}</span>{" "}
             {t(" — votre demande sera envoyée uniquement à ")}
             <strong>{artisan.fullname}</strong>
             {t(" (")}
@@ -166,25 +161,15 @@ export default function C4Request({
           {/* Main form */}
           <div className="flex flex-col gap-5">
             {/* Domaine */}
-            <div
-              className="p-5 rounded-2xl req-card"
-            >
-              <p
-                className="text-xs font-semibold mb-3 req-label"
-              >
+            <div className="p-5 rounded-2xl req-card">
+              <p className="text-xs font-semibold mb-3 req-label">
                 {t("Domaine de l'intervention")}
               </p>
               {artisan ? (
-                <div
-                  className="w-full flex items-center gap-3 rounded-xl px-4 py-4 text-sm req-field-blue"
-                >
+                <div className="w-full flex items-center gap-3 rounded-xl px-4 py-4 text-sm req-field-blue">
                   <span style={{ fontSize: "1.1rem" }}>{artisan.icon || "🛠️"}</span>
                   <div>
-                    <p
-                      className="font-semibold req-font-poppins req-text-blue"
-                    >
-                      {artisan.metier}
-                    </p>
+                    <p className="font-semibold req-font-poppins req-text-blue">{artisan.metier}</p>
                     <p className="text-xs req-muted">
                       {t("Domaine verrouillé sur le technicien sélectionné")}
                     </p>
@@ -215,18 +200,14 @@ export default function C4Request({
             </div>
 
             {/* Description */}
-            <div
-              className="p-5 rounded-2xl req-card"
-            >
-              <p
-                className="text-xs font-semibold mb-3 req-label"
-              >
-                {t("Description du problème")}
-              </p>
+            <div className="p-5 rounded-2xl req-card">
+              <p className="text-xs font-semibold mb-3 req-label">{t("Description du problème")}</p>
               <textarea
                 value={desc}
                 onChange={(e) => setDesc(e.target.value)}
-                placeholder={t("Décrivez votre problème au technicien avec le plus de précisions possible : localisation exacte, depuis quand, symptômes observés...")}
+                placeholder={t(
+                  "Décrivez votre problème au technicien avec le plus de précisions possible : localisation exacte, depuis quand, symptômes observés...",
+                )}
                 rows={7}
                 className="w-full rounded-xl px-4 py-4 text-sm resize-none outline-none req-input"
               />
@@ -244,13 +225,9 @@ export default function C4Request({
             </div>
 
             {/* Media */}
-            <div
-              className="p-5 rounded-2xl req-card"
-            >
+            <div className="p-5 rounded-2xl req-card">
               <div className="flex items-center justify-between gap-3 mb-3">
-                <p
-                  className="text-xs font-semibold req-label"
-                >
+                <p className="text-xs font-semibold req-label">
                   {t("Photos & documents de la panne")}
                 </p>
                 <span
@@ -271,11 +248,11 @@ export default function C4Request({
                 <ImageUploader files={files} onChange={(f) => setFiles(f)} maxFiles={MAX_FILES} />
               </div>
               <p className="text-xs mt-3 flex items-center gap-1 req-muted">
-                <span>{t("JPG, PNG, PDF · Glissez-déposez ou cliquez · Max 10 Mo par fichier")}</span>
+                <span>
+                  {t("JPG, PNG, PDF · Glissez-déposez ou cliquez · Max 10 Mo par fichier")}
+                </span>
                 {files.length === MAX_FILES && (
-                  <span
-                    className="rounded-full px-2 py-0.5 text-[10px] font-semibold req-badge-warn"
-                  >
+                  <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold req-badge-warn">
                     {t("Limite atteinte")}
                   </span>
                 )}
@@ -286,24 +263,21 @@ export default function C4Request({
           {/* Sidebar */}
           <div className="flex flex-col gap-5">
             {/* Urgence */}
-            <div
-              className="p-5 rounded-2xl req-card"
-            >
-              <p
-                className="text-xs font-semibold mb-4 req-label"
-              >
-                {t("Niveau d'urgence")}
-              </p>
+            <div className="p-5 rounded-2xl req-card">
+              <p className="text-xs font-semibold mb-4 req-label">{t("Niveau d'urgence")}</p>
               <div className="flex flex-col gap-2">
                 {urgenceOpts.map((opt) => (
                   <button
                     key={opt.key}
                     onClick={() => setUrgence(opt.key)}
-                    className="flex items-start gap-3 p-4 rounded-xl text-left"
-                    style={{
-                      background: urgence === opt.key ? opt.bg : "#1E2A42",
-                      border: `1px solid ${urgence === opt.key ? opt.border : "transparent"}`,
-                    }}
+                    className={`flex items-start gap-3 p-4 rounded-xl text-left ${
+                      urgence === opt.key ? "" : "req-urgence-option"
+                    }`}
+                    style={
+                      urgence === opt.key
+                        ? { background: opt.bg, border: `1px solid ${opt.border}` }
+                        : undefined
+                    }
                   >
                     <div
                       className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5"
@@ -315,16 +289,14 @@ export default function C4Request({
                     </div>
                     <div>
                       <p
-                        className="text-sm font-semibold req-font-poppins"
-                        style={{
-                          color: urgence === opt.key ? opt.color : "#E8EDF5",
-                        }}
+                        className={`text-sm font-semibold req-font-poppins ${
+                          urgence === opt.key ? "" : "req-urgence-label"
+                        }`}
+                        style={urgence === opt.key ? { color: opt.color } : undefined}
                       >
                         {opt.label}
                       </p>
-                      <p className="text-xs mt-0.5 req-muted">
-                        {opt.desc}
-                      </p>
+                      <p className="text-xs mt-0.5 req-muted">{opt.desc}</p>
                     </div>
                   </button>
                 ))}
@@ -332,19 +304,11 @@ export default function C4Request({
             </div>
 
             {/* Recap */}
-            <div
-              className="p-5 rounded-2xl req-card"
-            >
-              <p
-                className="text-xs font-semibold mb-3 req-label"
-              >
-                {t("Récapitulatif")}
-              </p>
+            <div className="p-5 rounded-2xl req-card">
+              <p className="text-xs font-semibold mb-3 req-label">{t("Récapitulatif")}</p>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs req-text-secondary">
-                    {t("Urgence")}
-                  </span>
+                  <span className="text-xs req-text-secondary">{t("Urgence")}</span>
                   <span
                     className="text-xs font-medium"
                     style={{
@@ -355,9 +319,7 @@ export default function C4Request({
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs req-text-secondary">
-                    {t("Photos")}
-                  </span>
+                  <span className="text-xs req-text-secondary">{t("Photos")}</span>
                   <span className="text-xs font-mono req-text-light">
                     {files.length} {t("fichier(s)")}
                   </span>
@@ -442,28 +404,15 @@ export default function C4Request({
                 }
               }}
               disabled={
-                isSelf ||
-                desc.trim().length === 0 ||
-                domainValue.trim().length === 0 ||
-                submitting
+                isSelf || desc.trim().length === 0 || domainValue.trim().length === 0 || submitting
               }
-              className="w-full py-4 rounded-xl font-bold text-base text-white req-font-poppins"
-              style={{
-                background:
-                  isSelf
-                    ? "#3B1D2A"
-                    : desc.trim().length > 0 && domainValue.trim().length > 0
-                      ? "linear-gradient(135deg, #2563EB, #1D4ED8)"
-                      : "#1E2A42",
-                boxShadow:
-                  !isSelf && desc.trim().length > 0 && domainValue.trim().length > 0
-                    ? "0 4px 20px rgba(37,99,235,0.35)"
-                    : "none",
-                cursor:
-                  isSelf || desc.trim().length === 0 || domainValue.trim().length === 0
-                    ? "not-allowed"
-                    : "pointer",
-              }}
+              className={`w-full py-4 rounded-xl font-bold text-base text-white req-font-poppins ${
+                isSelf
+                  ? "req-btn-self"
+                  : desc.trim().length > 0 && domainValue.trim().length > 0
+                    ? "req-btn-ready"
+                    : "req-btn-empty"
+              }`}
             >
               {submitting
                 ? t("Publication en cours…")
@@ -471,11 +420,7 @@ export default function C4Request({
                   ? t("Intervention sur vous-même impossible")
                   : t("Publier et trouver un artisan")}
             </button>
-            {error && (
-              <p className="mt-3 text-sm req-text-red">
-                {error}
-              </p>
-            )}
+            {error && <p className="mt-3 text-sm req-text-red">{error}</p>}
           </div>
         </div>
       </div>

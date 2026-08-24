@@ -79,6 +79,22 @@ missions:
   max-declines: ${MISSIONS_MAX_DECLINES:3}
   declines-window-hours: ${MISSIONS_DECLINES_WINDOW_HOURS:24}
 
+# Programme d'attestations de service des techniciens.
+# - min-rating : note moyenne minimum pour générer une attestation.
+# - number-prefix : préfixe des numéros (suffixe = ID auto-incrément, unique).
+# - signatory-name / signatory-role : signature unique imprimée sur le PDF.
+# - threshold-* : interventions requises par niveau (bronze < silver < gold < diamond).
+attestation:
+  min-rating: ${ATTESTATION_MIN_RATING:3.5}
+  number-prefix: ${ATTESTATION_NUMBER_PREFIX:MBT-}
+  platform-name: ${ATTESTATION_PLATFORM_NAME:MboaTech}
+  title: ${ATTESTATION_TITLE:ATTESTATION DE SERVICE}
+  signatory-role: ${ATTESTATION_SIGNATORY_ROLE:RESPONSABLE PLATEFORME}
+  threshold-bronze: ${ATTESTATION_THRESHOLD_BRONZE:1}
+  threshold-silver: ${ATTESTATION_THRESHOLD_SILVER:2}
+  threshold-gold: ${ATTESTATION_THRESHOLD_GOLD:3}
+  threshold-diamond: ${ATTESTATION_THRESHOLD_DIAMOND:5}
+
 admin:
   email: ${ADMIN_EMAIL:admin@mboatech.com}
   password: ${ADMIN_PASSWORD:}

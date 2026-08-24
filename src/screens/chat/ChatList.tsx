@@ -144,8 +144,6 @@ function avatarColor(name: string): string {
   return AVATAR_COLORS[hash % AVATAR_COLORS.length]
 }
 
-const MESSAGE_SENT_COLOR = "#2563EB"
-
 function formatAmount(value: number): string {
   try {
     return new Intl.NumberFormat("fr-FR").format(value)
@@ -349,9 +347,10 @@ export default function ChatList({
     const headers = token ? { Authorization: `Bearer ${token}` } : undefined
 
     const markRead = () => {
-      if (myUserId !== undefined) {
+      const sent =
+        myUserId !== undefined &&
         socketRef.current?.sendRead({ requestId: selectedId, userId: myUserId })
-      } else if (token) {
+      if (!sent && token) {
         fetch(`${API_BASE_URL}/api/chat/messages/${selectedId}/read`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -381,7 +380,10 @@ export default function ChatList({
           setError(err instanceof Error ? err.message : tr("Erreur réseau"))
         })
         .finally(() => {
-          if (initial) setLoading(false)
+          if (initial) {
+            setLoading(false)
+            markRead()
+          }
         })
     }
 
@@ -391,6 +393,9 @@ export default function ChatList({
       onMessage: (message) => {
         upsertMessage(message as IncomingChatMessage)
         bumpConversation(message as ChatMessage)
+        if (!(myUserId !== undefined && (message as ChatMessage).senderUserId === myUserId)) {
+          markRead()
+        }
       },
       onRead: (messageIds) => {
         const ids = new Set(messageIds)
@@ -1022,17 +1027,9 @@ export default function ChatList({
           </div>
         )}
 
-        {error && (
-          <div className="cl-alert-error mb-4 p-3 rounded-xl text-sm">
-            {error}
-          </div>
-        )}
+        {error && <div className="cl-alert-error mb-4 p-3 rounded-xl text-sm">{error}</div>}
 
-        {success && (
-          <div className="cl-alert-success mb-4 p-3 rounded-xl text-sm">
-            {success}
-          </div>
-        )}
+        {success && <div className="cl-alert-success mb-4 p-3 rounded-xl text-sm">{success}</div>}
 
         {loading && conversations.length === 0 ? (
           <div className="cl-text-muted text-center py-16">
@@ -1157,7 +1154,7 @@ export default function ChatList({
             >
               {!selected ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "#1E2A42" }}>
+                  <div className="cl-empty-icon flex h-16 w-16 items-center justify-center rounded-full">
                     <ChatBubbleIcon className="h-8 w-8 text-slate-400" />
                   </div>
                   <p className="cl-text-primary text-sm font-medium">
@@ -1235,7 +1232,10 @@ export default function ChatList({
                           <span className="cl-modal-warning-icon flex items-center justify-center w-10 h-10 rounded-full text-lg">
                             ⚠
                           </span>
-                          <h3 className="cl-font-heading text-base font-bold" style={{ color: "#F1F5F9" }}>
+                          <h3
+                            className="cl-font-heading text-base font-bold"
+                            style={{ color: "#F1F5F9" }}
+                          >
                             {tr("Confirmer la libération des fonds")}
                           </h3>
                         </div>
@@ -1279,7 +1279,9 @@ export default function ChatList({
                     )}
                     {!loading && messages.length === 0 && (
                       <p className="cl-text-light-muted text-sm text-center mt-10">
-                        {tr("Aucun message pour le moment. Envoyez le premier message pour démarrer la conversation.")}
+                        {tr(
+                          "Aucun message pour le moment. Envoyez le premier message pour démarrer la conversation.",
+                        )}
                       </p>
                     )}
                     {messages.map((m) => {
@@ -1325,9 +1327,7 @@ export default function ChatList({
                                 <div className="px-4 py-3">
                                   <p className="cl-text-primary text-3xl font-bold font-mono">
                                     {formatAmount(Number(m.devisAmount))}{" "}
-                                    <span className="cl-text-muted text-sm">
-                                      FCFA
-                                    </span>
+                                    <span className="cl-text-muted text-sm">FCFA</span>
                                   </p>
                                 </div>
                                 {m.devisStatus === "pending" && !mine && role === "client" ? (
@@ -1452,12 +1452,9 @@ export default function ChatList({
                         >
                           <div className="max-w-[70%]">
                             <div
-                              className="rounded-2xl px-4 py-2.5 shadow-lg"
-                              style={{
-                                background: mine ? MESSAGE_SENT_COLOR : "#1E2A42",
-                                borderBottomRightRadius: mine ? "4px" : undefined,
-                                borderBottomLeftRadius: !mine ? "4px" : undefined,
-                              }}
+                              className={`rounded-2xl px-4 py-2.5 shadow-lg ${
+                                mine ? "cl-bubble-mine" : "cl-bubble-other"
+                              }`}
                             >
                               {m.imageUrl && (
                                 <img
@@ -1472,11 +1469,8 @@ export default function ChatList({
                               </p>
                             </div>
                             <p
-                              className="mt-0.5 px-1 text-[10px]"
-                              style={{
-                                color: "#64748B",
-                                textAlign: mine ? "right" : "left",
-                              }}
+                              className="cl-text-muted mt-0.5 px-1 text-[10px]"
+                              style={{ textAlign: mine ? "right" : "left" }}
                             >
                               {mine && <ReadReceipt read={!!m.read} />}
                               {m.time}
@@ -1521,11 +1515,7 @@ export default function ChatList({
                         <button
                           onClick={send}
                           disabled={!input.trim() || isSending}
-                          className="flex h-11 w-11 items-center justify-center rounded-full flex-shrink-0 text-white"
-                          style={{
-                            background: input.trim() ? "#2563EB" : "#1E2A42",
-                            boxShadow: input.trim() ? "0 2px 10px rgba(37,99,235,0.35)" : "none",
-                          }}
+                          className="cl-btn-action cl-btn-send flex h-11 w-11 items-center justify-center rounded-full flex-shrink-0"
                           aria-label={tr("Envoyer")}
                         >
                           <svg
@@ -1552,9 +1542,7 @@ export default function ChatList({
             {showDevisPanel && (
               <aside className="cl-panel flex w-full flex-col overflow-hidden rounded-2xl lg:w-[260px] lg:flex-shrink-0">
                 <div className="cl-header-gradient flex-shrink-0 px-4 py-3">
-                  <p className="cl-font-heading cl-text-primary text-sm font-bold">
-                    {tr("Devis")}
-                  </p>
+                  <p className="cl-font-heading cl-text-primary text-sm font-bold">{tr("Devis")}</p>
                 </div>
                 <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
                   <div className="cl-inner-card rounded-2xl p-4">
@@ -1581,20 +1569,16 @@ export default function ChatList({
                     <button
                       onClick={sendDevis}
                       disabled={!devisInput.trim() || sendingDevis}
-                      className="mt-4 w-full rounded-xl py-3 text-sm font-bold text-white"
-                      style={{
-                        background: devisInput.trim()
-                          ? "linear-gradient(135deg, #2563EB, #1D4ED8)"
-                          : "#1E2A42",
-                        boxShadow: devisInput.trim() ? "0 4px 16px rgba(37,99,235,0.35)" : "none",
-                      }}
+                      className="cl-btn-action cl-btn-devis mt-4 w-full rounded-xl py-3 text-sm font-bold"
                     >
                       {sendingDevis
                         ? tr("Envoi…")
                         : `${tr("Envoyer le devis à")} ${partnerDisplay}`}
                     </button>
                     <p className="cl-text-muted mt-2 text-[10px] leading-relaxed">
-                      {tr("Le client pourra accepter et procéder au paiement, ou rejeter votre devis.")}
+                      {tr(
+                        "Le client pourra accepter et procéder au paiement, ou rejeter votre devis.",
+                      )}
                     </p>
                   </div>
 
@@ -1653,15 +1637,7 @@ export default function ChatList({
                     <button
                       onClick={sendSchedule}
                       disabled={!scheduleDate || !scheduleTime || sendingSchedule}
-                      className="mt-4 w-full rounded-xl py-3 text-sm font-bold text-white"
-                      style={{
-                        background:
-                          scheduleDate && scheduleTime
-                            ? "linear-gradient(135deg, #059669, #047857)"
-                            : "#1E2A42",
-                        boxShadow:
-                          scheduleDate && scheduleTime ? "0 4px 16px rgba(5,150,105,0.35)" : "none",
-                      }}
+                      className="cl-btn-action cl-btn-schedule mt-4 w-full rounded-xl py-3 text-sm font-bold"
                     >
                       {sendingSchedule
                         ? tr("Envoi…")

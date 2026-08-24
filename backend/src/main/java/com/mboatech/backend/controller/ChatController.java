@@ -198,7 +198,17 @@ public class ChatController {
                 .filter(request -> request.getTechnicianId() == null)
                 .filter(request -> !seenIds.contains(request.getId()))
                 .filter(request -> !declinedIds.contains(request.getId()))
-                .filter(request -> normalizeDomain(request.getCategory()).equals(normalizeDomain(profile.getDomain())))
+                .filter(request -> {
+                    String reqCat = normalizeDomain(request.getCategory());
+                    String[] parts = (profile.getDomain() != null ? profile.getDomain() : "").split(",");
+                    for (String part : parts) {
+                        String d = normalizeDomain(part);
+                        if (!d.isEmpty() && (reqCat.equals(d) || reqCat.contains(d) || d.contains(reqCat))) {
+                            return true;
+                        }
+                    }
+                    return false;
+                })
                 .forEach(request -> response.add(toTechnicianDto(request, "available", myUserId)));
         response.sort((a, b) -> {
             Object ca = a.get("createdAt");
@@ -1068,9 +1078,11 @@ public class ChatController {
 
     /**
      * Surveille les interventions planifiées (statut "assigned") :
-     * - rappel au technicien 10 minutes avant l'heure prévue ;
+     * - rappel au technicien 3 jours puis 2 jours avant l'heure prévue ;
+     * - rappel 1 heure avant ;
+     * - rappel 10 minutes avant l'heure prévue ;
      * - rappel 2 minutes avant ;
-     * - pénalité de non-présentation 10 minutes après l'heure prévue.
+     * - pénalité de non-présentation 1 heure après l'heure prévue.
      */
     @Scheduled(fixedDelay = 30_000)
     @Transactional
@@ -1093,6 +1105,18 @@ public class ChatController {
             String label = "« " + (request.getCategory() != null && !request.getCategory().isBlank()
                     ? request.getCategory() : "intervention") + " »";
             String timeText = formatSchedule(start);
+            notifyOncePerRequest(techUserId, "Rappel : intervention dans 3 jours",
+                    "Votre intervention " + label + " est prévue le " + timeText
+                            + ". Organisez-vous pour être disponible.",
+                    request.getId(), start.minusDays(3), now);
+            notifyOncePerRequest(techUserId, "Rappel : intervention dans 2 jours",
+                    "Votre intervention " + label + " est prévue dans 2 jours, le " + timeText
+                            + ". Vérifiez votre matériel.",
+                    request.getId(), start.minusDays(2), now);
+            notifyOncePerRequest(techUserId, "Rappel : intervention dans 1 heure",
+                    "Votre intervention " + label + " commence dans 1 heure (" + timeText
+                            + "). Mettez-vous en route.",
+                    request.getId(), start.minusHours(1), now);
             if (!now.isBefore(start.minusMinutes(10))) {
                 notifyOnce(techUserId, "Intervention dans 10 minutes",
                         "Votre intervention " + label + " commence à " + timeText + ". Préparez-vous.",
@@ -1103,7 +1127,7 @@ public class ChatController {
                         "Votre intervention " + label + " doit démarrer à " + timeText + ". Cliquez sur « Démarrer ».",
                         request.getId());
             }
-            if (!now.isBefore(start.plusMinutes(10))) {
+            if (!now.isBefore(start.plusHours(1))) {
                 applyNoShowPenalty(request);
             }
         }
@@ -1111,6 +1135,23 @@ public class ChatController {
 
     private void notifyOnce(Long userId, String title, String message, Long requestId) {
         if (notificationService.hasRecentDuplicate(userId, title, message, REMINDER_DEDUP_WINDOW)) {
+            return;
+        }
+        notificationService.create(userId, title, message, "request", requestId);
+    }
+
+    /**
+     * Rappel à horizon long (jours/heures) : envoyé une seule fois par demande,
+     * dès que l'heure de déclenchement (triggerAt) est atteinte. La fenêtre de
+     * 30 minutes de notifyOnce ne convient pas ici car la condition resterait
+     * vraie pendant des jours et provoquerait des doublons.
+     */
+    private void notifyOncePerRequest(Long userId, String title, String message, Long requestId,
+                                      LocalDateTime triggerAt, LocalDateTime now) {
+        if (now.isBefore(triggerAt)) {
+            return;
+        }
+        if (notificationService.existsForRequest(userId, title, requestId)) {
             return;
         }
         notificationService.create(userId, title, message, "request", requestId);
@@ -1136,7 +1177,7 @@ public class ChatController {
                     .map(TechnicianProfile::getUser)
                     .map(User::getId)
                     .ifPresent(userId -> notificationService.create(userId, "Pénalité : non-présentation",
-                            "Vous n'avez pas démarré l'intervention dans les 10 minutes suivant l'heure prévue. "
+                            "Vous n'avez pas démarré l'intervention dans l'heure suivant l'heure prévue. "
                                     + "Un déclin a été enregistré et la demande a été libérée.",
                             "request", request.getId()));
         }
@@ -1216,8 +1257,15 @@ public class ChatController {
                     if (normalizedCategory.isEmpty()) {
                         return true;
                     }
-                    String domain = normalizeDomain(profile.getDomain() != null ? profile.getDomain() : "");
-                    return !domain.isEmpty() && (domain.equals(normalizedCategory) || domain.contains(normalizedCategory) || normalizedCategory.contains(domain));
+                    String rawDomain = profile.getDomain() != null ? profile.getDomain() : "";
+                    String[] parts = rawDomain.split(",");
+                    for (String part : parts) {
+                        String domain = normalizeDomain(part);
+                        if (!domain.isEmpty() && (domain.equals(normalizedCategory) || domain.contains(normalizedCategory) || normalizedCategory.contains(domain))) {
+                            return true;
+                        }
+                    }
+                    return false;
                 })
                 .forEach(profile -> {
                     Long userId = profile.getUser().getId();

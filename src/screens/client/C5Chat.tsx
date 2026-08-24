@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { openChatSocket, type ChatSocket } from "../../utils/chatSocket"
 import { API_BASE_URL } from "../../config"
 import { sanitizeMultiline, hasSqlInjectionPattern } from "../../utils/validation"
@@ -67,6 +67,17 @@ function ReadReceipt({ read }: { read: boolean }) {
 
 const SYSTEM_SENDER_ID = 999999999999
 
+function isOwnMessage(
+  message: Pick<ChatMessage, "sender" | "senderUserId">,
+  viewerRole: "client" | "tech",
+  myUserId?: number,
+): boolean {
+  if (myUserId !== undefined && message.senderUserId !== undefined) {
+    return message.senderUserId === myUserId
+  }
+  return message.sender === (viewerRole === "tech" ? "tech" : "client")
+}
+
 function formatChatTime(iso: string, locale: string): string {
   try {
     const date = new Date(iso)
@@ -120,6 +131,20 @@ export default function C5Chat({
     el.style.height = Math.min(el.scrollHeight, 200) + "px"
   }, [input])
 
+  const markConversationRead = useCallback(() => {
+    if (!requestId) return
+    const token = localStorage.getItem("mboaTechToken")
+    const sent =
+      profile?.userId !== undefined &&
+      socketRef.current?.sendRead({ requestId, userId: profile.userId })
+    if (!sent && token) {
+      fetch(`${API_BASE_URL}/api/chat/messages/${requestId}/read`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch((err) => console.error("Erreur marquage messages lus:", err))
+    }
+  }, [requestId, profile?.userId])
+
   useEffect(() => {
     if (!requestId) return
     let cancelled = false
@@ -162,12 +187,17 @@ export default function C5Chat({
         })
         if (!response.ok) throw new Error(t("Impossible de charger l'historique de chat"))
         const data: ChatMessage[] = await response.json()
+        const list = Array.isArray(data) ? data : []
         setMessages(
-          (Array.isArray(data) ? data : []).map((message) => ({
+          list.map((message) => ({
             ...message,
             time: formatChatTime(message.timestamp, locale),
           })),
         )
+        const hasUnreadFromOther = list.some(
+          (message) => !message.read && !isOwnMessage(message, viewerRole, profile?.userId),
+        )
+        if (hasUnreadFromOther) markConversationRead()
       } catch (err) {
         console.error(err)
         setError(err instanceof Error ? err.message : t("Erreur réseau"))
@@ -177,7 +207,7 @@ export default function C5Chat({
     }
 
     fetchMessages()
-  }, [requestId])
+  }, [requestId, markConversationRead])
 
   const appendMessage = (message: ChatMessage) => {
     setMessages((prev) =>
@@ -192,6 +222,9 @@ export default function C5Chat({
     const socket = openChatSocket(requestId, {
       onMessage: (message) => {
         appendMessage(message as ChatMessage)
+        if (!isOwnMessage(message as ChatMessage, viewerRole, profile?.userId)) {
+          markConversationRead()
+        }
       },
       onRead: (messageIds) => {
         const ids = new Set(messageIds)
@@ -214,6 +247,7 @@ export default function C5Chat({
             )
           })
           .catch((err) => console.error("Erreur rechargement messages:", err))
+          .finally(() => markConversationRead())
       },
     })
     socketRef.current = socket
@@ -222,7 +256,7 @@ export default function C5Chat({
       socketRef.current?.close()
       socketRef.current = null
     }
-  }, [requestId])
+  }, [requestId, markConversationRead])
 
   const send = async () => {
     if (!requestId) return
@@ -442,17 +476,11 @@ export default function C5Chat({
   return (
     <div className="min-h-full p-3 sm:p-6 chat-page">
       {ratingToast && (
-        <div
-          className="fixed top-20 right-4 sm:right-6 z-50 max-w-sm w-[calc(100%-2rem)] sm:w-96 p-4 rounded-2xl chat-toast"
-        >
+        <div className="fixed top-20 right-4 sm:right-6 z-50 max-w-sm w-[calc(100%-2rem)] sm:w-96 p-4 rounded-2xl chat-toast">
           <div className="flex items-start gap-3">
-            <span className="text-2xl leading-none chat-text-yellow">
-              ⭐
-            </span>
+            <span className="text-2xl leading-none chat-text-yellow">⭐</span>
             <div className="flex-1">
-              <p
-                className="text-sm font-bold chat-font-poppins chat-text-light"
-              >
+              <p className="text-sm font-bold chat-font-poppins chat-text-light">
                 {t("Intervention terminée — donnez votre avis")}
               </p>
               <p className="text-xs mt-1 leading-relaxed chat-text-muted">
@@ -475,13 +503,9 @@ export default function C5Chat({
       <div className="mx-auto max-w-[min(1400px,95%)] h-full">
         <div className="grid grid-cols-1 gap-5 h-full lg:grid-cols-[1fr_340px]">
           {/* Chat panel */}
-          <div
-            className="flex flex-col rounded-2xl overflow-hidden chat-panel"
-          >
+          <div className="flex flex-col rounded-2xl overflow-hidden chat-panel">
             {/* Chat header */}
-            <div
-              className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-4 flex-shrink-0 chat-divider-bottom"
-            >
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-4 flex-shrink-0 chat-divider-bottom">
               <div className="flex items-center gap-4 min-w-0">
                 <div className="relative flex-shrink-0">
                   <img
@@ -489,18 +513,12 @@ export default function C5Chat({
                     alt={`${artisanName} — ${t("identité vérifiée")}`}
                     className="w-11 h-11 rounded-full object-cover chat-avatar-border"
                   />
-                  <span
-                    className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 chat-online-dot"
-                  />
+                  <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 chat-online-dot" />
                 </div>
                 <div className="min-w-0">
-                  <p
-                    className="text-sm font-semibold truncate chat-font-poppins chat-text-light"
-                  >
+                  <p className="text-sm font-semibold truncate chat-font-poppins chat-text-light">
                     {artisanName}
-                    <span
-                      className="ml-2 text-xs px-2 py-0.5 rounded-full whitespace-nowrap chat-badge-verified"
-                    >
+                    <span className="ml-2 text-xs px-2 py-0.5 rounded-full whitespace-nowrap chat-badge-verified">
                       ✓ {t("Identité vérifiée")}
                     </span>
                   </p>
@@ -510,12 +528,8 @@ export default function C5Chat({
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold chat-badge-realtime"
-                >
-                  <span
-                    className="h-1.5 w-1.5 animate-pulse rounded-full chat-realtime-dot"
-                  />
+                <span className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold chat-badge-realtime">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full chat-realtime-dot" />
                   {t("Temps réel")}
                 </span>
                 <button
@@ -553,9 +567,7 @@ export default function C5Chat({
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-5 flex flex-col gap-4">
               {loading && (
-                <p className="text-sm chat-text-muted">
-                  {t("Chargement des messages...")}
-                </p>
+                <p className="text-sm chat-text-muted">{t("Chargement des messages...")}</p>
               )}
               {!loading && messages.length === 0 && (
                 <p className="text-sm chat-text-muted">
@@ -568,9 +580,7 @@ export default function C5Chat({
                 if (m.senderUserId === SYSTEM_SENDER_ID) {
                   return (
                     <div key={m.id} className="flex justify-center">
-                      <span
-                        className="rounded-full px-3 py-1.5 text-[11px] font-medium chat-system-msg"
-                      >
+                      <span className="rounded-full px-3 py-1.5 text-[11px] font-medium chat-system-msg">
                         {m.text}
                       </span>
                     </div>
@@ -590,11 +600,7 @@ export default function C5Chat({
                             className="rounded-xl mb-3 w-full object-cover cursor-pointer chat-msg-image"
                           />
                         )}
-                        <p
-                          className="text-sm leading-relaxed chat-msg-text"
-                        >
-                          {m.text}
-                        </p>
+                        <p className="text-sm leading-relaxed chat-msg-text">{m.text}</p>
                       </div>
                       <p
                         className="text-xs mt-1 px-1 chat-text-dark-muted"
@@ -612,9 +618,7 @@ export default function C5Chat({
             </div>
 
             {/* Input */}
-            <div
-              className="flex items-center gap-2 px-3 sm:px-6 py-4 flex-shrink-0 chat-divider-top"
-            >
+            <div className="flex items-center gap-2 px-3 sm:px-6 py-4 flex-shrink-0 chat-divider-top">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -649,9 +653,7 @@ export default function C5Chat({
                   <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
                 </svg>
               </button>
-              <div
-                className="flex-1 flex flex-col rounded-xl px-4 py-3 chat-input-container"
-              >
+              <div className="flex-1 flex flex-col rounded-xl px-4 py-3 chat-input-container">
                 <textarea
                   ref={chatInputRef}
                   value={input}
@@ -683,17 +685,14 @@ export default function C5Chat({
               <button
                 onClick={send}
                 disabled={!requestId || !input.trim() || isSending}
-                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{
-                  background: requestId && input.trim() ? "#2563EB" : "#1E2A42",
-                }}
+                className="chat-btn-send w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
               >
                 <svg
                   width="18"
                   height="18"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="white"
+                  stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -703,24 +702,16 @@ export default function C5Chat({
                 </svg>
               </button>
             </div>
-            {error && (
-              <p className="px-6 pb-4 text-sm chat-text-error">
-                {error}
-              </p>
-            )}
+            {error && <p className="px-6 pb-4 text-sm chat-text-error">{error}</p>}
           </div>
 
           {/* Right sidebar */}
           <div className="flex flex-col gap-4">
             {/* Devis */}
-            <div
-              className="p-5 rounded-2xl chat-card-green"
-            >
+            <div className="p-5 rounded-2xl chat-card-green">
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-lg">📋</span>
-                <p
-                  className="text-sm font-semibold chat-font-poppins chat-text-light"
-                >
+                <p className="text-sm font-semibold chat-font-poppins chat-text-light">
                   {t("Devis")}
                 </p>
                 <span
@@ -754,14 +745,10 @@ export default function C5Chat({
               {devisMessage ? (
                 <>
                   <div className="mb-4 p-3 rounded-xl chat-surface">
-                    <p className="text-xs mb-1 chat-text-muted">
-                      {devisMessage.text}
-                    </p>
+                    <p className="text-xs mb-1 chat-text-muted">{devisMessage.text}</p>
                     <p className="text-2xl font-bold font-mono chat-text-light">
                       {formatAmount(devisAmount)}{" "}
-                      <span className="text-sm font-normal chat-text-dark-muted">
-                        FCFA
-                      </span>
+                      <span className="text-sm font-normal chat-text-dark-muted">FCFA</span>
                     </p>
                     <p className="text-xs mt-1 chat-text-dark-muted">
                       {t("N° demande #")}
@@ -791,12 +778,8 @@ export default function C5Chat({
 
             {/* Validation des travaux */}
             {canValidateWork && (
-              <div
-                className="p-5 rounded-2xl chat-validation-section"
-              >
-                <p
-                  className="text-sm font-semibold mb-1.5 chat-font-poppins chat-text-light"
-                >
+              <div className="p-5 rounded-2xl chat-validation-section">
+                <p className="text-sm font-semibold mb-1.5 chat-font-poppins chat-text-light">
                   {t("Les travaux sont terminés")}
                 </p>
                 <p className="text-xs leading-relaxed mb-4 chat-text-muted">
@@ -827,27 +810,19 @@ export default function C5Chat({
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex items-center gap-3 mb-4">
-                    <span
-                      className="flex items-center justify-center w-10 h-10 rounded-full text-lg chat-modal-icon"
-                    >
+                    <span className="flex items-center justify-center w-10 h-10 rounded-full text-lg chat-modal-icon">
                       ⚠
                     </span>
-                    <h3
-                      className="text-base font-bold chat-font-poppins chat-modal-title"
-                    >
+                    <h3 className="text-base font-bold chat-font-poppins chat-modal-title">
                       {t("Confirmer la libération des fonds")}
                     </h3>
                   </div>
-                  <p
-                    className="text-sm leading-relaxed mb-2 chat-modal-desc"
-                  >
+                  <p className="text-sm leading-relaxed mb-2 chat-modal-desc">
                     {t(
                       "Vous êtes sur le point de valider la fin de l'intervention et de libérer les fonds en garde au technicien.",
                     )}
                   </p>
-                  <p
-                    className="text-sm font-semibold leading-relaxed mb-6 chat-modal-warning"
-                  >
+                  <p className="text-sm font-semibold leading-relaxed mb-6 chat-modal-warning">
                     {t(
                       "Cette action est irréversible. Ne confirmez que si les travaux sont réellement terminés et conformes.",
                     )}
@@ -875,14 +850,8 @@ export default function C5Chat({
             )}
 
             {/* Info artisan */}
-            <div
-              className="p-5 rounded-2xl chat-card"
-            >
-              <p
-                className="text-xs font-semibold mb-3 chat-section-label"
-              >
-                {t("Artisan")}
-              </p>
+            <div className="p-5 rounded-2xl chat-card">
+              <p className="text-xs font-semibold mb-3 chat-section-label">{t("Artisan")}</p>
               <div className="flex items-center gap-3 mb-3">
                 <img
                   src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=48&h=48&fit=crop&auto=format"
@@ -890,12 +859,8 @@ export default function C5Chat({
                   className="w-10 h-10 rounded-full object-cover chat-avatar-border"
                 />
                 <div>
-                  <p className="text-sm font-medium chat-text-light">
-                    {artisanName}
-                  </p>
-                  <p className="text-xs chat-text-dark-muted">
-                    {artisanRole} · ⭐ 4.9
-                  </p>
+                  <p className="text-sm font-medium chat-text-light">{artisanName}</p>
+                  <p className="text-xs chat-text-dark-muted">{artisanRole} · ⭐ 4.9</p>
                 </div>
               </div>
               <p className="text-xs chat-text-dark-muted">
@@ -905,9 +870,7 @@ export default function C5Chat({
             </div>
 
             {/* Réassurance */}
-            <div
-              className="p-4 rounded-2xl chat-reassurance"
-            >
+            <div className="p-4 rounded-2xl chat-reassurance">
               <p className="text-xs leading-relaxed chat-text-muted">
                 🔐 <strong className="chat-text-green">{t("Paiement sécurisé.")}</strong>{" "}
                 {t(
