@@ -348,3 +348,6 @@
 [data-theme="light"] .chat-modal-desc {
   color: #475569 !important;
 }
+[data-theme="light"] .chat-modal-warning {
+  color: #dc2626 !important;
+}

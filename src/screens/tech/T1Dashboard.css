@@ -265,6 +265,15 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.dash-btn-itinerary {
+  background: rgba(245, 158, 11, 0.12);
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.dash-btn-itinerary:hover {
+  background: rgba(245, 158, 11, 0.2);
+}
+
 /* ── Light theme ── */
 [data-theme="light"] .dash-card-wallet {
   background: linear-gradient(160deg, #dbeafe 0%, #ffffff 100%);
@@ -393,6 +402,11 @@
   background: #ffffff !important;
   color: #64748b !important;
   border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+[data-theme="light"] .dash-btn-itinerary {
+  background: rgba(245, 158, 11, 0.06);
+  color: #D97706;
+  border-color: rgba(245, 158, 11, 0.15);
 }
 [data-theme="light"] .dash-day-badge {
   background: rgba(37, 99, 235, 0.12) !important;

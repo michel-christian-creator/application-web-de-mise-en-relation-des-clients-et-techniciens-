@@ -1058,9 +1058,9 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                           type="button"
                           onClick={() => setRatingInput(star)}
                           aria-label={`${star} ${t("étoile")}${star > 1 ? "s" : ""}`}
-                          className="text-2xl leading-none transition-transform"
+                          title={`${star} ${t("étoile")}${star > 1 ? "s" : ""}`}
+                          className={`text-2xl leading-none transition-transform cursor-pointer select-none ${star <= ratingInput ? "profile-star-active" : "profile-star-inactive"}`}
                           style={{
-                            color: star <= ratingInput ? "#F59E0B" : "rgba(255,255,255,0.15)",
                             transform: star <= ratingInput ? "scale(1.1)" : "scale(1)",
                           }}
                         >

@@ -265,3 +265,54 @@
   background: #ffffff;
   border-color: rgba(0, 0, 0, 0.1);
 }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .auth-left-panel {
+    flex: 0 0 46%;
+    padding: 2rem;
+  }
+
+  .auth-left-panel h1 {
+    font-size: 1.875rem;
+    line-height: 1.25;
+  }
+
+  .auth-right-panel {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .auth-bg {
+    flex-direction: column;
+  }
+
+  .auth-left-panel {
+    flex: none;
+    height: auto;
+    min-height: 0;
+    padding: 0.9rem 1rem;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    overflow: visible;
+  }
+
+  /* On mobile, keep only the logo row from the branding panel */
+  .auth-left-panel > .flex-1,
+  .auth-left-panel > .mt-auto {
+    display: none;
+  }
+
+  .auth-right-panel {
+    height: auto;
+    min-height: calc(100vh - 3.6rem);
+    padding-top: 4rem;
+  }
+
+  [data-theme="light"] .auth-left-panel {
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+}

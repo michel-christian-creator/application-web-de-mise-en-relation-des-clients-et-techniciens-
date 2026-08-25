@@ -364,7 +364,7 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
       <div className="mx-auto max-w-[min(1400px,95%)]">
         {searchRequest && (
           <div
-            className="mb-5 rounded-2xl border border-white/10 bg-[#141C2F] p-5 text-sm home-text"
+            className="mb-5 rounded-2xl home-card p-5 text-sm"
           >
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -452,17 +452,9 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                     selectedFilter === f.label ? null : (f.label as "Mieux notés" | "Plus proches"),
                   )
                 }
-                className="px-4 py-3 rounded-xl text-sm font-medium home-filter-btn"
-                style={{
-                  background: selectedFilter === f.label ? "#1E3A6A" : "#141C2F",
-
-                  color: selectedFilter === f.label ? "#fff" : "#64748B",
-
-                  border:
-                    selectedFilter === f.label
-                      ? "1px solid rgba(37,99,235,0.4)"
-                      : "1px solid rgba(255,255,255,0.06)",
-                }}
+                className={`px-4 py-3 rounded-xl text-sm font-medium home-filter-btn ${
+                  selectedFilter === f.label ? "home-filter-btn-active" : ""
+                }`}
               >
                 {t(f.label)}
               </button>
@@ -470,7 +462,7 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
           </div>
         </div>
 
-        <div className="mb-6 rounded-3xl border border-white/10 bg-[#141C2F] p-6">
+        <div className="mb-6 rounded-3xl home-card p-6">
           <div className="flex items-center justify-between gap-4 mb-4">
             <div>
               <p className="text-sm font-semibold home-text">
@@ -479,7 +471,7 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
               <p className="mt-1 text-xs home-text-muted"></p>
             </div>
             <span
-              className="inline-flex rounded-full bg-[#1E3A6A] px-3 py-1 text-xs font-medium home-text"
+              className="inline-flex rounded-full home-pill px-3 py-1 text-xs font-medium"
             >
               {categories.length} {t("domaines")}
             </span>
@@ -492,30 +484,22 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                   onClick={() =>
                     setSelectedCategory(selectedCategory === category ? null : category)
                   }
-                  className="rounded-full px-4 py-2 text-sm font-medium"
-                  style={{
-                    background: selectedCategory === category ? "#1E3A6A" : "#0F172A",
-
-                    color: selectedCategory === category ? "#E8EDF5" : "#94A3B8",
-
-                    border:
-                      selectedCategory === category
-                        ? "1px solid rgba(37,99,235,0.4)"
-                        : "1px solid rgba(255,255,255,0.08)",
-                  }}
+                  className={`rounded-full px-4 py-2 text-sm font-medium ${
+                    selectedCategory === category ? "home-chip-active" : "home-chip"
+                  }`}
                 >
                   {category}
                 </button>
               ))
             ) : (
-              <span className="text-xs text-[#94A3B8]">{t("Chargement des domaines...")}</span>
+              <span className="text-xs home-text-muted">{t("Chargement des domaines...")}</span>
             )}
           </div>
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-5">
-            <div className="rounded-3xl border border-white/10 bg-[#141C2F] p-6">
+            <div className="rounded-3xl home-card p-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold home-text">
@@ -526,7 +510,7 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                   </p>
                 </div>
                 <span
-                  className="inline-flex rounded-full bg-[#1E3A6A] px-3 py-1 text-xs font-medium home-text"
+                  className="inline-flex rounded-full home-pill px-3 py-1 text-xs font-medium"
                 >
                   {lastResponseCount ?? 0} {t("artisans")}
                 </span>
@@ -539,7 +523,7 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                   <StaggerItem key={artisan.id} hoverY={-2}>
                     <button
                       onClick={() => onSelectArtisan(artisan)}
-                      className="w-full rounded-[28px] border border-white/10 bg-[#141C2F] p-6 text-left home-card-hover"
+                      className="w-full rounded-[28px] home-card p-6 text-left home-card-hover"
                     >
                       <div className="flex items-start gap-5">
                         <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-3xl bg-slate-700">
@@ -559,7 +543,7 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                                 {artisan.metier}
                               </p>
                             </div>
-                            <span className="flex items-center gap-0.5 rounded-full bg-[#1E3A6A] px-3 py-0.5">
+                            <span className="flex items-center gap-0.5 rounded-full home-pill px-3 py-0.5">
                               {[1, 2, 3, 4, 5].map((i) => (
                                 <svg
                                   key={i}
@@ -569,8 +553,9 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                                   fill={
                                     i <= Math.round(artisan.note)
                                       ? "#FBBF24"
-                                      : "rgba(255,255,255,0.15)"
+                                      : undefined
                                   }
+                                  className={i > Math.round(artisan.note) ? "home-star-inactive" : undefined}
                                 >
                                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
                                 </svg>
@@ -593,7 +578,7 @@ export default function C2Home({ searchRequest, onSelectArtisan }: Props) {
                   </StaggerItem>
                 ))
               ) : (
-                <div className="rounded-[28px] border border-white/10 bg-[#141C2F] p-6 text-center">
+                <div className="rounded-[28px] home-card p-6 text-center">
                   <p className="text-sm home-text-muted">
                     {query.trim()
                       ? t("Aucun artisan ne correspond à « ") + query.trim() + t(" ».")

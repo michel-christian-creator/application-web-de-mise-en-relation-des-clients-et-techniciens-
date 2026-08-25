@@ -13,6 +13,7 @@ import {
   useAttestation,
   type AttestationLevel,
 } from "../../hooks/useAttestation"
+import ItineraryMap from "../../components/ItineraryMap"
 import orangeLogo from "../../../orange-money-logo-png_seeklogo-440383.png"
 import "./T1Dashboard.css"
 
@@ -44,6 +45,7 @@ type ActiveChantier = {
   urgency?: string
   clientName: string
   clientLocation: string
+  clientCity: string
   heldAmount: number
 }
 
@@ -78,6 +80,7 @@ type DayItem = {
   updatedAt?: string | null
   clientName: string
   clientLocation: string
+  clientCity: string
   heldAmount: number
 }
 
@@ -313,6 +316,8 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [dismissed, setDismissed] = useState<number[]>([])
   const [technicianId, setTechnicianId] = useState<number | null>(null)
+  const [techCity, setTechCity] = useState("")
+  const [techLocation, setTechLocation] = useState("")
   const [day, setDay] = useState<TechDay | null>(null)
   const [now, setNow] = useState(() => Date.now())
   const [toast, setToast] = useState<{ id: number; urgency: string; hours: number } | null>(null)
@@ -327,6 +332,14 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
   const [withdrawError, setWithdrawError] = useState<string | null>(null)
   const [withdrawSubmitting, setWithdrawSubmitting] = useState(false)
   const [withdrawSuccess, setWithdrawSuccess] = useState<string | null>(null)
+  const [itineraryOpen, setItineraryOpen] = useState(false)
+  const [itineraryData, setItineraryData] = useState<{
+    clientCity: string
+    clientLocation: string
+    techCity: string
+    techLocation: string
+    clientName: string
+  } | null>(null)
   const [attestationOpen, setAttestationOpen] = useState(false)
   const [attestationError, setAttestationError] = useState<string | null>(null)
   const [attestationChoice, setAttestationChoice] = useState<AttestationLevel | null>(null)
@@ -356,6 +369,10 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
         if (p && p.technicianId) {
           setTechnicianId(Number(p.technicianId))
           localStorage.setItem("mboaTechTechnicianId", String(p.technicianId))
+        }
+        if (p) {
+          if (p.city) setTechCity(p.city)
+          if (p.location) setTechLocation(p.location)
         }
       })
       .catch((err) => console.error(err))
@@ -616,6 +633,17 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
       console.error(err)
       setError(err instanceof Error ? err.message : t("Impossible de terminer l'intervention"))
     }
+  }
+
+  const openItinerary = (item: { clientCity?: string; clientLocation?: string; clientName: string }) => {
+    setItineraryData({
+      clientCity: item.clientCity || techCity,
+      clientLocation: item.clientLocation || "",
+      techCity: techCity,
+      techLocation: techLocation,
+      clientName: item.clientName,
+    })
+    setItineraryOpen(true)
   }
 
   const toggleAvailability = async () => {
@@ -973,12 +1001,20 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                 {formatScheduled(item.scheduledAt, t, locale)}
                               </p>
                             </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                            <button
+                              onClick={() => openItinerary(item)}
+                              className="dash-btn-itinerary px-3 py-2 rounded-lg text-xs font-semibold"
+                            >
+                              {t("Carte")}
+                            </button>
                             <button
                               onClick={() => completeRequest(item.id)}
                               className="dash-btn-success px-4 py-2 rounded-lg text-sm font-bold text-white flex-shrink-0"
                             >
                               {t("Terminer")}
                             </button>
+                          </div>
                           </div>
                         </div>
                       ))}
@@ -1030,13 +1066,21 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                                   </p>
                                 )}
                               </div>
-                              <button
-                                onClick={() => startRequest(item.id)}
-                                className={`px-4 py-2 rounded-lg text-sm font-bold text-white flex-shrink-0 ${imminent ? "mboa-blink" : ""}`}
-                                style={startStyle}
-                              >
-                                {t("Démarrer →")}
-                              </button>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <button
+                                  onClick={() => openItinerary(item)}
+                                  className="dash-btn-itinerary px-3 py-2 rounded-lg text-xs font-semibold"
+                                >
+                                  {t("Carte")}
+                                </button>
+                                <button
+                                  onClick={() => startRequest(item.id)}
+                                  className={`px-4 py-2 rounded-lg text-sm font-bold text-white ${imminent ? "mboa-blink" : ""}`}
+                                  style={startStyle}
+                                >
+                                  {t("Démarrer →")}
+                                </button>
+                              </div>
                             </div>
                           </div>
                         )
@@ -1745,6 +1789,39 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+      {/* ── Modal Itinéraire ── */}
+      {itineraryOpen && itineraryData && (
+        <div
+          className="dash-modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={() => setItineraryOpen(false)}
+        >
+          <div
+            className="dash-modal-panel w-full max-w-2xl rounded-2xl p-6 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="dash-page-title text-lg font-bold">
+                {t("Itinéraire")} — {itineraryData.clientName}
+              </h2>
+              <button
+                onClick={() => setItineraryOpen(false)}
+                className="dash-text-muted text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+            <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.06)" }}>
+              <ItineraryMap
+                clientCity={itineraryData.clientCity}
+                clientLocation={itineraryData.clientLocation}
+                techCity={itineraryData.techCity}
+                techLocation={itineraryData.techLocation}
+                clientName={itineraryData.clientName}
+              />
+            </div>
           </div>
         </div>
       )}

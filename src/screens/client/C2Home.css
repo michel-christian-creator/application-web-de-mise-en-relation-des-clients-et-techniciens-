@@ -60,6 +60,45 @@
   font-family: "Inter", sans-serif;
 }
 
+.home-card {
+  background: #141C2F;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.home-card-inner {
+  background: #0F172A;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.home-pill {
+  background: #1E3A6A;
+  color: #E8EDF5;
+}
+
+.home-chip {
+  background: #0F172A;
+  color: #94A3B8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.home-chip-active {
+  background: #1E3A6A;
+  color: #E8EDF5;
+  border: 1px solid rgba(37, 99, 235, 0.4);
+}
+
+.home-filter-btn {
+  background: #141C2F;
+  color: #64748B;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.home-filter-btn-active {
+  background: #1E3A6A;
+  color: #fff;
+  border: 1px solid rgba(37, 99, 235, 0.4);
+}
+
 /* ── Light theme ── */
 [data-theme="light"] .home-page {
   background: #f0f4f8;
@@ -99,5 +138,61 @@
 }
 
 [data-theme="light"] .home-filter-btn {
+  background: #ffffff;
   color: #64748b;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .home-card {
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .home-card-inner {
+  background: #f1f5f9;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .home-pill {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+[data-theme="light"] .home-chip {
+  background: #ffffff;
+  color: #64748b;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .home-chip-active {
+  background: #dbeafe;
+  color: #1e40af;
+  border-color: rgba(37, 99, 235, 0.4);
+}
+
+[data-theme="light"] .home-filter-btn-active {
+  background: #dbeafe;
+  color: #1e40af;
+  border-color: rgba(37, 99, 235, 0.4);
+}
+
+/* Pastel badge text needs darker tones on light backgrounds */
+[data-theme="light"] .home-badge-blue {
+  color: #1d4ed8;
+}
+
+[data-theme="light"] .home-badge-amber {
+  color: #b45309;
+}
+
+[data-theme="light"] .home-badge-green {
+  color: #047857;
+}
+
+.home-star-inactive {
+  fill: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="light"] .home-star-inactive {
+  fill: rgba(0, 0, 0, 0.12);
 }

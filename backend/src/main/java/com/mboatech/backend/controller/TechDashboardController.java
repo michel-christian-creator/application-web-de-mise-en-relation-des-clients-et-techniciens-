@@ -135,6 +135,7 @@ public class TechDashboardController {
                     item.put("urgency", r.getUrgency());
                     item.put("clientName", resolveClientName(r.getClientId()));
                     item.put("clientLocation", resolveClientLocation(r.getClientId()));
+                    item.put("clientCity", resolveClientCity(r.getClientId()));
                     item.put("heldAmount", heldForRequest(r.getId()));
                     activeChantiers.add(item);
                 });
@@ -338,6 +339,7 @@ public class TechDashboardController {
         item.put("updatedAt", r.getUpdatedAt());
         item.put("clientName", resolveClientName(r.getClientId()));
         item.put("clientLocation", resolveClientLocation(r.getClientId()));
+        item.put("clientCity", resolveClientCity(r.getClientId()));
         item.put("heldAmount", heldForRequest(r.getId()));
         return item;
     }
@@ -388,6 +390,15 @@ public class TechDashboardController {
         }
         return clientProfileRepository.findById(clientId)
                 .map(com.mboatech.backend.model.ClientProfile::getLocation)
+                .orElse("");
+    }
+
+    private String resolveClientCity(Long clientId) {
+        if (clientId == null) {
+            return "";
+        }
+        return clientProfileRepository.findById(clientId)
+                .map(com.mboatech.backend.model.ClientProfile::getCity)
                 .orElse("");
     }
 

@@ -834,7 +834,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                 {t("Quelques informations pour commencer votre aventure MboaTech.")}
               </p>
 
-              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="grid grid-cols-1 gap-3 mb-4 sm:grid-cols-2">
                 <div>
                   <p
                     className="text-xs font-medium mb-2 auth-label"
@@ -1064,7 +1064,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                 >
                   {t("Vous êtes")}
                 </p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <button
                     type="button"
                     onClick={() => updateProfile("role", "client")}
@@ -1124,7 +1124,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
                     ))}
                   </select>
                   {profile.domain === "Multi-métier" && (
-                    <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {multiProfessions.map((profession) => {
                         const checked = selectedDomains.includes(profession)
                         const atMax = !checked && selectedDomains.length >= 3
@@ -1239,7 +1239,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
               )}
 
               {profile.role === "technician" && (
-                <div className="mb-4 grid grid-cols-2 gap-3">
+                <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <p
                       className="text-xs font-medium mb-2 auth-label"
