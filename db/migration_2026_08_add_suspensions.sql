@@ -6,9 +6,9 @@
 --     7e → 7 j, 8e → 10 j).
 -- 3) technicians.suspended_permanent : suspension définitive (9e non-présentation).
 
-ALTER TABLE `request_declines`
-  ADD COLUMN `reason` VARCHAR(20) NULL AFTER `technician_id`;
+ALTER TABLE request_declines
+  ADD COLUMN IF NOT EXISTS reason VARCHAR(20) NULL;
 
-ALTER TABLE `technicians`
-  ADD COLUMN `suspended_until` DATETIME NULL AFTER `avg_response_time_sec`,
-  ADD COLUMN `suspended_permanent` TINYINT(1) NOT NULL DEFAULT 0 AFTER `suspended_until`;
+ALTER TABLE technicians
+  ADD COLUMN IF NOT EXISTS suspended_until TIMESTAMP NULL,
+  ADD COLUMN IF NOT EXISTS suspended_permanent BOOLEAN NOT NULL DEFAULT FALSE;

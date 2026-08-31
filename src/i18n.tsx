@@ -532,6 +532,11 @@ export const EN_DICT: Record<string, string> = {
   "Rouvrir la page Paymee": "Reopen the Paymee page",
   "Le paiement Paymee a été refusé ou annulé. Aucun fonds n'a été prélevé. Vous pouvez réessayer.":
     "The Paymee payment was refused or cancelled. No funds were charged. You can try again.",
+  "Le paiement a été refusé ou annulé. Aucun fonds n'a été prélevé. Vous pouvez réessayer.":
+    "The payment was refused or cancelled. No funds were charged. You can try again.",
+  "Une demande de paiement de": "A payment request of",
+  "a été envoyée sur votre téléphone. Confirmez-la pour valider le paiement.":
+    "has been sent to your phone. Confirm it to complete the payment.",
   "Réessayer le paiement": "Retry the payment",
   "J'ai payé — vérifier": "I paid — verify",
   "Votre paiement a été reçu. Les fonds sont maintenant conservés en garde par MboaTech.":

@@ -9,7 +9,7 @@ Design mboa-tech/
 ├── src/                    ← Frontend React (TypeScript)
 ├── backend/                ← Backend Java (Spring Boot)
 ├── db/                     ← Scripts SQL / migrations
-├── server/                 ← Microservice Node.js (paiement Paymee)
+├── server/                 ← Microservice Node.js (ex-implémentation paiement)
 ├── deploy/                 ← Configs déploiement (Nginx, systemd, backups)
 ├── index.html              ← Point d'entrée HTML (Vite)
 ├── vite.config.ts          ← Config Vite + plugins
@@ -144,7 +144,7 @@ Design mboa-tech/
 | `WebConfig.java` | Config CORS globale |
 | `SystemUserInitializer.java` | Initialisation comptes par défaut au démarrage |
 | `RequestLoggingFilter.java` | Logging des requêtes HTTP |
-| `PaymeeProperties.java` | Props configuration Paymee |
+| `HrSkillsProperties.java` | Props configuration passerelle (2 clés) |
 | `MissionsProperties.java` | Props configuration missions |
 | `AsyncConfig.java` | Config tâches asynchrones |
 | `AsyncRequestTimeoutAdvice.java` | Timeout requêtes async |
@@ -162,7 +162,7 @@ Design mboa-tech/
 | `TechnicianWithdrawController.java` | Retraits technicien | `/api/tech/withdraw/*` |
 | `ClientWithdrawController.java` | Retraits client | `/api/client/withdraw/*` |
 | `PortfolioController.java` | Portfolio du technicien | `/api/portfolio/*` |
-| `PaymentController.java` | Paiements / Paymee | `/api/payment/*` |
+| `PaymentController.java` | Paiements / passerelle | `/api/payment/*` |
 | `KycController.java` | Documents KYC | `/api/kyc/*` |
 | `AttestationController.java` | Attestations de service | `/api/attestation/*` |
 | `AdminDashboardController.java` | Dashboard admin | `/api/admin/*` |
@@ -182,7 +182,7 @@ Design mboa-tech/
 | `PaymentService.java` | Logique de paiement (abstraction) |
 | `PaymentGateway.java` | Interface de paiement |
 | `SimulatedPaymentGateway.java` | Passerelle simulée (dev) |
-| `RealPaymentGateway.java` | Passerelle réelle (Paymee) |
+| `RealPaymentGateway.java` | Passerelle réelle (hr skills pay) |
 | `PaymentRequest.java` | DTO de requête de paiement |
 | `PaymentResult.java` | DTO de résultat de paiement |
 | `PaymentException.java` | Exception paiement |
@@ -255,7 +255,7 @@ Design mboa-tech/
 
 | Fichier | Rôle |
 |---|---|
-| `application.yml` | Config Spring Boot (port, DB, JWT, Paymee) |
+| `application.yml` | Config Spring Boot (port, DB, JWT, passerelle) |
 | `logback-spring.xml` | Config logging |
 
 ### 2.10 Tests
@@ -269,7 +269,7 @@ Design mboa-tech/
 
 | Fichier | Rôle |
 |---|---|
-| `pom.xml` | Dépendances Maven (Spring Boot 3.2, OpenPDF 1.3.30, MySQL, JWT) |
+| `pom.xml` | Dépendances Maven (Spring Boot 3.2, OpenPDF 1.3.30, PostgreSQL, JWT) |
 
 ---
 
@@ -304,7 +304,7 @@ Design mboa-tech/
 
 | Fichier | Rôle |
 |---|---|
-| `paymee.js` | Serveur Express pour intégration Paymee |
+| `paymee.js` | (Exemple) Serveur Express intégration paiement |
 | `payment-endpoint.example.js` | Exemple endpoint paiement |
 | `.env.example` | Variables d'environnement |
 
@@ -350,6 +350,6 @@ PDF généré via OpenPDF (PdfContentByte) :
 ### Backend
 - **Spring Boot 3.2** (Java 17)
 - **OpenPDF 1.3.30** (génération PDF — API spécifique : `setColorStroke()`, `circle(x,y,r)`, `drawRoundedRect()` custom)
-- **MySQL 8.2** (WampServer)
+- **PostgreSQL 16**
 - **Spring Security** + JWT (filtre token)
 - **Spring WebSocket** (chat temps réel)

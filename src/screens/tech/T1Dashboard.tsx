@@ -356,7 +356,7 @@ export default function T1Dashboard({ onOpenChat, focusRequestId }: Props) {
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" })
     }
-  }, [focusRequestId, requests])
+  }, [focusRequestId])
 
   useEffect(() => {
     const token = localStorage.getItem("mboaTechToken")

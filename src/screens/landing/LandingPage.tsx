@@ -7,10 +7,8 @@ import StaggerItem from "../../components/animations/StaggerItem"
 import ConnectionNetwork from "../../components/animations/ConnectionNetwork"
 import PhoneShowcase from "../../components/animations/PhoneShowcase"
 import CityMap3D from "../../components/animations/CityMap3D"
-import ThemeToggle from "../../components/ThemeToggle"
 import { useI18n } from "../../i18n"
 import { API_BASE_URL } from "../../config"
-import "./LandingPage.css"
 
 interface Props {
   onLogin: () => void
@@ -187,19 +185,30 @@ function FloatingFeature({
     >
       <TiltCard maxTilt={6} hoverScale={1.04}>
         <div
-          className="rounded-2xl p-6 sm:p-8 landing-feature-card"
+          className="rounded-2xl p-6 sm:p-8"
+          style={{
+            background: "linear-gradient(135deg, #141C2F, #1E2A42)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)",
+          }}
         >
           <div
-            className="flex h-14 w-14 items-center justify-center rounded-2xl mb-5 landing-feature-icon"
+            className="flex h-14 w-14 items-center justify-center rounded-2xl mb-5"
+            style={{
+              background: "linear-gradient(135deg, rgba(37,99,235,0.2), rgba(29,78,216,0.1))",
+              border: "1px solid rgba(37,99,235,0.2)",
+              color: "#93C5FD",
+            }}
           >
             {icon}
           </div>
           <h3
-            className="text-lg font-bold mb-2 landing-card-title"
+            className="text-lg font-bold mb-2"
+            style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
           >
             {title}
           </h3>
-          <p className="text-sm leading-relaxed landing-card-desc">
+          <p className="text-sm leading-relaxed" style={{ color: "#94A3B8" }}>
             {desc}
           </p>
         </div>
@@ -247,7 +256,8 @@ function StepConnector() {
         whileInView={{ scaleX: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6, delay: 0.3 }}
-        className="h-px w-16 landing-connector"
+        className="h-px w-16"
+        style={{ background: "linear-gradient(90deg, transparent, #2563EB, transparent)" }}
       />
     </div>
   )
@@ -276,21 +286,21 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
   }, [])
 
   return (
-    <div className="landing min-h-screen w-full overflow-x-hidden">
-      {/* Theme toggle — fixed top-right */}
-      <div className="fixed top-5 right-5 z-50">
-        <ThemeToggle className="border-white/15 landing-theme-toggle" />
-      </div>
-
+    <div className="min-h-screen w-full overflow-x-hidden" style={{ background: "#070D1A" }}>
       {/* ══════════ HERO ══════════ */}
       <section
         ref={heroRef}
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
       >
         {/* Background grid */}
-          <div
-            className="absolute inset-0 opacity-[0.04] landing-hero-grid"
-          />
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
 
         {/* Floating orbs */}
         <FloatingOrb size={300} color="#2563EB" x="10%" y="15%" delay={0} duration={8} />
@@ -301,7 +311,11 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
 
         {/* Radial gradient overlay */}
         <div
-          className="absolute inset-0 landing-radial-hero"
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 60% 50% at 50% 40%, rgba(37,99,235,0.12) 0%, transparent 70%)",
+          }}
         />
 
         <motion.div
@@ -311,10 +325,14 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
           {/* Badge */}
           <FadeIn delay={0.1}>
             <div
-              className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-8 landing-badge"
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-8"
+              style={{
+                background: "rgba(37,99,235,0.12)",
+                border: "1px solid rgba(37,99,235,0.25)",
+              }}
             >
-              <span className="h-2 w-2 rounded-full animate-pulse landing-badge-dot" />
-              <span className="text-xs font-semibold landing-badge-text">
+              <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: "#059669" }} />
+              <span className="text-xs font-semibold" style={{ color: "#93C5FD" }}>
                 Plateforme de services techniques au Cameroun
               </span>
             </div>
@@ -323,10 +341,17 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
           {/* Headline */}
           <FadeIn delay={0.25}>
             <h1
-              className="text-4xl sm:text-5xl md:text-7xl font-extrabold leading-tight mb-6 landing-headline"
+              className="text-4xl sm:text-5xl md:text-7xl font-extrabold leading-tight mb-6"
+              style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
             >
               Trouvez votre{" "}
-              <span className="landing-gradient-text">
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #2563EB, #3B82F6, #059669)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
                 artisan de confiance
               </span>{" "}
               en quelques clics
@@ -336,7 +361,8 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
           {/* Subtitle */}
           <FadeIn delay={0.4}>
             <p
-              className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed landing-subtitle"
+              className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
+              style={{ color: "#94A3B8" }}
             >
               MboaTech connecte les clients aux meilleurs techniciens certifiés.
               Paiement sécurisé en garde, suivi en temps réel, avis vérifiés.
@@ -350,7 +376,13 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
                 whileHover={{ scale: 1.05, boxShadow: "0 8px 30px rgba(37,99,235,0.4)" }}
                 whileTap={{ scale: 0.97 }}
                 onClick={onRegister}
-                className="px-8 py-4 rounded-2xl font-bold text-white text-sm sm:text-base cursor-pointer landing-cta-primary"
+                className="px-8 py-4 rounded-2xl font-bold text-white text-sm sm:text-base cursor-pointer"
+                style={{
+                  background: "linear-gradient(135deg, #2563EB, #1D4ED8)",
+                  boxShadow: "0 4px 20px rgba(37,99,235,0.3)",
+                  fontFamily: "Poppins, sans-serif",
+                  border: "none",
+                }}
               >
                 Commencer gratuitement
               </motion.button>
@@ -358,7 +390,13 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
                 whileHover={{ scale: 1.05, background: "#1E2A42" }}
                 whileTap={{ scale: 0.97 }}
                 onClick={onLogin}
-                className="px-8 py-4 rounded-2xl font-semibold text-sm sm:text-base cursor-pointer landing-cta-secondary"
+                className="px-8 py-4 rounded-2xl font-semibold text-sm sm:text-base cursor-pointer"
+                style={{
+                  background: "transparent",
+                  color: "#E8EDF5",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  fontFamily: "Poppins, sans-serif",
+                }}
               >
                 J'ai déjà un compte
               </motion.button>
@@ -374,8 +412,8 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
                 { icon: icons.bolt, text: "Intervention rapide" },
               ].map((badge) => (
                 <div key={badge.text} className="flex items-center gap-2">
-                  <span className="landing-trust-icon">{badge.icon}</span>
-                  <span className="text-xs font-medium landing-trust-text">
+                  <span style={{ color: "#2563EB" }}>{badge.icon}</span>
+                  <span className="text-xs font-medium" style={{ color: "#64748B" }}>
                     {badge.text}
                   </span>
                 </div>
@@ -391,10 +429,12 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
           transition={{ duration: 2, repeat: Infinity }}
         >
           <div
-            className="w-6 h-10 rounded-full flex items-start justify-center pt-2 landing-scroll-ring"
+            className="w-6 h-10 rounded-full flex items-start justify-center pt-2"
+            style={{ border: "2px solid rgba(255,255,255,0.15)" }}
           >
             <motion.div
-              className="w-1.5 h-1.5 rounded-full landing-scroll-dot"
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: "#2563EB" }}
               animate={{ y: [0, 12, 0], opacity: [1, 0.3, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
@@ -407,17 +447,19 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
         <div className="max-w-6xl mx-auto">
           <FadeIn>
             <p
-              className="text-xs font-bold tracking-widest uppercase text-center mb-3 landing-section-label"
+              className="text-xs font-bold tracking-widest uppercase text-center mb-3"
+              style={{ color: "#3B82F6" }}
             >
               Mise en relation
             </p>
             <h2
-              className="text-3xl sm:text-4xl font-extrabold text-center mb-4 landing-section-title"
+              className="text-3xl sm:text-4xl font-extrabold text-center mb-4"
+              style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
             >
               Une demande, des{" "}
-              <span className="landing-accent-green">professionnels</span> mobilisés
+              <span style={{ color: "#059669" }}>professionnels</span> mobilisés
             </h2>
-            <p className="text-center text-sm max-w-lg mx-auto mb-8 landing-section-desc">
+            <p className="text-center text-sm max-w-lg mx-auto mb-8" style={{ color: "#94A3B8" }}>
               Votre demande de dépannage est distribuée instantanément aux techniciens qualifiés autour de vous.
             </p>
           </FadeIn>
@@ -428,22 +470,28 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
       {/* ══════════ CONCEPT 2: PHONE SHOWCASE ══════════ */}
       <section className="relative py-16 sm:py-24 px-4">
         <div
-          className="absolute inset-0 landing-radial-phone"
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 50% 40% at 50% 50%, rgba(37,99,235,0.06) 0%, transparent 70%)",
+          }}
         />
         <div className="relative max-w-6xl mx-auto">
           <FadeIn>
             <p
-              className="text-xs font-bold tracking-widest uppercase text-center mb-3 landing-section-label-green"
+              className="text-xs font-bold tracking-widest uppercase text-center mb-3"
+              style={{ color: "#059669" }}
             >
               Expérience utilisateur
             </p>
             <h2
-              className="text-3xl sm:text-4xl font-extrabold text-center mb-4 landing-section-title"
+              className="text-3xl sm:text-4xl font-extrabold text-center mb-4"
+              style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
             >
               De la demande au{" "}
-              <span className="landing-accent-purple">paiement</span>, tout en un
+              <span style={{ color: "#8B5CF6" }}>paiement</span>, tout en un
             </h2>
-            <p className="text-center text-sm max-w-lg mx-auto mb-8 landing-section-desc">
+            <p className="text-center text-sm max-w-lg mx-auto mb-8" style={{ color: "#94A3B8" }}>
               Suivez chaque étape de votre intervention en temps réel, de la publication à la libération des fonds.
             </p>
           </FadeIn>
@@ -456,17 +504,19 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
         <div className="max-w-6xl mx-auto">
           <FadeIn>
             <p
-              className="text-xs font-bold tracking-widest uppercase text-center mb-3 landing-section-label-amber"
+              className="text-xs font-bold tracking-widest uppercase text-center mb-3"
+              style={{ color: "#F59E0B" }}
             >
               Géolocalisation
             </p>
             <h2
-              className="text-3xl sm:text-4xl font-extrabold text-center mb-4 landing-section-title"
+              className="text-3xl sm:text-4xl font-extrabold text-center mb-4"
+              style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
             >
               Des techniciens{" "}
-              <span className="landing-accent-green">près de chez vous</span>
+              <span style={{ color: "#059669" }}>près de chez vous</span>
             </h2>
-            <p className="text-center text-sm max-w-lg mx-auto mb-8 landing-section-desc">
+            <p className="text-center text-sm max-w-lg mx-auto mb-8" style={{ color: "#94A3B8" }}>
               Visualisez en temps réel les artisans disponibles dans votre ville. Disponibilité mise à jour instantanément.
             </p>
           </FadeIn>
@@ -479,16 +529,18 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
         <div className="max-w-6xl mx-auto">
           <FadeIn>
             <p
-              className="text-xs font-bold tracking-widest uppercase text-center mb-3 landing-section-label"
+              className="text-xs font-bold tracking-widest uppercase text-center mb-3"
+              style={{ color: "#2563EB" }}
             >
               Comment ça marche
             </p>
             <h2
-              className="text-3xl sm:text-4xl font-extrabold text-center mb-4 landing-section-title"
+              className="text-3xl sm:text-4xl font-extrabold text-center mb-4"
+              style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
             >
               Simple, rapide, sécurisé
             </h2>
-            <p className="text-center text-sm max-w-lg mx-auto mb-16 landing-section-desc">
+            <p className="text-center text-sm max-w-lg mx-auto mb-16" style={{ color: "#94A3B8" }}>
               De la demande d'intervention à la libération des fonds, tout se passe en toute transparence.
             </p>
           </FadeIn>
@@ -518,21 +570,28 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
                 <FadeIn delay={i * 0.15}>
                   <div className="flex flex-col items-center text-center px-6 py-8 max-w-xs">
                     <div
-                      className="flex h-16 w-16 items-center justify-center rounded-2xl mb-5 landing-step-icon"
+                      className="flex h-16 w-16 items-center justify-center rounded-2xl mb-5"
+                      style={{
+                        background: "linear-gradient(135deg, rgba(37,99,235,0.15), rgba(37,99,235,0.05))",
+                        border: "1px solid rgba(37,99,235,0.2)",
+                        color: "#3B82F6",
+                      }}
                     >
                       {item.icon}
                     </div>
                     <span
-                      className="text-xs font-bold tracking-widest mb-2 landing-step-label"
+                      className="text-xs font-bold tracking-widest mb-2"
+                      style={{ color: "#2563EB" }}
                     >
                       ÉTAPE {item.step}
                     </span>
                     <h3
-                      className="text-base font-bold mb-2 landing-step-title"
+                      className="text-base font-bold mb-2"
+                      style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
                     >
                       {item.title}
                     </h3>
-                    <p className="text-sm leading-relaxed landing-step-desc">
+                    <p className="text-sm leading-relaxed" style={{ color: "#94A3B8" }}>
                       {item.desc}
                     </p>
                   </div>
@@ -547,21 +606,27 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
       {/* ══════════ FEATURES GRID ══════════ */}
       <section className="relative py-24 sm:py-32 px-4">
         <div
-          className="absolute inset-0 landing-radial-features"
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 50% 40% at 50% 0%, rgba(37,99,235,0.08) 0%, transparent 70%)",
+          }}
         />
         <div className="relative max-w-6xl mx-auto">
           <FadeIn>
             <p
-              className="text-xs font-bold tracking-widest uppercase text-center mb-3 landing-section-label-green"
+              className="text-xs font-bold tracking-widest uppercase text-center mb-3"
+              style={{ color: "#059669" }}
             >
               Fonctionnalités
             </p>
             <h2
-              className="text-3xl sm:text-4xl font-extrabold text-center mb-4 landing-section-title"
+              className="text-3xl sm:text-4xl font-extrabold text-center mb-4"
+              style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
             >
               Tout ce dont vous avez besoin
             </h2>
-            <p className="text-center text-sm max-w-lg mx-auto mb-16 landing-section-desc">
+            <p className="text-center text-sm max-w-lg mx-auto mb-16" style={{ color: "#94A3B8" }}>
               Une plateforme complète pour gérer vos interventions de A à Z.
             </p>
           </FadeIn>
@@ -601,19 +666,30 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
             ].map((f, i) => (
               <StaggerItem key={f.title} hoverY={-4}>
                 <div
-                  className="rounded-2xl p-6 h-full landing-card"
+                  className="rounded-2xl p-6 h-full"
+                  style={{
+                    background: "linear-gradient(135deg, #141C2F, #1E2A42)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+                  }}
                 >
                   <div
-                    className="flex h-12 w-12 items-center justify-center rounded-xl mb-4 landing-card-icon"
+                    className="flex h-12 w-12 items-center justify-center rounded-xl mb-4"
+                    style={{
+                      background: "rgba(37,99,235,0.1)",
+                      border: "1px solid rgba(37,99,235,0.15)",
+                      color: "#93C5FD",
+                    }}
                   >
                     {f.icon}
                   </div>
                   <h3
-                    className="text-base font-bold mb-2 landing-card-title"
+                    className="text-base font-bold mb-2"
+                    style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
                   >
                     {f.title}
                   </h3>
-                  <p className="text-sm leading-relaxed landing-card-desc">
+                  <p className="text-sm leading-relaxed" style={{ color: "#94A3B8" }}>
                     {f.desc}
                   </p>
                 </div>
@@ -630,15 +706,17 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
             <FadeIn>
               <div>
                 <p
-                  className="text-xs font-bold tracking-widest uppercase mb-3 landing-section-label-blue"
+                  className="text-xs font-bold tracking-widest uppercase mb-3"
+                  style={{ color: "#3B82F6" }}
                 >
                   Pour les clients
                 </p>
                 <h2
-                  className="text-3xl sm:text-4xl font-extrabold mb-6 landing-section-title"
+                  className="text-3xl sm:text-4xl font-extrabold mb-6"
+                  style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
                 >
                   Des travaux en toute{" "}
-                  <span className="landing-accent-green">sérénité</span>
+                  <span style={{ color: "#059669" }}>sérénité</span>
                 </h2>
                 <div className="space-y-5">
                   {[
@@ -661,17 +739,23 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
                     <FadeIn key={item.title} delay={0.1 * (i + 1)}>
                       <div className="flex gap-4">
                         <div
-                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl landing-list-icon-blue"
+                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl"
+                          style={{
+                            background: "rgba(37,99,235,0.1)",
+                            border: "1px solid rgba(37,99,235,0.15)",
+                            color: "#3B82F6",
+                          }}
                         >
                           {item.icon}
                         </div>
                         <div>
                           <h4
-                            className="text-sm font-bold mb-1 landing-list-title"
+                            className="text-sm font-bold mb-1"
+                            style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
                           >
                             {item.title}
                           </h4>
-                          <p className="text-sm leading-relaxed landing-list-desc">
+                          <p className="text-sm leading-relaxed" style={{ color: "#94A3B8" }}>
                             {item.desc}
                           </p>
                         </div>
@@ -700,7 +784,11 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
       {/* ══════════ FOR TECHNICIENS ══════════ */}
       <section className="relative py-24 sm:py-32 px-4">
         <div
-          className="absolute inset-0 landing-radial-tech"
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 40% 30% at 80% 50%, rgba(5,150,105,0.06) 0%, transparent 70%)",
+          }}
         />
         <div className="relative max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -719,15 +807,17 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
             <FadeIn className="order-1 lg:order-2">
               <div>
                 <p
-                  className="text-xs font-bold tracking-widest uppercase mb-3 landing-section-label-green"
+                  className="text-xs font-bold tracking-widest uppercase mb-3"
+                  style={{ color: "#059669" }}
                 >
                   Pour les techniciens
                 </p>
                 <h2
-                  className="text-3xl sm:text-4xl font-extrabold mb-6 landing-section-title"
+                  className="text-3xl sm:text-4xl font-extrabold mb-6"
+                  style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
                 >
                   Développez votre{" "}
-                  <span className="landing-accent-blue">activité</span>
+                  <span style={{ color: "#2563EB" }}>activité</span>
                 </h2>
                 <div className="space-y-5">
                   {[
@@ -750,17 +840,23 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
                     <FadeIn key={item.title} delay={0.1 * (i + 1)}>
                       <div className="flex gap-4">
                         <div
-                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl landing-list-icon-green"
+                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl"
+                          style={{
+                            background: "rgba(5,150,105,0.1)",
+                            border: "1px solid rgba(5,150,105,0.15)",
+                            color: "#059669",
+                          }}
                         >
                           {item.icon}
                         </div>
                         <div>
                           <h4
-                            className="text-sm font-bold mb-1 landing-list-title"
+                            className="text-sm font-bold mb-1"
+                            style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
                           >
                             {item.title}
                           </h4>
-                          <p className="text-sm leading-relaxed landing-list-desc">
+                          <p className="text-sm leading-relaxed" style={{ color: "#94A3B8" }}>
                             {item.desc}
                           </p>
                         </div>
@@ -792,7 +888,7 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
                   >
                     <Counter target={stat.value} suffix={stat.suffix ?? ""} />
                   </p>
-                  <p className="text-xs sm:text-sm font-medium landing-stat-label">
+                  <p className="text-xs sm:text-sm font-medium" style={{ color: "#94A3B8" }}>
                     {stat.label}
                   </p>
                 </div>
@@ -807,14 +903,20 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
         <div className="max-w-3xl mx-auto text-center">
           <FadeIn>
             <div
-              className="rounded-3xl p-10 sm:p-16 landing-cta-card"
+              className="rounded-3xl p-10 sm:p-16"
+              style={{
+                background: "linear-gradient(135deg, #141C2F, #1E2A42)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                boxShadow: "0 16px 64px rgba(0,0,0,0.4)",
+              }}
             >
               <h2
-                className="text-3xl sm:text-4xl font-extrabold mb-4 landing-section-title"
+                className="text-3xl sm:text-4xl font-extrabold mb-4"
+                style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
               >
                 Prêt à commencer ?
               </h2>
-              <p className="text-sm sm:text-base max-w-md mx-auto mb-8 landing-section-desc">
+              <p className="text-sm sm:text-base max-w-md mx-auto mb-8" style={{ color: "#94A3B8" }}>
                 Rejoignez des milliers de Camerounais qui font confiance à MboaTech pour leurs travaux.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -822,7 +924,13 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
                   whileHover={{ scale: 1.05, boxShadow: "0 8px 30px rgba(37,99,235,0.4)" }}
                   whileTap={{ scale: 0.97 }}
                   onClick={onRegister}
-                  className="px-8 py-4 rounded-2xl font-bold text-white text-sm sm:text-base cursor-pointer landing-cta-primary"
+                  className="px-8 py-4 rounded-2xl font-bold text-white text-sm sm:text-base cursor-pointer"
+                  style={{
+                    background: "linear-gradient(135deg, #2563EB, #1D4ED8)",
+                    boxShadow: "0 4px 20px rgba(37,99,235,0.3)",
+                    fontFamily: "Poppins, sans-serif",
+                    border: "none",
+                  }}
                 >
                   Créer mon compte gratuitement
                 </motion.button>
@@ -830,7 +938,13 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
                   whileHover={{ scale: 1.05, background: "#1E2A42" }}
                   whileTap={{ scale: 0.97 }}
                   onClick={onLogin}
-                  className="px-8 py-4 rounded-2xl font-semibold text-sm sm:text-base cursor-pointer landing-cta-secondary"
+                  className="px-8 py-4 rounded-2xl font-semibold text-sm sm:text-base cursor-pointer"
+                  style={{
+                    background: "transparent",
+                    color: "#E8EDF5",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    fontFamily: "Poppins, sans-serif",
+                  }}
                 >
                   Se connecter
                 </motion.button>
@@ -842,12 +956,14 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
 
       {/* ══════════ FOOTER ══════════ */}
       <footer
-        className="border-t py-10 px-4 landing-footer"
+        className="border-t py-10 px-4"
+        style={{ borderColor: "rgba(255,255,255,0.06)", background: "#070D1A" }}
       >
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div
-              className="flex h-7 w-7 items-center justify-center rounded-lg landing-footer-logo"
+              className="flex h-7 w-7 items-center justify-center rounded-lg"
+              style={{ background: "linear-gradient(135deg, #2563EB, #1D4ED8)" }}
             >
               <svg width="14" height="14" viewBox="0 0 32 32" fill="none">
                 <path d="M8 24V14l8-6 8 6v10" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -856,12 +972,13 @@ export default function LandingPage({ onLogin, onRegister }: Props) {
               </svg>
             </div>
             <span
-              className="text-sm font-bold landing-footer-brand"
+              className="text-sm font-bold"
+              style={{ fontFamily: "Poppins, sans-serif", color: "#E8EDF5" }}
             >
               MboaTech
             </span>
           </div>
-          <p className="text-xs landing-footer-copy">
+          <p className="text-xs" style={{ color: "#64748B" }}>
             &copy; 2026 MboaTech. Tous droits réservés.
           </p>
         </div>

@@ -4,7 +4,7 @@ Ce backend Java Spring Boot gère l'inscription automatique des clients, technic
 
 ## Installation
 
-1. Assure-toi que MySQL/WAMP est lancé et que la base `mboatech` existe.
+1. Assure-toi que PostgreSQL est lancé et que la base `mboatech` existe.
 2. Vérifie que le fichier `db/schema_updated.sql` a bien été importé.
 3. Depuis `backend/`, exécute :
 
@@ -18,13 +18,15 @@ Toutes les valeurs sensibles passent par des variables d'environnement (aucun se
 
 | Variable | Défaut | Rôle |
 | --- | --- | --- |
-| `DB_HOST`, `DB_PORT`, `DB_NAME` | `localhost`, `3306`, `mboatech` | Connexion MySQL |
-| `DB_USERNAME`, `DB_PASSWORD` | `root`, vide | Identifiants MySQL |
+| `DB_HOST`, `DB_PORT`, `DB_NAME` | `localhost`, `5432`, `mboatech` | Connexion PostgreSQL |
+| `DB_USERNAME`, `DB_PASSWORD` | `postgres`, vide | Identifiants PostgreSQL |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | `admin@mboatech.com`, **obligatoire** | Compte admin créé au démarrage si aucun admin n'existe |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Origines autorisées (HTTP + WebSocket), séparées par des virgules |
 | `SERVER_PORT` | `8082` | Port HTTP |
-| `PAYMEE_ENABLED` | `false` | Activer les paiements Paymee réels |
-| `PAYMEE_API_KEY` | vide | Clé API Paymee (jamais dans le dépôt) |
+| `HRSK_ENABLED` | `false` | Activer les paiements réels HR-Skills Pay |
+| `HRSK_API_KEY` | vide | Clé publique A (`hrsk_pk_…`, jamais dans le dépôt) |
+| `HRSK_API_SECRET` | vide | Clé secrète B (`hrsk_sk_…`, jamais dans le dépôt) |
+| `HRSK_WEBHOOK_SECRET` | vide | Secret de signature des webhooks (X-Hub-Signature) |
 | `UPLOAD_DIR` | `./uploads` | Fichiers publics (photos de profil / portfolio) |
 | `PRIVATE_UPLOAD_DIR` | `./private-uploads` | Documents KYC (jamais servis par `/uploads/**`) |
 

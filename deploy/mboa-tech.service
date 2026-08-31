@@ -1,14 +1,14 @@
 [Unit]
 Description=MboaTech Spring Boot backend
-After=network.target mysql.service
-Wants=mysql.service
+After=network.target postgresql.service
+Wants=postgresql.service
 
 [Service]
 Type=simple
 User=mboatech
 Group=mboatech
 WorkingDirectory=/opt/mboa-tech
-# Les secrets (DB, admin, Paymee) vivent dans /etc/mboa-tech/mboa-tech.env
+# Les secrets (DB, admin, passerelle de paiement) vivent dans /etc/mboa-tech/mboa-tech.env
 # (propriétaire root, permissions 600) — jamais dans le dépôt.
 EnvironmentFile=/etc/mboa-tech/mboa-tech.env
 ExecStart=/usr/bin/java -Xmx512m -jar /opt/mboa-tech/backend.jar

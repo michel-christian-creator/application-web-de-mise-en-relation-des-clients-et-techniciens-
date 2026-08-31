@@ -161,6 +161,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
       password,
       firstName,
       lastName,
+      phone: sanitizeText(phone, 20),
       role: profile.role,
       city,
       location,

@@ -8,16 +8,17 @@ import java.util.UUID;
 /**
  * Implémentation de repli de {@link PaymentGateway} qui accepte tous les débits
  * sans contacter un fournisseur réel. N'est active que lorsque la passerelle
- * Paymee est désactivée ({@code paymee.enabled} absent ou {@code false}).
+ * « hr skills pay » est désactivée ({@code hrskills.enabled} absent ou {@code false}).
  *
- * <p>Avec Paymee actif, c'est {@link RealPaymentGateway} qui est injecté.</p>
+ * <p>Avec la passerelle active, c'est {@link RealPaymentGateway} qui est injecté.</p>
  */
 @Component
-@ConditionalOnProperty(name = "paymee.enabled", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(name = "hrskills.enabled", havingValue = "false", matchIfMissing = true)
 public class SimulatedPaymentGateway implements PaymentGateway {
 
     @Override
     public PaymentResult charge(PaymentRequest request) {
+        System.out.println("[DEBUG] SimulatedPaymentGateway.charge appelé - amount=" + request.getAmount() + ", phone=" + request.getPayerPhone() + ", method=" + request.getMethod());
         String transactionRef = "SIM-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
         return PaymentResult.success(transactionRef);
     }

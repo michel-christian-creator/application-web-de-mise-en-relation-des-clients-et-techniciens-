@@ -330,17 +330,14 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
       }
       const reference = data.txRef ?? data.transactionRef ?? null
       if (data.status === "pending") {
-        if (data.paymentUrl) {
-          setTxRef(reference)
-          setPendingInfo({ txRef: reference, paymentUrl: data.paymentUrl })
-          setPendingStatus("pending")
-          const popup = window.open(data.paymentUrl, "_blank", "noopener,noreferrer")
-          if (!popup) window.location.href = data.paymentUrl
-          return
+        setTxRef(reference)
+        const url = data.paymentUrl ?? ""
+        setPendingInfo({ txRef: reference, paymentUrl: url })
+        setPendingStatus("pending")
+        if (url) {
+          const popup = window.open(url, "_blank", "noopener,noreferrer")
+          if (!popup) window.location.href = url
         }
-        setSubmitError(
-          t("Le paiement est en attente de confirmation. Veuillez réessayer dans un instant."),
-        )
         return
       }
       setTxRef(reference)
@@ -512,12 +509,18 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
           <p className="text-sm leading-relaxed mb-4 payment-text-secondary">
             {failed
               ? t(
-                  "Le paiement Paymee a été refusé ou annulé. Aucun fonds n'a été prélevé. Vous pouvez réessayer.",
+                  "Le paiement a été refusé ou annulé. Aucun fonds n'a été prélevé. Vous pouvez réessayer.",
                 )
               : waiting
-                ? `${t("Un onglet Paymee s'est ouvert pour finaliser")} ${formatAmount(
-                    devis?.amount ?? 0,
-                  )} FCFA. ${t("Dès que le paiement est confirmé, les fonds sont mis en garde automatiquement.")}`
+                ? pendingInfo.paymentUrl
+                  ? `${t("Un onglet Paymee s'est ouvert pour finaliser")} ${formatAmount(
+                      devis?.amount ?? 0,
+                    )} FCFA. ${t("Dès que le paiement est confirmé, les fonds sont mis en garde automatiquement.")}`
+                  : `${t("Une demande de paiement de")} ${formatAmount(
+                      devis?.amount ?? 0,
+                    )} FCFA ${t(
+                      "a été envoyée sur votre téléphone. Confirmez-la pour valider le paiement.",
+                    )}`
                 : t(
                     "Votre paiement a été reçu. Les fonds sont maintenant conservés en garde par MboaTech.",
                   )}
@@ -543,12 +546,14 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
               >
                 {checking ? t("Vérification…") : t("J'ai payé — vérifier")}
               </button>
-              <button
-                onClick={reopenPaymee}
-                className="w-full py-3 rounded-xl font-bold text-sm disabled:opacity-60 payment-btn-outline"
-              >
-                {t("Rouvrir la page Paymee")}
-              </button>
+              {pendingInfo.paymentUrl && (
+                <button
+                  onClick={reopenPaymee}
+                  className="w-full py-3 rounded-xl font-bold text-sm disabled:opacity-60 payment-btn-outline"
+                >
+                  {t("Rouvrir la page Paymee")}
+                </button>
+              )}
               <button onClick={cancelPending} className="w-full py-2 text-xs payment-text-muted">
                 {t("Annuler et revenir")}
               </button>

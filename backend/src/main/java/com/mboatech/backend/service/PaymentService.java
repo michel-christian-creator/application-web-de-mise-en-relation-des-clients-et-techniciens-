@@ -23,8 +23,8 @@ import java.util.Set;
 /**
  * Orchestre le dépôt des fonds en garde.
  *
- * <p>Avec Paymee, le dépôt est d'abord créé en statut {@code pending} : le client est
- * redirigé sur la page Paymee, puis la confirmation arrive sur
+ * <p>Avec la passerelle, le dépôt est d'abord créé en statut {@code pending} : le client est
+ * redirigé sur la page de paiement, puis la confirmation arrive sur
  * {@code POST /api/payments/webhook} (voir {@link #confirmPayment}) qui passe le
  * paiement en {@code held} et sécurise les fonds.</p>
  */
@@ -63,31 +63,39 @@ public class PaymentService {
 
     @Transactional
     public Map<String, Object> deposit(Long requestId, Long payerUserId, BigDecimal amount, String method) {
+        System.out.println("[DEBUG] deposit() - requestId=" + requestId + ", payerId=" + payerUserId + ", amount=" + amount + ", method=" + method);
         boolean enabled = settingsRepository.findById(PAYMENTS_KEY)
                 .map(setting -> Boolean.parseBoolean(setting.getValue()))
                 .orElse(true);
+        System.out.println("[DEBUG] payments_enabled=" + enabled);
         if (!enabled) {
             throw new PaymentException("Les paiements sont temporairement désactivés par l'administration.");
         }
         if (method == null || !ALLOWED_METHODS.contains(method)) {
+            System.out.println("[DEBUG] méthode invalide: " + method);
             throw new PaymentException("Mode de paiement invalide.");
         }
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new PaymentException("Montant invalide.");
         }
+        System.out.println("[DEBUG] recherche request id=" + requestId);
         ClientRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new PaymentException("Demande introuvable."));
+        System.out.println("[DEBUG] request trouvé, clientId=" + request.getClientId());
         Long clientUserId = request.getClientId() != null
                 ? clientProfileRepository.findById(request.getClientId())
                         .map(profile -> profile.getUser().getId())
                         .orElse(null)
                 : null;
+        System.out.println("[DEBUG] clientUserId=" + clientUserId + ", payerUserId=" + payerUserId);
         if (clientUserId == null || !clientUserId.equals(payerUserId)) {
+            System.out.println("[DEBUG] REFUSÉ: clientUserId != payerUserId ou null");
             throw new PaymentException("Vous n'êtes pas autorisé à payer pour cette demande.");
         }
 
         Optional<Payment> held = paymentRepository.findFirstByRequestIdAndStatusOrderByIdAsc(requestId, "held");
         if (held.isPresent()) {
+            System.out.println("[DEBUG] Déjà un paiement held");
             Map<String, Object> out = outcome(held.get());
             out.put("alreadyHeld", true);
             return out;
@@ -95,6 +103,7 @@ public class PaymentService {
 
         Optional<Payment> pending = paymentRepository.findFirstByRequestIdAndStatusOrderByIdAsc(requestId, "pending");
         if (pending.isPresent()) {
+            System.out.println("[DEBUG] Déjà un paiement pending");
             Map<String, Object> out = outcome(pending.get());
             out.put("alreadyPending", true);
             return out;
@@ -105,11 +114,14 @@ public class PaymentService {
                         .map(profile -> profile.getUser().getId())
                         .orElse(null)
                 : null;
+        System.out.println("[DEBUG] technicianId=" + request.getTechnicianId() + ", payeeUserId=" + payeeUserId);
         if (payeeUserId == null) {
+            System.out.println("[DEBUG] REFUSÉ: aucun technicien assigné");
             throw new PaymentException("Aucun technicien n'est assigné à cette demande : les fonds ne peuvent pas être sécurisés.");
         }
         User payer = userRepository.findById(payerUserId).orElse(null);
         String payerName = payer != null ? fullName(payer) : "Client";
+        System.out.println("[DEBUG] appel paymentGateway.charge avec phone=" + (payer != null ? payer.getPhone() : "null"));
 
         PaymentResult result = paymentGateway.charge(new PaymentRequest(
                 requestId, amount, "XAF", method, payerUserId, payeeUserId, payerName, request.getDescription(),
@@ -128,10 +140,11 @@ public class PaymentService {
         payment.setTransactionRef(result.getTransactionRef());
         payment.setPaymentUrl(result.getPaymentUrl());
 
-        boolean redirectFlow = result.getPaymentUrl() != null && !result.getPaymentUrl().isBlank();
-        if (redirectFlow) {
+        boolean pendingFlow = result.isPending()
+                || (result.getPaymentUrl() != null && !result.getPaymentUrl().isBlank());
+        if (pendingFlow) {
             payment.setStatus("pending");
-            payment.setNotes("Paiement Paymee en attente de confirmation.");
+            payment.setNotes("Paiement en attente de confirmation.");
             paymentRepository.save(payment);
             Map<String, Object> out = outcome(payment);
             out.put("alreadyHeld", false);
@@ -213,23 +226,17 @@ public class PaymentService {
     }
 
     /**
-     * Confirmation reçue sur le webhook Paymee (check_sum déjà vérifié côté contrôleur).
+     * Confirmation reçue sur le webhook « HR-Skills Pay » (signature déjà vérifiée
+     * côté contrôleur). {@code reference} est la référence de transaction
+     * (ex. {@code ref_…}) fournie par la passerelle à l'initiation et au webhook.
+     * {@code success} vaut {@code true} pour {@code payment.succeeded}, {@code false}
+     * pour {@code payment.failed}.
      */
     @Transactional
-    public Map<String, Object> confirmPayment(String token, boolean paymentStatus, String orderId, String transactionId) {
-        Optional<Payment> byToken = token != null ? paymentRepository.findFirstByTransactionRef(token) : Optional.empty();
-        Payment payment = byToken.orElseGet(() -> {
-            if (orderId == null) {
-                return null;
-            }
-            try {
-                return paymentRepository.findFirstByRequestIdAndStatusOrderByIdAsc(Long.valueOf(orderId), "pending").orElse(null);
-            } catch (NumberFormatException e) {
-                return null;
-            }
-        });
+    public Map<String, Object> confirmPayment(String reference, boolean success, String transactionId) {
+        Payment payment = findPendingByReference(reference);
         if (payment == null) {
-            throw new PaymentException("Transaction Paymee inconnue.");
+            throw new PaymentException("Transaction de la passerelle inconnue.");
         }
         if ("held".equals(payment.getStatus())) {
             Map<String, Object> out = outcome(payment);
@@ -243,9 +250,9 @@ public class PaymentService {
             out.put("alreadyReleased", true);
             return out;
         }
-        if (!paymentStatus) {
+        if (!success) {
             payment.setStatus("failed");
-            payment.setNotes("Paiement Paymee refusé ou annulé.");
+            payment.setNotes("Paiement refusé ou annulé.");
             paymentRepository.save(payment);
             Map<String, Object> out = outcome(payment);
             out.put("confirmed", false);
@@ -253,7 +260,7 @@ public class PaymentService {
         }
 
         payment.setStatus("held");
-        payment.setNotes("Fonds déposés en garde MboaTech (Paymee #" + (transactionId != null ? transactionId : payment.getTransactionRef()) + ").");
+        payment.setNotes("Fonds déposés en garde MboaTech (transaction #" + (transactionId != null ? transactionId : payment.getTransactionRef()) + ").");
         paymentRepository.save(payment);
 
         Long requestId = payment.getRequestId();
@@ -287,6 +294,15 @@ public class PaymentService {
         String first = user.getFirstName() != null ? user.getFirstName() : "";
         String last = user.getLastName() != null ? user.getLastName() : "";
         return (first + " " + last).trim();
+    }
+
+    private Payment findPendingByReference(String reference) {
+        if (reference == null) {
+            return null;
+        }
+        return paymentRepository.findFirstByTransactionRef(reference)
+                .filter(p -> "pending".equals(p.getStatus()))
+                .orElse(null);
     }
 
     private Map<String, Object> outcome(Payment payment) {

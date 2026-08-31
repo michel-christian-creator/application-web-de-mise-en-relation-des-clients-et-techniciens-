@@ -4,8 +4,8 @@ spring:
       max-file-size: 10MB
       max-request-size: 20MB
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:mboatech}?useSSL=${DB_USE_SSL:false}&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci
-    username: ${DB_USERNAME:root}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:mboatech}?sslmode=${DB_SSL_MODE:prefer}
+    username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:}
     hikari:
       maximum-pool-size: 50
@@ -19,7 +19,7 @@ spring:
     properties:
       hibernate:
         format_sql: false
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 server:
   port: ${SERVER_PORT:8082}
   tomcat:
@@ -47,18 +47,23 @@ logging:
     org.springframework.web: INFO
     org.hibernate.SQL: INFO
 
-# Passerelle de paiement Paymee (paymee.tn).
-# PAYMEE_ENABLED doit être vrai et PAYMEE_API_KEY fournie via l'environnement
-# pour activer les paiements réels (jamais de clé en clair dans le dépôt).
-# NB : le serveur sandbox (sandbox.paymee.tn) était injoignable au moment des tests.
-# Autres surcharges : PAYMEE_RETURN_URL, PAYMEE_CANCEL_URL, PAYMEE_WEBHOOK_URL.
-paymee:
-  enabled: ${PAYMEE_ENABLED:false}
-  api-key: ${PAYMEE_API_KEY:}
-  api-base: ${PAYMEE_API_BASE:https://sandbox.paymee.tn/api/v2}
-  return-url: ${PAYMEE_RETURN_URL:http://localhost:5173}
-  cancel-url: ${PAYMEE_CANCEL_URL:http://localhost:5173}
-  webhook-url: ${PAYMEE_WEBHOOK_URL:http://localhost:8082/api/payments/webhook}
+# Passerelle de paiement « HR-Skills Pay » (api.hrskills-pay.com).
+# Authentification à double clé : HRSK_API_KEY (clé A, publique) + HRSK_API_SECRET
+# (clé B, secrète, échangée contre un transaction token). HRSK_WEBHOOK_SECRET sert
+# à vérifier la signature des webhooks. HRSK_ENABLED doit être vrai pour activer
+# les paiements réels (jamais de clé en clair dans le dépôt).
+# Autres surcharges : HRSK_RETURN_URL, HRSK_CANCEL_URL, HRSK_WEBHOOK_URL.
+hrskills:
+  enabled: ${HRSK_ENABLED:true}
+  api-key: ${HRSK_API_KEY:}
+  api-secret: ${HRSK_API_SECRET:}
+  webhook-secret: ${HRSK_WEBHOOK_SECRET:}
+  api-base: ${HRSK_API_BASE:https://api.hrskills-pay.com}
+  country: ${HRSK_COUNTRY:CM}
+  currency: ${HRSK_CURRENCY:XAF}
+  return-url: ${HRSK_RETURN_URL:http://localhost:5173}
+  cancel-url: ${HRSK_CANCEL_URL:http://localhost:5173}
+  webhook-url: ${HRSK_WEBHOOK_URL:http://localhost:8082/api/payments/webhook}
 
 # Garde-fous contre l'accaparement des demandes d'intervention.
 # - max-concurrent : nombre max de demandes réservées (acceptées) en même temps

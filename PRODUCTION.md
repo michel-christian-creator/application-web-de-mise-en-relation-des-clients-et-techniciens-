@@ -1,8 +1,8 @@
 # MboaTech — Guide de mise en production
 
 Guide pas à pas pour déployer MboaTech sur un serveur Linux (Ubuntu/Debian).
-Le projet reste en **paiements simulés** tant qu'aucune clé API Paymee n'est
-fournie ; la bascule vers les paiements réels se limite à quelques variables
+Le projet reste en **paiements simulés** tant qu'aucune clé API « hr skills pay »
+n'est fournie ; la bascule vers les paiements réels se limite à quelques variables
 d'environnement (section 6).
 
 ## Architecture cible
@@ -17,7 +17,7 @@ nginx (80/443) ── sert dist/ (SPA) ─────────────�
    └── /ws    (WebSocket, upgrade) ──────────────────────────► Spring Boot :8082
                                                                     │
                                                                     ▼
-                                                                 MySQL :3306 (mboatech)
+                                                                 PostgreSQL :5432 (mboatech)
 ```
 
 - Le frontend et le backend sont servis **sur le même domaine** : nginx proxy
@@ -30,7 +30,7 @@ nginx (80/443) ── sert dist/ (SPA) ─────────────�
 - Ubuntu 22.04+ (ou équivalent)
 - OpenJDK 17
 - Node.js 20+ (uniquement pour construire le frontend)
-- MySQL 8.0+
+- PostgreSQL 13+
 - nginx
 
 ## 2. Déployer le code et préparer les répertoires
@@ -70,11 +70,15 @@ cp target/backend-0.0.1-SNAPSHOT.jar /opt/mboa-tech/backend.jar
 
 Créer la base et un utilisateur applicatif :
 
+```bash
+sudo -u postgres psql
+```
+
 ```sql
-CREATE DATABASE mboatech CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'mboatech_app'@'localhost' IDENTIFIED BY 'mot_de_passe_fort';
-GRANT ALL PRIVILEGES ON mboatech.* TO 'mboatech_app'@'localhost';
-FLUSH PRIVILEGES;
+CREATE DATABASE mboatech;
+CREATE USER mboatech_app WITH PASSWORD 'mot_de_passe_fort';
+GRANT ALL PRIVILEGES ON DATABASE mboatech TO mboatech_app;
+\q
 ```
 
 Appliquer le schéma et les migrations :
@@ -105,7 +109,7 @@ Valeurs importantes :
 - `ADMIN_EMAIL` / `ADMIN_PASSWORD` — compte admin créé au premier démarrage
   s'il n'en existe aucun. **Obligatoire.**
 - `CORS_ALLOWED_ORIGINS` — les domaines du frontend.
-- `PAYMEE_*` — voir section 6 (rester en simulation pour l'instant).
+- `HRSK_*` — voir section 6 (rester en simulation pour l'instant).
 
 ## 5. Service systemd + nginx
 
@@ -126,25 +130,30 @@ sudo nginx -t && sudo systemctl reload nginx
 ## 6. Paiements : simulation → réel
 
 **État actuel : simulation.** Aucune clé API n'est requise ; les transactions
-sont simulées par le backend (`PAYMEE_ENABLED=false`).
+sont simulées par le backend (`HRSK_ENABLED=false`).
 
-Quand la clé API Paymee est fournie, changer uniquement dans
-`/etc/mboa-tech/mboa-tech.env` :
+Quand la plateforme « HR-Skills Pay » fournit les deux clés (clé publique A
+`hrsk_pk_…` + clé secrète B `hrsk_sk_…`) et le secret de webhook, changer
+uniquement dans `/etc/mboa-tech/mboa-tech.env` :
 
 ```ini
-PAYMEE_ENABLED=true
-PAYMEE_API_KEY=<clé de production>
-PAYMEE_API_BASE=https://app.paymee.tn/api/v2
-PAYMEE_RETURN_URL=https://mboatech.com
-PAYMEE_CANCEL_URL=https://mboatech.com
-PAYMEE_WEBHOOK_URL=https://mboatech.com/api/payments/webhook
+HRSK_ENABLED=true
+HRSK_API_KEY=<clé publique A hrsk_pk_…>
+HRSK_API_SECRET=<clé secrète B hrsk_sk_…>
+HRSK_WEBHOOK_SECRET=<secret de signature des webhooks>
+HRSK_API_BASE=https://api.hrskills-pay.com
+HRSK_RETURN_URL=https://mboatech.com
+HRSK_CANCEL_URL=https://mboatech.com
+HRSK_WEBHOOK_URL=https://mboatech.com/api/payments/webhook
 ```
 
 puis `sudo systemctl restart mboa-tech`.
 
-> Le webhook `/api/payments/webhook` est public mais protégé par la signature
-> Paymee (`check_sum` vérifié avec la clé API). Ne pas le mettre derrière une
-> autre authentification.
+> Flux Cash-In : le client confirme le paiement sur son téléphone (USSD / push
+> Mobile Money), puis le statut final arrive sur le webhook
+> `/api/payments/webhook`. Ce webhook est public (sans JWT) mais protégé par la
+> signature HMAC-SHA256 (`X-Hub-Signature`) vérifiée avec `HRSK_WEBHOOK_SECRET`.
+> Ne pas le mettre derrière une autre authentification.
 
 ## 7. HTTPS
 

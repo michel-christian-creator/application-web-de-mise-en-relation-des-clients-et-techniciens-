@@ -1,3 +1,4 @@
--- Add photo_url column to users table so the profile photo persists
-USE `mboatech`;
-ALTER TABLE `users` ADD COLUMN `photo_url` VARCHAR(500) NULL AFTER `phone`;
+-- Ajoute la colonne photo_url à users pour que la photo de profil persiste.
+
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS photo_url VARCHAR(500) NULL;

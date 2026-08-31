@@ -15,6 +15,7 @@ import {
   sanitizeLetters,
   sanitizeUsername,
   isValidName,
+  isValidPhone,
   isValidUsername,
   hasSqlInjectionPattern,
   validateFields,
@@ -49,6 +50,7 @@ interface Props {
     username: string
     firstName: string
     lastName: string
+    phone?: string
     role: "client" | "technician" | "admin"
     domain: string
     city: string
@@ -61,6 +63,7 @@ interface Props {
     username: string
     firstName: string
     lastName: string
+    phone?: string
     role: "client" | "technician" | "admin"
     domain: string
     city: string
@@ -185,6 +188,7 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
     username: profile?.username || "",
     firstName: profile?.firstName || "",
     lastName: profile?.lastName || "",
+    phone: profile?.phone || "",
     role: profile?.role || "client",
     domain: profile?.domain || "",
     city: profile?.city || "",
@@ -197,6 +201,7 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
       username: profile?.username || "",
       firstName: profile?.firstName || "",
       lastName: profile?.lastName || "",
+      phone: profile?.phone || "",
       role: profile?.role || "client",
       domain: profile?.domain || "",
       city: profile?.city || "",
@@ -310,6 +315,7 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
     const payload = new FormData()
     payload.append("firstName", sanitizeText(form.firstName, MAX_NAME_LENGTH))
     payload.append("lastName", sanitizeText(form.lastName, MAX_NAME_LENGTH))
+    if (form.phone) payload.append("phone", sanitizeText(form.phone, 20))
     payload.append("role", form.role)
     payload.append("domain", sanitizeText(form.domain, MAX_TEXT_LENGTH))
     payload.append("city", sanitizeText(form.city, MAX_TEXT_LENGTH))
@@ -336,6 +342,7 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
           username: updated.username || form.username,
           firstName: updated.firstName || form.firstName,
           lastName: updated.lastName || form.lastName,
+          phone: updated.phone || form.phone,
           role: (updated.role as "client" | "technician" | "admin") || form.role,
           domain: updated.domain || form.domain,
           city: updated.city || form.city,
@@ -360,6 +367,7 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
 
     const firstName = sanitizeText(form.firstName, MAX_NAME_LENGTH)
     const lastName = sanitizeText(form.lastName, MAX_NAME_LENGTH)
+    const phone = sanitizeText(form.phone, 20)
     const domain = sanitizeText(form.domain, MAX_TEXT_LENGTH)
     const city = sanitizeText(form.city, MAX_TEXT_LENGTH)
     const location = sanitizeText(form.location, MAX_TEXT_LENGTH)
@@ -372,6 +380,11 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
     if (!isValidName(firstName) || !isValidName(lastName)) {
       setEditing(true)
       setSaveError(t("Le prénom et le nom ne doivent contenir que des lettres."))
+      return
+    }
+    if (phone && !isValidPhone(phone)) {
+      setEditing(true)
+      setSaveError(t("Veuillez renseigner un numéro de téléphone valide (ex : +237 6 99 00 00 00)."))
       return
     }
     if (!isValidUsername(form.username)) {
@@ -431,6 +444,7 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
     const payload = new FormData()
     payload.append("firstName", firstName)
     payload.append("lastName", lastName)
+    if (phone) payload.append("phone", phone)
     payload.append("role", form.role)
     payload.append("domain", domain)
     payload.append("city", city)
@@ -457,6 +471,7 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
         username: updated.username || sanitizeText(form.username, MAX_NAME_LENGTH),
         firstName: updated.firstName || form.firstName,
         lastName: updated.lastName || form.lastName,
+        phone: updated.phone || phone,
         role: (updated.role as "client" | "technician" | "admin") || form.role,
         domain: updated.domain || form.domain,
         city: updated.city || form.city,
@@ -480,6 +495,7 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
         username: profile.username,
         firstName: profile.firstName,
         lastName: profile.lastName,
+        phone: profile.phone || "",
         role: profile.role,
         domain: profile.domain,
         city: profile.city,
@@ -640,6 +656,20 @@ export default function C3Profile({ artisan, profile, onBack, onRequest, onUpdat
                       />
                     ) : (
                       profile?.location || "—"
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span>{t("Numéro de téléphone")}</span>
+                  <span className="profile-label">
+                    {editing ? (
+                      <input
+                        value={form.phone}
+                        onChange={(e) => handleChange("phone", sanitizeText(e.target.value, 20))}
+                        className="rounded-xl px-3 py-2 profile-input text-white"
+                      />
+                    ) : (
+                      (profile?.phone && `+237 ${profile.phone}`) || "—"
                     )}
                   </span>
                 </div>

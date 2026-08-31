@@ -1,9 +1,6 @@
--- Migration: allow clients to leave star ratings (avis) on technicians.
--- A rating between 1 and 5 is stored on technician_recommendations.
--- NULL rating = recommendation from a senior artisan; rating present = client review.
+-- Migration: permet aux clients de laisser des étoiles (avis) sur les
+-- techniciens. Note entre 1 et 5 stockée sur technician_recommendations.
+-- NULL = recommandation d'un artisan senior ; note présente = avis client.
 
-USE `mboatech`;
-
-ALTER TABLE `technician_recommendations`
-  ADD COLUMN `rating` TINYINT UNSIGNED NULL COMMENT 'Note étoiles (1-5) laissée par un client. NULL = recommandation artisan senior.'
-  AFTER `comment`;
+ALTER TABLE technician_recommendations
+  ADD COLUMN IF NOT EXISTS rating SMALLINT NULL;
