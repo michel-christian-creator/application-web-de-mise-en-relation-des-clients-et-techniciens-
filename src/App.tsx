@@ -74,11 +74,29 @@ const techNav = [
   { key: "chat", label: "T3 · Messagerie", short: "Chat" },
 ]
 
+function loadNavState(): { space: Space; clientScreen: number; techScreen: number } | null {
+  try {
+    const raw = localStorage.getItem("mboaTechNav")
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+function saveNavState(space: Space, clientScreen: number, techScreen: number) {
+  try {
+    localStorage.setItem("mboaTechNav", JSON.stringify({ space, clientScreen, techScreen }))
+  } catch { /* ignore */ }
+}
+
 export default function App() {
+  const saved = loadNavState()
+  const [hydrating, setHydrating] = useState(true)
   const [showLanding, setShowLanding] = useState(true)
-  const [space, setSpace] = useState<Space>("client")
-  const [clientScreen, setClientScreen] = useState(0)
-  const [techScreen, setTechScreen] = useState(0)
+  const [space, setSpace] = useState<Space>(saved?.space ?? "client")
+  const [clientScreen, setClientScreen] = useState(saved?.clientScreen ?? 0)
+  const [techScreen, setTechScreen] = useState(saved?.techScreen ?? 0)
   const [userRole, setUserRole] = useState<UserRole>("client")
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [selectedArtisan, setSelectedArtisan] = useState<Artisan | null>(null)
@@ -124,27 +142,53 @@ export default function App() {
   useEffect(() => {
     const loadCurrentProfile = async () => {
       const profile = await refreshProfile()
-      if (!profile) return
+      if (!profile) {
+        setHydrating(false)
+        return
+      }
       setUserRole(profile.role)
       setUserProfile(profile)
       setShowLanding(false)
-      if (profile.role === "admin") {
-        setSpace("admin")
-        setTechScreen(0)
-        setClientScreen(0)
-      } else if (profile.role === "technician") {
-        setSpace("tech")
-        setTechScreen(0)
-        setClientScreen(0)
+      if (saved && saved.space) {
+        if (saved.space === "admin" && profile.role === "admin") {
+          setSpace("admin")
+        } else if (saved.space === "tech" && profile.role === "technician") {
+          setSpace("tech")
+          setTechScreen(saved.techScreen)
+        } else if (saved.space === "client" && (profile.role === "client" || profile.role === "technician")) {
+          setSpace("client")
+          setClientScreen(saved.clientScreen || 1)
+        } else {
+          setSpace(profile.role === "admin" ? "admin" : profile.role === "technician" ? "tech" : "client")
+          setClientScreen(profile.role === "client" ? 1 : 0)
+          setTechScreen(0)
+        }
       } else {
-        setSpace("client")
-        setClientScreen(1)
-        setTechScreen(0)
+        if (profile.role === "admin") {
+          setSpace("admin")
+          setTechScreen(0)
+          setClientScreen(0)
+        } else if (profile.role === "technician") {
+          setSpace("tech")
+          setTechScreen(0)
+          setClientScreen(0)
+        } else {
+          setSpace("client")
+          setClientScreen(1)
+          setTechScreen(0)
+        }
       }
+      setHydrating(false)
     }
 
     loadCurrentProfile()
   }, [refreshProfile])
+  useEffect(() => {
+    if (!hydrating) {
+      saveNavState(space, clientScreen, techScreen)
+    }
+  }, [space, clientScreen, techScreen, hydrating])
+
   const [showNotifications, setShowNotifications] = useState(false)
   const notificationsRef = useRef<HTMLDivElement>(null)
 
@@ -329,6 +373,7 @@ export default function App() {
     localStorage.removeItem("mboaTechToken")
     localStorage.removeItem("mboaTechUser")
     localStorage.removeItem("mboaTechTechnicianId")
+    localStorage.removeItem("mboaTechNav")
     setUserRole("client")
     setUserProfile(null)
     setSelectedArtisan(null)
@@ -390,6 +435,13 @@ export default function App() {
   }
 
   const renderContent = () => {
+    if (hydrating) {
+      return (
+        <div className="flex h-full w-full items-center justify-center py-24">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
+        </div>
+      )
+    }
     if (showLanding) {
       return (
         <LandingPage
@@ -526,7 +578,7 @@ export default function App() {
               myUserId={userProfile?.userId}
               focusRequestId={chatRequest.id}
               direct
-              onBack={() => setTechScreen(0)}
+              onBack={() => { setTechScreen(0); setFocusRequestId(null) }}
               profile={userProfile}
               onUnreadChange={setChatUnread}
             />
