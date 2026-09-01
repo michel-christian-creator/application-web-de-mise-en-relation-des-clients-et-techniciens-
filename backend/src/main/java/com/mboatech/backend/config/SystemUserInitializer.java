@@ -10,7 +10,6 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +17,8 @@ import org.springframework.stereotype.Component;
 public class SystemUserInitializer {
 
     private static final Logger logger = LoggerFactory.getLogger(SystemUserInitializer.class);
+
+    private static final String SYSTEM_USER_EMAIL = "system@mboatech.com";
 
     private final UserRepository userRepository;
     private final AdminProfileRepository adminProfileRepository;
@@ -36,29 +37,24 @@ public class SystemUserInitializer {
 
     @PostConstruct
     public void ensureSystemUser() {
-        if (!userRepository.existsById(ChatController.SYSTEM_SENDER_USER_ID)) {
+        if (!userRepository.existsByEmail(SYSTEM_USER_EMAIL) && !userRepository.existsById(ChatController.SYSTEM_SENDER_USER_ID)) {
             User system = new User();
             system.setId(ChatController.SYSTEM_SENDER_USER_ID);
             system.setUsername("system");
-            system.setEmail("system@mboatech.com");
+            system.setEmail(SYSTEM_USER_EMAIL);
             system.setPasswordHash("!DISABLED!");
             system.setFirstName("MboaTech");
             system.setLastName("Systeme");
             system.setRole(Role.client);
             system.setStatus("active");
-            try {
-                userRepository.save(system);
-            } catch (DataIntegrityViolationException e) {
-                system.setUsername("systeme");
-                userRepository.save(system);
-            }
+            userRepository.save(system);
             logger.info("Utilisateur systeme cree (id={}) pour les messages systeme du chat", ChatController.SYSTEM_SENDER_USER_ID);
         }
         ensureDefaultAdmin();
     }
 
     private void ensureDefaultAdmin() {
-        if (!userRepository.findByRole(Role.admin).isEmpty()) {
+        if (!userRepository.findByRole(Role.admin).isEmpty() || userRepository.existsByEmail(adminEmail)) {
             return;
         }
         if (adminPassword == null || adminPassword.isBlank()) {
