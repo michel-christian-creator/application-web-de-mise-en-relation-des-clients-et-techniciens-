@@ -1,0 +1,44 @@
+# Render Blueprint pour l'API MboaTech
+# La base de données PostgreSQL est gérée par Neon (externe), pas par Render.
+# Renseigne chaque variable d'environnement (env) avec tes vraies valeurs.
+services:
+  - type: web
+    name: mboatech-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/public/stats
+    envVars:
+      # --- Base de données Neon (obligatoire) ---
+      - key: DB_HOST
+        sync: false          # ex: ep-xxxx-xxxx-pooler.eu-central-1.aws.neon.tech
+      - key: DB_PORT
+        value: 5432
+      - key: DB_NAME
+        sync: false          # ex: neondb
+      - key: DB_USERNAME
+        sync: false          # ex: neondb_owner
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSL_MODE
+        value: require
+      # --- Port (Render injecte 8080 automatiquement) ---
+      - key: SERVER_PORT
+        value: 8080
+      # --- Administrateur par défaut ---
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # --- Passerelle de paiement HR-Skills (désactivée au début si non utilisée) ---
+      - key: HRSK_ENABLED
+        value: "false"
+      - key: HRSK_API_KEY
+        sync: false
+      - key: HRSK_API_SECRET
+        sync: false
+      - key: HRSK_WEBHOOK_SECRET
+        sync: false
+      # --- CORS (origine du frontend en ligne) ---
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://votre-frontend.onrender.com"
