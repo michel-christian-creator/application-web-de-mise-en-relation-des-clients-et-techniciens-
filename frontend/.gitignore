@@ -1,15 +1,12 @@
 node_modules/
-frontend/node_modules/
-frontend/dist/
-frontend/build/
+dist/
+build/
 backend/target/
 backend/bin/
-backend/logs/
 uploads/
 private-uploads/
 .cache/
 .env*
-!.env*.example
 .vite/
 vite.config.*.timestamp-*
 *.tsbuildinfo
@@ -18,5 +15,3 @@ logs/
 *.log
 .claude-replay.*
 .tmp-*
-backend/backend-*.log
-backend/requests.log

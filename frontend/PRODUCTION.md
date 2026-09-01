@@ -48,7 +48,8 @@ Copier le code source dans `/opt/mboa-tech` (ou simplement le dossier du
 projet), puis construire côté local ou côté serveur :
 
 ```bash
-# Frontend (à la racine du projet) : l'URL de l'API est embarquée au build
+# Frontend (dans le dossier frontend/) : l'URL de l'API est embarquée au build
+cd frontend
 cp deploy/.env.production.example .env.production
 #   → renseigner VITE_API_URL (ex. https://mboatech.com)
 npm install
@@ -57,7 +58,7 @@ npm run build
 cp -r dist/* /opt/mboa-tech/frontend/
 
 # Backend
-cd backend
+cd ../backend
 mvn clean package -DskipTests
 cp target/backend-0.0.1-SNAPSHOT.jar /opt/mboa-tech/backend.jar
 ```
@@ -190,9 +191,9 @@ Points d'attention :
 
 ```bash
 # 1. Frontend : rebuild + copie
-npm run build && sudo cp -r dist/* /opt/mboa-tech/frontend/
+cd frontend && npm run build && sudo cp -r dist/* /opt/mboa-tech/frontend/
 # 2. Backend : rebuild du jar
-cd backend && mvn clean package -DskipTests
+cd ../backend && mvn clean package -DskipTests
 sudo cp target/backend-0.0.1-SNAPSHOT.jar /opt/mboa-tech/backend.jar
 # 3. Migrations éventuelles
 DB_USERNAME=mboatech_app DB_PASSWORD=... ./deploy/migrate-db.sh

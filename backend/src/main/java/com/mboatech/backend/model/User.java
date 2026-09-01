@@ -38,12 +38,6 @@ public class User {
     @Column(name = "phone")
     private String phone;
 
-    @Column(name = "city")
-    private String city;
-
-    @Column(name = "location")
-    private String location;
-
     public Long getId() {
         return id;
     }
@@ -124,19 +118,4 @@ public class User {
         this.phone = phone;
     }
 
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
 }

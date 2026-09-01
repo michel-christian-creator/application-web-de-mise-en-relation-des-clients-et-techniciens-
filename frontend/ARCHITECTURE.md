@@ -6,88 +6,112 @@
 
 ```
 Design mboa-tech/
-├── src/                    ← Frontend React (TypeScript)
+├── frontend/               ← Projet Frontend React (TypeScript + Vite)
+│   ├── src/                ← Code source React (TypeScript)
+│   ├── .figma/             ← Config Figma Make (site.json, dev scripts)
+│   ├── public/             ← Assets publics (favicon, etc.)
+│   ├── node_modules/       ← Dépendances npm
+│   ├── dist/               ← Build de production (généré)
+│   ├── index.html          ← Point d'entrée HTML (Vite)
+│   ├── vite.config.ts      ← Config Vite + plugins
+│   ├── tsconfig.json       ← Config TypeScript
+│   ├── package.json        ← Dépendances frontend + scripts
+│   ├── pnpm-lock.yaml      ← Lockfile pnpm
+│   ├── .mise.toml          ← Versions outils (Node, pnpm)
+│   ├── .oxfmtrc.json       ← Config formateur oxfmt
+│   ├── AGENTS.md / CLAUDE.md ← Instructions agents IA
+│   ├── ARCHITECTURE.md     ← Ce fichier
+│   └── PRODUCTION.md       ← Notes de production
 ├── backend/                ← Backend Java (Spring Boot)
+│   ├── src/                ← Code source Java
+│   ├── target/             ← Build Maven (généré)
+│   ├── pom.xml             ← Dépendances Maven
+│   └── README.md
 ├── db/                     ← Scripts SQL / migrations
 ├── server/                 ← Microservice Node.js (ex-implémentation paiement)
 ├── deploy/                 ← Configs déploiement (Nginx, systemd, backups)
-├── index.html              ← Point d'entrée HTML (Vite)
-├── vite.config.ts          ← Config Vite + plugins
-├── tsconfig.json           ← Config TypeScript
-├── package.json            ← Dépendances frontend
-├── pnpm-lock.yaml          ← Lockfile pnpm
-├── .mise.toml              ← Versions outils (Node, pnpm)
-├── .oxfmtrc.json           ← Config formateur oxfmt
-├── AGENTS.md / CLAUDE.md   ← Instructions agents IA
-└── PRODUCTION.md           ← Notes de production
+├── uploads/                ← Uploads utilisateur
+└── .gitignore              ← Gitignore racine
 ```
+
+> Le frontend est un **sous-projet autonome** dans `frontend/`. Toutes les
+> dépendances, le code source, la configuration Vite et les assets se trouvent
+> dans ce dossier. Lancer `npm install` / `npm run dev` / `npm run build` depuis
+> `frontend/`.
 
 ---
 
-## 1. Frontend — `src/`
+## 1. Frontend — `frontend/src/`
+
+> Le frontend est un projet Vite + React 19 + Tailwind CSS v4. Toutes les commandes
+> (`npm install`, `npm run dev`, `npm run build`) s'exécutent depuis le dossier
+> `frontend/`. L'alias `@` pointe vers `frontend/src/`.
+>
+> Point d'entrée du projet : `frontend/package.json`, `frontend/vite.config.ts`,
+> `frontend/index.html`.
 
 ### 1.1 Point d'entrée
 
 | Fichier | Rôle |
 |---|---|
-| `main.tsx` | Monte `<App />` dans `#root`, importe `index.css` |
-| `App.tsx` | Routeur principal, layout, navigation |
-| `index.css` | Import Tailwind CSS v4, styles globaux, polices |
-| `config.ts` | Config (URL API, etc.) |
-| `i18n.tsx` | Internationalisation (FR/EN) |
-| `vite-env.d.ts` | Déclarations type Vite |
+| `frontend/src/main.tsx` | Monte `<App />` dans `#root`, importe `index.css` |
+| `frontend/src/App.tsx` | Routeur principal, layout, navigation |
+| `frontend/src/index.css` | Import Tailwind CSS v4, styles globaux, polices |
+| `frontend/src/config.ts` | Config (URL API, etc.) |
+| `frontend/src/i18n.tsx` | Internationalisation (FR/EN) |
+| `frontend/src/vite-env.d.ts` | Déclarations type Vite |
 
-### 1.2 Composants — `components/`
-
-| Fichier | Rôle |
-|---|---|
-| `ThemeToggle.tsx` | Bouton thème clair/sombre |
-| `NotificationsPanel.tsx` + `.css` | Panneau de notifications |
-| `BellIcon.tsx` | Icône cloche |
-| `LanguageMenu.tsx` + `.css` | Sélecteur de langue |
-| `ImageUploader.tsx` + `.css` | Upload d'images |
-| `LocationMarker.tsx` | Marqueur de localisation |
-
-#### Composants d'animation — `components/animations/`
-| Fichier | Rôle |
-|---|---|
-| `TiltCard.tsx` | Effet tilt 3D sur cartes |
-| `FadeIn.tsx` | Animation fondu à l'apparition |
-| `Stagger.tsx` + `StaggerItem.tsx` | Animation décalée d'enfants |
-| `PhoneShowcase.tsx` | Showcase téléphone animé |
-| `ConnectionNetwork.tsx` | Réseau de connexions animé |
-| `CityMap3D.tsx` | Carte 3D de ville |
-
-#### Icônes — `components/icons/`
-| Fichier | Rôle |
-|---|---|
-| `ChatBubbleIcon.tsx` | Bulle de chat |
-
-### 1.3 Hooks — `hooks/`
+### 1.2 Composants — `frontend/src/components/`
 
 | Fichier | Rôle |
 |---|---|
-| `useTheme.ts` | Gestion thème clair/sombre |
-| `useNotifications.ts` | Récupération des notifications |
-| `useAttestation.ts` | Appels API attestations (check, generate, history) |
+| `src/components/ThemeToggle.tsx` | Bouton thème clair/sombre |
+| `src/components/NotificationsPanel.tsx` + `.css` | Panneau de notifications |
+| `src/components/BellIcon.tsx` | Icône cloche |
+| `src/components/LanguageMenu.tsx` + `.css` | Sélecteur de langue |
+| `src/components/ImageUploader.tsx` + `.css` | Upload d'images |
+| `src/components/LocationMarker.tsx` | Marqueur de localisation |
 
-### 1.4 Utilitaires — `utils/`
+#### Composants d'animation — `frontend/src/components/animations/`
+| Fichier | Rôle |
+|---|---|
+| `src/components/animations/TiltCard.tsx` | Effet tilt 3D sur cartes |
+| `src/components/animations/FadeIn.tsx` | Animation fondu à l'apparition |
+| `src/components/animations/Stagger.tsx` + `StaggerItem.tsx` | Animation décalée d'enfants |
+| `src/components/animations/PhoneShowcase.tsx` | Showcase téléphone animé |
+| `src/components/animations/ConnectionNetwork.tsx` | Réseau de connexions animé |
+| `src/components/animations/CityMap3D.tsx` | Carte 3D de ville |
+
+#### Icônes — `frontend/src/components/icons/`
+| Fichier | Rôle |
+|---|---|
+| `src/components/icons/ChatBubbleIcon.tsx` | Bulle de chat |
+
+### 1.3 Hooks — `frontend/src/hooks/`
 
 | Fichier | Rôle |
 |---|---|
-| `validation.ts` | Validation de formulaires |
-| `themeOverrides.ts` | Overrides CSS thème |
-| `photoUrl.ts` | Construction URLs photos |
-| `chatSocket.ts` | Connexion WebSocket chat |
+| `src/hooks/useTheme.ts` | Gestion thème clair/sombre |
+| `src/hooks/useNotifications.ts` | Récupération des notifications |
+| `src/hooks/useAttestation.ts` | Appels API attestations (check, generate, history) |
 
-### 1.5 Écrans — `screens/`
+### 1.4 Utilitaires — `frontend/src/utils/`
+
+| Fichier | Rôle |
+|---|---|
+| `src/utils/validation.ts` | Validation de formulaires |
+| `src/utils/themeOverrides.ts` | Overrides CSS thème |
+| `src/utils/photoUrl.ts` | Construction URLs photos |
+| `src/utils/chatSocket.ts` | Connexion WebSocket chat |
+
+### 1.5 Écrans — `frontend/src/screens/`
 
 #### Landing
 | Fichier | Rôle |
 |---|---|
 | `LandingPage.tsx` + `.css` | Page d'accueil publique |
 
-#### Auth & Client — `screens/client/`
+#### Auth & Client — `frontend/src/screens/client/`
 | Fichier | Rôle |
 |---|---|
 | `C1Auth.tsx` + `.css` | Connexion / Inscription |
@@ -97,28 +121,28 @@ Design mboa-tech/
 | `C5Chat.tsx` + `.css` | Chat client |
 | `C6Payment.tsx` + `.css` | Paiement client |
 
-#### Technicien — `screens/tech/`
+#### Technicien — `frontend/src/screens/tech/`
 | Fichier | Rôle |
 |---|---|
 | `T1Dashboard.tsx` + `.css` | Dashboard technicien (missions, attestations, stats, étoiles) |
 | `T2Profile.tsx` + `.css` | Profil technicien |
 
-#### Admin — `screens/admin/`
+#### Admin — `frontend/src/screens/admin/`
 | Fichier | Rôle |
 |---|---|
 | `A1Dashboard.tsx` + `.css` | Dashboard administrateur |
 
-#### Support — `screens/support/`
+#### Support — `frontend/src/screens/support/`
 | Fichier | Rôle |
 |---|---|
 | `S1Console.tsx` + `.css` | Console de support |
 
-#### Chat — `screens/chat/`
+#### Chat — `frontend/src/screens/chat/`
 | Fichier | Rôle |
 |---|---|
 | `ChatList.tsx` + `.css` | Liste des conversations |
 
-### 1.6 Assets — `assets/`
+### 1.6 Assets — `frontend/src/assets/`
 - `admin/electrician.svg`, `painter.svg`, `plumber.svg`, `tiler.svg` — Icônes de métier
 
 ---
@@ -274,7 +298,6 @@ Design mboa-tech/
 ---
 
 ## 3. Base de Données — `db/`
-
 | Fichier | Rôle |
 |---|---|
 | `schema.sql` | Schéma initial complet |
@@ -298,20 +321,14 @@ Design mboa-tech/
 | `migration_2026_08_add_suspensions.sql` | Suspensions |
 | `migration_2026_08_add_attestations.sql` | Attestations de service |
 
----
-
 ## 4. Microservice Node.js — `server/`
-
 | Fichier | Rôle |
 |---|---|
 | `paymee.js` | (Exemple) Serveur Express intégration paiement |
 | `payment-endpoint.example.js` | Exemple endpoint paiement |
 | `.env.example` | Variables d'environnement |
 
----
-
 ## 5. Déploiement — `deploy/`
-
 | Fichier | Rôle |
 |---|---|
 | `nginx.conf` | Config Nginx (reverse proxy) |
@@ -321,13 +338,10 @@ Design mboa-tech/
 | `mboa-tech.env.example` | Variables d'environnement prod |
 | `.env.production.example` | Config production |
 
----
-
 ## 6. Flux principal Attestation
 
-```
-Frontend (T1Dashboard.tsx)
-  → useAttestation.ts (hook)
+Frontend (frontend/src/screens/tech/T1Dashboard.tsx)
+  → frontend/src/hooks/useAttestation.ts (hook)
     → GET /api/attestation/check    → AttestationController → AttestationService.checkEligibility()
     → POST /api/attestation/generate → AttestationController → AttestationService.generate() → generatePdf()
     → GET /api/attestation/history   → AttestationController → AttestationService.getHistory()
@@ -337,16 +351,12 @@ PDF généré via OpenPDF (PdfContentByte) :
   → Titre → Divider → Paragraphe → Tableau encadré
   → Signatures doubles → Sceau bouclier arc text
 ```
-
 ---
-
 ## 7. Dépendances Clés
-
 ### Frontend
 - **React 19** + React DOM 19
 - **Tailwind CSS v4** (via `@tailwindcss/vite`)
 - **Vite 8** + TypeScript 5.7
-
 ### Backend
 - **Spring Boot 3.2** (Java 17)
 - **OpenPDF 1.3.30** (génération PDF — API spécifique : `setColorStroke()`, `circle(x,y,r)`, `drawRoundedRect()` custom)

@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:mboatech}?sslmode=${DB_SSL_MODE:prefer}
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:}
+    password: ${DB_PASSWORD:rootkit}
     hikari:
       maximum-pool-size: 50
       minimum-idle: 10
@@ -102,4 +102,4 @@ attestation:
 
 admin:
   email: ${ADMIN_EMAIL:admin@mboatech.com}
-  password: ${ADMIN_PASSWORD:}
+  password: ${ADMIN_PASSWORD:MboaTechAdmin2026}

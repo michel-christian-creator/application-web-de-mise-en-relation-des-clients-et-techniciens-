@@ -1,28 +1,12 @@
 -- PostgreSQL schema for MboaTech
 -- Converted from MySQL 8.0
 --
--- Note : seuls role / availability_status / level utilisent des types ENUM
--- natifs PostgreSQL (mappés en Java par @Enumerated(EnumType.STRING) via
--- les enums Role / AvailabilityStatus / AttestationLevel). Les autres
--- colonnes « enum » MySQL sont mappées en String Java : on les représente
--- donc en VARCHAR + contrainte CHECK pour rester compatible Hibernate.
-
--- ─── ENUM types ─────────────────────────────────────────────────────
-
-DO $$ BEGIN
-  CREATE TYPE user_role AS ENUM ('client','technician','admin');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-DO $$ BEGIN
-  CREATE TYPE availability_status AS ENUM ('available','busy','offline');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-DO $$ BEGIN
-  CREATE TYPE attestation_level AS ENUM ('BRONZE','SILVER','GOLD','DIAMOND');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
+-- Note : role / availability_status / level sont mappés en Java par
+-- @Enumerated(EnumType.STRING) (enums Role / AvailabilityStatus /
+-- AttestationLevel). Ils sont donc stockés en VARCHAR + contrainte CHECK :
+-- PostgreSQL ne permet pas de comparer implicitement un VARCHAR à un type
+-- ENUM natif sous Hibernate. Les autres colonnes « enum » MySQL sont aussi
+-- mappées en String Java (VARCHAR + CHECK).
 
 -- ─── Trigger function for updated_at ────────────────────────────────
 
@@ -43,13 +27,14 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash VARCHAR(255) NOT NULL,
   first_name    VARCHAR(100) NOT NULL,
   last_name     VARCHAR(100) NOT NULL,
-  role          user_role    NOT NULL DEFAULT 'client',
+  role          VARCHAR(20)  NOT NULL DEFAULT 'client',
   phone         VARCHAR(30)  NULL,
   photo_url     VARCHAR(500) NULL,
   status        VARCHAR(20)  NOT NULL DEFAULT 'active',
   created_at    TIMESTAMP    NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMP    NOT NULL DEFAULT NOW(),
-  CONSTRAINT chk_users_status CHECK (status IN ('active','inactive','pending','suspended'))
+  CONSTRAINT chk_users_status CHECK (status IN ('active','inactive','pending','suspended')),
+  CONSTRAINT chk_users_role   CHECK (role IN ('client','technician','admin'))
 );
 
 CREATE TRIGGER set_users_updated_at
@@ -82,7 +67,7 @@ CREATE TABLE IF NOT EXISTS technicians (
   rating_count          INT                 NOT NULL DEFAULT 0,
   experience_years      SMALLINT            NULL,
   verified              BOOLEAN             NOT NULL DEFAULT FALSE,
-  availability_status   availability_status NOT NULL DEFAULT 'available',
+  availability_status   VARCHAR(20) NOT NULL DEFAULT 'available',
   hourly_rate           DECIMAL(10,2)       NULL,
   success_rate          DECIMAL(5,2)        NOT NULL DEFAULT 0.00,
   acceptance_count      INT                 NOT NULL DEFAULT 0,
@@ -92,7 +77,9 @@ CREATE TABLE IF NOT EXISTS technicians (
   suspended_permanent   BOOLEAN             NOT NULL DEFAULT FALSE,
   created_at            TIMESTAMP           NOT NULL DEFAULT NOW(),
   updated_at            TIMESTAMP           NOT NULL DEFAULT NOW(),
-  CONSTRAINT fk_technicians_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+  CONSTRAINT fk_technicians_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT chk_technician_profiles_availability_status
+    CHECK (availability_status IN ('available','busy','offline'))
 );
 
 CREATE TRIGGER set_technicians_updated_at
@@ -254,11 +241,13 @@ CREATE TABLE IF NOT EXISTS attestations (
   technician_id      BIGINT             NOT NULL,
   intervention_count INT                NOT NULL,
   avg_rating         DECIMAL(3,1)       NOT NULL,
-  level              attestation_level  NOT NULL,
+  level              VARCHAR(20)      NOT NULL,
   attestation_number VARCHAR(30)        NOT NULL,
   generated_at       TIMESTAMP          NOT NULL DEFAULT NOW(),
   CONSTRAINT fk_attestation_technician FOREIGN KEY (technician_id) REFERENCES technicians (id) ON DELETE CASCADE,
-  CONSTRAINT uk_attestation_number     UNIQUE (attestation_number)
+  CONSTRAINT uk_attestation_number     UNIQUE (attestation_number),
+  CONSTRAINT chk_attestations_level
+    CHECK (level IN ('BRONZE','SILVER','GOLD','DIAMOND'))
 );
 
 CREATE INDEX idx_attestation_technician ON attestations (technician_id);
