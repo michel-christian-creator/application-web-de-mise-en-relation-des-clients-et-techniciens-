@@ -16,7 +16,6 @@ import {
   MAX_NAME_LENGTH,
   MAX_TEXT_LENGTH,
   MAX_MULTILINE_LENGTH,
-  MAX_PASSWORD_LENGTH,
 } from "../../utils/validation"
 import "./C1Auth.css"
 
@@ -149,7 +148,7 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
     )
     const bio = sanitizeMultiline(profile.bio, MAX_MULTILINE_LENGTH)
     const specialties = sanitizeMultiline(profile.specialties, MAX_MULTILINE_LENGTH)
-    const password = sanitizeText(credentials.password, MAX_PASSWORD_LENGTH)
+    const password = credentials.password
     const generatedUsername = `${firstName.toLowerCase()}${lastName.toLowerCase()}`.replace(
       /\s+/g,
       "",
