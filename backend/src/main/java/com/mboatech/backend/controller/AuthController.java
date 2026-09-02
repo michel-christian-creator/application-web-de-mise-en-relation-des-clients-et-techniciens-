@@ -3,11 +3,13 @@ package com.mboatech.backend.controller;
 import com.mboatech.backend.dto.LoginRequest;
 import com.mboatech.backend.dto.RegistrationRequest;
 import com.mboatech.backend.model.AdminProfile;
+import com.mboatech.backend.model.AuthSession;
 import com.mboatech.backend.model.ClientProfile;
 import com.mboatech.backend.model.TechnicianProfile;
 import com.mboatech.backend.model.User;
 import com.mboatech.backend.model.Role;
 import com.mboatech.backend.repository.AdminProfileRepository;
+import com.mboatech.backend.repository.AuthSessionRepository;
 import com.mboatech.backend.repository.ClientProfileRepository;
 import com.mboatech.backend.repository.TechnicianProfileRepository;
 import com.mboatech.backend.repository.UserRepository;
@@ -22,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api")
@@ -34,8 +35,9 @@ public class AuthController {
     private final ClientProfileRepository clientProfileRepository;
     private final TechnicianProfileRepository technicianProfileRepository;
     private final AdminProfileRepository adminProfileRepository;
+    private final AuthSessionRepository authSessionRepository;
     private final BCryptPasswordEncoder passwordEncoder;
-    private static final Map<String, String> tokenStore = new ConcurrentHashMap<>();
+    private static AuthSessionRepository sessionRepository;
 
     @Value("${admin.email}")
     private String adminEmail;
@@ -46,12 +48,15 @@ public class AuthController {
     public AuthController(UserRepository userRepository,
                           ClientProfileRepository clientProfileRepository,
                           TechnicianProfileRepository technicianProfileRepository,
-                          AdminProfileRepository adminProfileRepository) {
+                          AdminProfileRepository adminProfileRepository,
+                          AuthSessionRepository authSessionRepository) {
         this.userRepository = userRepository;
         this.clientProfileRepository = clientProfileRepository;
         this.technicianProfileRepository = technicianProfileRepository;
         this.adminProfileRepository = adminProfileRepository;
+        this.authSessionRepository = authSessionRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
+        AuthController.sessionRepository = authSessionRepository;
     }
 
     @PostMapping("/auth/login")
@@ -285,7 +290,13 @@ public class AuthController {
         if (authorizationHeader != null && !authorizationHeader.isBlank()) {
             String token = authorizationHeader.startsWith("Bearer ") ? authorizationHeader.substring(7) : authorizationHeader;
             if (!token.isBlank()) {
-                return Optional.ofNullable(tokenStore.get(token)).flatMap(userRepository::findByUsername);
+                if (sessionRepository == null) {
+                    return Optional.empty();
+                }
+                return sessionRepository.findByToken(token)
+                        .filter(session -> session.getExpiresAt() == null || session.getExpiresAt().isAfter(java.time.LocalDateTime.now()))
+                        .map(AuthSession::getUsername)
+                        .flatMap(userRepository::findByUsername);
             }
         }
         if (username != null && !username.isBlank()) {
@@ -300,7 +311,10 @@ public class AuthController {
 
     private String generateToken(User user) {
         String token = UUID.randomUUID().toString();
-        tokenStore.put(token, user.getUsername());
+        AuthSession session = new AuthSession();
+        session.setToken(token);
+        session.setUsername(user.getUsername());
+        authSessionRepository.save(session);
         return token;
     }
 }
