@@ -18,6 +18,7 @@ import LanguageMenu from "./components/LanguageMenu"
 import { useNotifications, type Notification as AppNotification } from "./hooks/useNotifications"
 import { resolvePhotoUrl } from "./utils/photoUrl"
 import { API_BASE_URL } from "./config"
+import { setSessionExpiredHandler, clearAuth } from "./utils/auth"
 import { useI18n } from "./i18n"
 import { useTheme } from "./hooks/useTheme"
 
@@ -132,6 +133,10 @@ export default function App() {
         headers,
         credentials: "include",
       })
+      if (response.status === 401) {
+        handleSessionExpired()
+        return null
+      }
       if (!response.ok) return null
       return (await response.json()) as UserProfile & { photoUrl?: string }
     } catch {
@@ -385,6 +390,28 @@ export default function App() {
     setClientScreen(0)
     setTechScreen(0)
   }
+
+  const handleSessionExpired = useCallback(() => {
+    // Session invalide ou expirée : on nettoie localement puis on
+    // ramène l'utilisateur vers l'écran de connexion (client).
+    clearAuth()
+    setUserRole("client")
+    setUserProfile(null)
+    setSelectedArtisan(null)
+    setClientRequest(null)
+    setFocusRequestId(null)
+    setChatRequest(null)
+    setPaymentInfo(null)
+    setSpace("client")
+    setClientScreen(0)
+    setTechScreen(0)
+    setShowNotifications(false)
+  }, [])
+
+  useEffect(() => {
+    setSessionExpiredHandler(handleSessionExpired)
+    return () => setSessionExpiredHandler(null)
+  }, [handleSessionExpired])
 
   const handleAuthComplete = (role: UserRole, profile?: UserProfile) => {
     setUserRole(role)

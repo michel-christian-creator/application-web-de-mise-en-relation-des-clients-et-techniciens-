@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { API_BASE_URL } from "../config"
+import { authHeaders, currentToken, notifySessionExpired } from "../utils/auth"
 
 export type NotificationType = "message" | "request" | "review" | "system"
 
@@ -40,19 +41,6 @@ function relativeTime(date: Date): string {
   return `il y a ${days} j`
 }
 
-function authHeaders(): Record<string, string> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" }
-  const token = localStorage.getItem("mboaTechToken")
-  if (token) {
-    headers.Authorization = `Bearer ${token}`
-  }
-  return headers
-}
-
-function currentToken(): string {
-  return localStorage.getItem("mboaTechToken") ?? ""
-}
-
 function normalizeType(type?: string | null): NotificationType {
   if (type === "message" || type === "request" || type === "review") {
     return type
@@ -82,15 +70,25 @@ function toNotification(raw: RawNotification): Notification {
 
 export function useNotifications({ requestId = null }: Options = {}) {
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [stopped, setStopped] = useState(false)
 
   const refresh = useCallback(async () => {
     const tokenAtFetch = currentToken()
+    if (!tokenAtFetch) return
     try {
       const response = await fetch(`${API_BASE_URL}/api/notifications`, {
         headers: authHeaders(),
         credentials: "include",
       })
-      if (!response.ok) return
+      if (!response.ok) {
+        if (response.status === 401) {
+          setStopped(true)
+          setNotifications([])
+          notifySessionExpired()
+        }
+        return
+      }
+      setStopped(false)
       const data = (await response.json()) as {
         notifications?: RawNotification[]
       } | null
@@ -109,9 +107,10 @@ export function useNotifications({ requestId = null }: Options = {}) {
   }, [refresh])
 
   useEffect(() => {
+    if (stopped) return
     const interval = setInterval(refresh, 10000)
     return () => clearInterval(interval)
-  }, [refresh])
+  }, [refresh, stopped])
 
   // Vide les notifications d'un compte précédent dès que le token change
   // (ex. : connexion en tant qu'admin après une session client/technicien),
@@ -122,6 +121,7 @@ export function useNotifications({ requestId = null }: Options = {}) {
       const current = currentToken()
       if (current !== last) {
         last = current
+        setStopped(false)
         setNotifications([])
         refresh()
       }
