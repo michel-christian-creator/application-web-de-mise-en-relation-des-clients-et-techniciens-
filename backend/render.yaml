@@ -39,6 +39,6 @@ services:
         sync: false
       - key: HRSK_WEBHOOK_SECRET
         sync: false
-      # --- CORS (origine du frontend en ligne) ---
+      # --- CORS (frontend local + frontend en ligne) ---
       - key: CORS_ALLOWED_ORIGINS
-        value: "https://votre-frontend.onrender.com"
+        value: "https://moatech.onrender.com,http://localhost:5173,http://127.0.0.1:5173"

@@ -184,11 +184,11 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
       throw new Error(text || t("Erreur ") + response.status)
     }
 
-    return generatedUsername
+    return { username: generatedUsername, email }
   }
 
   const loginUser = async (email?: string) => {
-    const emailToUse = email || credentials.email
+    const emailToUse = email || sanitizeText(credentials.email, 254)
     const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: "POST",
       credentials: "include",
@@ -393,16 +393,19 @@ export default function C1Auth({ onNext, onAuthComplete }: Props) {
     setError("")
 
     let fetchedProfile: BackendProfile | null = null
-    let registeredUsername: string = ""
+    let registeredUsername = ""
+    let registeredEmail = ""
     try {
-      registeredUsername = await registerUser()
+      const registration = await registerUser()
+      registeredUsername = registration.username
+      registeredEmail = registration.email
     } catch (error) {
       const message = error instanceof Error ? error.message : t("Erreur lors de l'inscription.")
       setError(message)
       return
     }
     try {
-      fetchedProfile = (await loginUser(profile.email)) as BackendProfile
+      fetchedProfile = (await loginUser(registeredEmail)) as BackendProfile
     } catch {
       setError(t("Compte créé, mais connexion automatique impossible. Veuillez vous connecter."))
       setStep("credentials")
