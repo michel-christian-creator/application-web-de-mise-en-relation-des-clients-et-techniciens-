@@ -16,7 +16,10 @@ import java.time.format.DateTimeFormatter;
 public class RequestLoggingFilter implements Filter {
 
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("MM-dd HH:mm:ss.SSS");
-    private static final Path LOG_FILE = Path.of("C:\\Users\\MDA Services\\Desktop\\Design mboa-tech\\backend\\requests.log");
+    private static final Path LOG_FILE = Path.of(
+            System.getenv("RENDER") != null
+                    ? "/tmp/requests.log"
+                    : "./logs/requests.log");
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -42,10 +45,15 @@ public class RequestLoggingFilter implements Filter {
 
     private static synchronized void logLine(String line) {
         try {
-            Files.createDirectories(LOG_FILE.getParent());
-            Files.writeString(LOG_FILE, LocalDateTime.now().format(FMT) + "  " + line + System.lineSeparator(),
+            Path parent = LOG_FILE.getParent();
+            if (parent != null && !Files.exists(parent)) {
+                Files.createDirectories(parent);
+            }
+            Files.writeString(LOG_FILE,
+                    LocalDateTime.now().format(FMT) + "  " + line + System.lineSeparator(),
                     StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            System.err.println("Erreur de logging: " + e.getMessage());
         }
     }
 }
