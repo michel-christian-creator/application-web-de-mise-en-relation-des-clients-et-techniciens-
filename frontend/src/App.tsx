@@ -240,6 +240,7 @@ export default function App() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/settings/payments`, {
         method: "PUT",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -261,6 +262,7 @@ export default function App() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/settings/payments`, {
         method: "PUT",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),

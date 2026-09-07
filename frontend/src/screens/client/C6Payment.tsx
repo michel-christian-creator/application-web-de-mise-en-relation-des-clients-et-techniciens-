@@ -91,6 +91,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
     try {
       const token = localStorage.getItem("mboaTechToken")
       const response = await fetch(`${API_BASE_URL}/api/client/withdraw`, {
+        credentials: "include",
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       })
       if (!response.ok) return
@@ -117,6 +118,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
       try {
         const token = localStorage.getItem("mboaTechToken")
         const response = await fetch(`${API_BASE_URL}/api/payments/history`, {
+          credentials: "include",
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         })
         if (!response.ok) throw new Error(`Erreur (${response.status})`)
@@ -141,6 +143,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
     try {
       const token = localStorage.getItem("mboaTechToken")
       const response = await fetch(`${API_BASE_URL}/api/payments/history`, {
+        credentials: "include",
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       })
       if (!response.ok) throw new Error(`Erreur (${response.status})`)
@@ -302,6 +305,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
       const token = localStorage.getItem("mboaTechToken")
       const response = await fetch(`${API_BASE_URL}/api/payments/deposit`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -407,6 +411,7 @@ export default function C6Payment({ paymentsEnabled, onConfirm, devis, paymentAc
       const token = localStorage.getItem("mboaTechToken")
       const response = await fetch(`${API_BASE_URL}/api/client/withdraw`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),

@@ -335,6 +335,7 @@ export default function C5Chat({
       const token = localStorage.getItem("mboaTechToken")
       const response = await fetch(`${API_BASE_URL}/api/payments/release`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
