@@ -31,7 +31,7 @@ server:
 # Origines autorisées pour CORS (HTTP + handshake WebSocket), séparées par des virgules.
 app:
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,https://application-web-de-mise-en-relation.vercel.app,https://application-web-de-mise-en-relation-des-clients-et-b0oivst5g.vercel.app}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://application-web-de-mise-en-relation.vercel.app,http://localhost:3000,http://localhost:5173}
 
 # Répertoire public (photos de profil/portfolio servies par /uploads/**).
 upload:
