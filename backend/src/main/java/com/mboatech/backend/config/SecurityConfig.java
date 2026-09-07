@@ -38,7 +38,14 @@ public class SecurityConfig {
                 .toList();
 
         if (!origins.isEmpty()) {
-            configuration.setAllowedOrigins(origins);
+            configuration.setAllowedOriginPatterns(origins);
+        } else {
+            configuration.setAllowedOriginPatterns(List.of(
+                "https://*.vercel.app",
+                "https://vercel.app",
+                "http://localhost:3000",
+                "http://localhost:5173"
+            ));
         }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(
