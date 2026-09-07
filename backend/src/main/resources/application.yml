@@ -21,7 +21,7 @@ spring:
         format_sql: false
         dialect: org.hibernate.dialect.PostgreSQLDialect
 server:
-  port: ${SERVER_PORT:8082}
+  port: ${PORT:10000}
   tomcat:
     threads:
       max: 400
