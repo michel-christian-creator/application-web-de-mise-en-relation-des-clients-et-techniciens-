@@ -3,6 +3,7 @@ package com.mboatech.backend.service;
 import com.mboatech.backend.config.MissionsProperties;
 import com.mboatech.backend.model.RequestDecline;
 import com.mboatech.backend.model.TechnicianProfile;
+import com.mboatech.backend.model.UrgencyLevel;
 import com.mboatech.backend.repository.RequestDeclineRepository;
 import com.mboatech.backend.repository.TechnicianProfileRepository;
 import org.springframework.stereotype.Service;
@@ -46,11 +47,11 @@ public class MissionGuardService {
      * Durée de réservation selon le niveau d'urgence :
      * critique → le plus court, normal → le plus long.
      */
-    public long getReservationHoursFor(String urgency) {
-        if ("critique".equalsIgnoreCase(urgency)) {
+    public long getReservationHoursFor(UrgencyLevel urgency) {
+        if (urgency == UrgencyLevel.CRITICAL) {
             return properties.getReservationCritiqueHours();
         }
-        if ("important".equalsIgnoreCase(urgency)) {
+        if (urgency == UrgencyLevel.IMPORTANT) {
             return properties.getReservationImportantHours();
         }
         return properties.getReservationNormalHours();

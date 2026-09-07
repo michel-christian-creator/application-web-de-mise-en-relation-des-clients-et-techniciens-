@@ -1,5 +1,6 @@
 package com.mboatech.backend.model;
 
+import com.mboatech.backend.model.UrgencyLevel;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -23,8 +24,9 @@ public class ClientRequest {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "urgency")
-    private String urgency = "normal";
+    @Enumerated(EnumType.STRING)
+    @Column(name = "urgency", nullable = false)
+    private UrgencyLevel urgency = UrgencyLevel.NORMAL;
 
     @Column(name = "status")
     private String status = "published";
@@ -124,21 +126,20 @@ public class ClientRequest {
         this.domain = domain;
     }
 
-    public String getUrgency() {
+    public UrgencyLevel getUrgency() {
         return urgency;
     }
 
-    public void setUrgency(String urgency) {
-        this.urgency = urgency != null && !urgency.isBlank() ? urgency : "normal";
+    public void setUrgency(UrgencyLevel urgency) {
+        this.urgency = urgency != null ? urgency : UrgencyLevel.NORMAL;
     }
 
     public boolean isUrgent() {
-        return "important".equalsIgnoreCase(urgency) || "critique".equalsIgnoreCase(urgency);
+        return urgency == UrgencyLevel.IMPORTANT || urgency == UrgencyLevel.CRITICAL;
     }
 
     public void setUrgent(boolean urgent) {
-        this.urgent = urgent;
-        this.urgency = urgent ? "critique" : "normal";
+        this.urgency = urgent ? UrgencyLevel.CRITICAL : UrgencyLevel.NORMAL;
     }
 
     public String getPhotoUrl() {

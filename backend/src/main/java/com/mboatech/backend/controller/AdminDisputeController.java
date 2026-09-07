@@ -177,7 +177,7 @@ public class AdminDisputeController {
         dto.put("category", request.getCategory());
         dto.put("description", request.getDescription());
         dto.put("status", request.getStatus());
-        dto.put("urgency", request.getUrgency());
+        dto.put("urgency", request.getUrgency() != null ? request.getUrgency().name() : null);
         dto.put("createdAt", request.getCreatedAt());
         dto.put("disputeOpenAt", request.getDisputeOpenAt());
         dto.put("reporterRole", reporterRole(request));

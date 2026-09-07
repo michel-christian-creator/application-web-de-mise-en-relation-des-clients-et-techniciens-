@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS service_requests (
   technician_id      BIGINT        NULL,
   category           VARCHAR(100)  NOT NULL,
   description        TEXT          NOT NULL,
-  urgency            VARCHAR(20)   NOT NULL DEFAULT 'normal',
+  urgency            VARCHAR(20)   NOT NULL DEFAULT 'NORMAL',
   status             VARCHAR(20)   NOT NULL DEFAULT 'published',
   budget_min         DECIMAL(10,2) NULL,
   budget_max         DECIMAL(10,2) NULL,
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS service_requests (
   updated_at         TIMESTAMP     NOT NULL DEFAULT NOW(),
   CONSTRAINT fk_service_requests_client     FOREIGN KEY (client_id)     REFERENCES users (id)      ON DELETE CASCADE,
   CONSTRAINT fk_service_requests_technician FOREIGN KEY (technician_id) REFERENCES users (id)      ON DELETE SET NULL,
-  CONSTRAINT chk_service_requests_urgency   CHECK (urgency IN ('normal','important','critique')),
+  CONSTRAINT chk_service_requests_urgency   CHECK (urgency IN ('NORMAL','IMPORTANT','CRITICAL')),
   CONSTRAINT chk_service_requests_status    CHECK (status IN ('draft','published','assigned','in_progress','completed','cancelled','disputed'))
 );
 

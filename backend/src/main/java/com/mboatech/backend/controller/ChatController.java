@@ -7,6 +7,7 @@ import com.mboatech.backend.model.ClientRequest;
 import com.mboatech.backend.model.RequestDecline;
 import com.mboatech.backend.model.Role;
 import com.mboatech.backend.model.TechnicianProfile;
+import com.mboatech.backend.model.UrgencyLevel;
 import com.mboatech.backend.model.User;
 import com.mboatech.backend.repository.ChatMessageRepository;
 import com.mboatech.backend.repository.ClientProfileRepository;
@@ -90,7 +91,7 @@ public class ChatController {
         request.setDomain(domain);
         request.setDescription(description);
         if (urgency != null && !urgency.isBlank()) {
-            request.setUrgency(urgency);
+            request.setUrgency(normalizeUrgency(urgency));
         } else {
             request.setUrgent("true".equalsIgnoreCase(urgent));
         }
@@ -129,14 +130,9 @@ public class ChatController {
         }
         request.setCategory(category.trim());
 
-        if (request.getUrgency() == null || request.getUrgency().isBlank()) {
-            request.setUrgency(request.isUrgent() ? "critique" : "normal");
+        if (request.getUrgency() == null) {
+            request.setUrgency(request.isUrgent() ? UrgencyLevel.CRITICAL : UrgencyLevel.NORMAL);
         }
-        String urgency = request.getUrgency() == null ? "normal" : request.getUrgency().trim();
-        if (!"normal".equals(urgency) && !"important".equals(urgency) && !"critique".equals(urgency)) {
-            urgency = "normal";
-        }
-        request.setUrgency(urgency);
 
         String description = InputValidator.sanitizeMultiline(
                 request.getDescription() == null ? "" : request.getDescription(), InputValidator.MAX_MULTILINE_LENGTH);
@@ -248,7 +244,7 @@ public class ChatController {
         data.put("category", request.getCategory());
         data.put("domain", request.getDomain() != null ? request.getDomain() : request.getCategory());
         data.put("description", request.getDescription());
-        data.put("urgency", request.getUrgency());
+        data.put("urgency", request.getUrgency() != null ? request.getUrgency().name() : null);
         data.put("status", request.getStatus());
         data.put("type", type);
         data.put("createdAt", request.getCreatedAt());
@@ -291,22 +287,22 @@ public class ChatController {
         return normalized.toLowerCase();
     }
 
-    private String normalizeUrgency(String urgency) {
+    private UrgencyLevel normalizeUrgency(String urgency) {
         if (urgency == null) {
-            return "normal";
+            return UrgencyLevel.NORMAL;
         }
         String normalized = urgency.trim().toLowerCase();
-        if ("critique".equals(normalized)) {
-            return "critique";
+        if (normalized.contains("critique") || normalized.contains("critical")) {
+            return UrgencyLevel.CRITICAL;
         }
-        if ("important".equals(normalized)) {
-            return "important";
+        if (normalized.contains("important")) {
+            return UrgencyLevel.IMPORTANT;
         }
-        return "normal";
+        return UrgencyLevel.NORMAL;
     }
 
-    private boolean sameUrgency(String a, String b) {
-        return normalizeUrgency(a).equals(normalizeUrgency(b));
+    private boolean sameUrgency(UrgencyLevel a, UrgencyLevel b) {
+        return a == b || (a != null && a.equals(b));
     }
 
     private String resolveClientName(Long clientId) {
@@ -454,7 +450,7 @@ public class ChatController {
         data.put("category", request.getCategory());
         data.put("domain", request.getDomain() != null ? request.getDomain() : request.getCategory());
         data.put("description", request.getDescription());
-        data.put("urgency", request.getUrgency());
+        data.put("urgency", request.getUrgency() != null ? request.getUrgency().name() : null);
         data.put("status", request.getStatus());
         data.put("createdAt", request.getCreatedAt());
         data.put("technicianName", request.getTechnicianId() != null
@@ -959,7 +955,7 @@ public class ChatController {
                     .count();
             if (concurrent >= missionGuardService.getMaxConcurrent()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Vous avez déjà " + missionGuardService.getMaxConcurrent()
-                        + " demandes réservées dans le niveau d'urgence « " + normalizeUrgency(request.getUrgency()) + " ». Terminez ou déclinez-en une avant d'en accepter une nouvelle."));
+                        + " demandes réservées dans le niveau d'urgence « " + normalizeUrgency(request.getUrgency().name()) + " ». Terminez ou déclinez-en une avant d'en accepter une nouvelle."));
             }
         }
         request.setTechnicianId(technicianId);

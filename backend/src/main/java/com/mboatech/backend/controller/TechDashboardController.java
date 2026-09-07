@@ -7,6 +7,7 @@ import com.mboatech.backend.model.ClientRequest;
 import com.mboatech.backend.model.Role;
 import com.mboatech.backend.model.TechnicianProfile;
 import com.mboatech.backend.model.TechnicianRecommendation;
+import com.mboatech.backend.model.UrgencyLevel;
 import com.mboatech.backend.model.User;
 import com.mboatech.backend.repository.ChatMessageRepository;
 import com.mboatech.backend.repository.ClientProfileRepository;
@@ -132,7 +133,7 @@ public class TechDashboardController {
                     item.put("description", r.getDescription());
                     item.put("scheduledAt", r.getScheduledAt());
                     item.put("reservedUntil", r.getReservedUntil());
-                    item.put("urgency", r.getUrgency());
+                    item.put("urgency", r.getUrgency() != null ? r.getUrgency().name() : null);
                     item.put("clientName", resolveClientName(r.getClientId()));
                     item.put("clientLocation", resolveClientLocation(r.getClientId()));
                     item.put("clientCity", resolveClientCity(r.getClientId()));
@@ -144,7 +145,7 @@ public class TechDashboardController {
         requestRepository.findByTechnicianIdOrderByCreatedAtDesc(techProfileId).stream()
                 .filter(r -> "assigned".equals(r.getStatus()))
                 .forEach(r -> {
-                    String urgency = normalizeUrgency(r.getUrgency());
+                    String urgency = normalizeUrgency(r.getUrgency() != null ? r.getUrgency().name() : null);
                     urgencyUsage.put(urgency, urgencyUsage.getOrDefault(urgency, 0L) + 1);
                 });
 
@@ -416,10 +417,10 @@ public class TechDashboardController {
             return "normal";
         }
         String normalized = urgency.trim().toLowerCase();
-        if ("critique".equals(normalized)) {
+        if (normalized.contains("critique") || normalized.contains("critical")) {
             return "critique";
         }
-        if ("important".equals(normalized)) {
+        if (normalized.contains("important")) {
             return "important";
         }
         return "normal";
