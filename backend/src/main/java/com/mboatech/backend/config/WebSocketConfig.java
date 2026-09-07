@@ -18,7 +18,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     private final List<String> allowedOrigins;
 
     public WebSocketConfig(ChatWebSocketHandler chatWebSocketHandler,
-                           @Value("${app.cors.allowed-origins:http://localhost:5173}") String allowedOrigins) {
+                           @Value("${cors.allowed.origins:${app.cors.allowed-origins:http://localhost:5173}}") String allowedOrigins) {
         this.chatWebSocketHandler = chatWebSocketHandler;
         this.allowedOrigins = Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)
