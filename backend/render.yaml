@@ -41,4 +41,4 @@ services:
         sync: false
       # --- CORS (frontend local + frontend en ligne) ---
       - key: CORS_ALLOWED_ORIGINS
-        value: "https://application-web-de-mise-en-relation.vercel.app,https://application-web-de-mise-en-relation-des-clients-et-cjm07j6dc.vercel.app,http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173"
+        value: "https://application-web-de-mise-en-relation.vercel.app,https://application-web-de-mise-en-relation-des-clients-et-ezfv13gcc.vercel.app,http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173"
