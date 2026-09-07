@@ -1,22 +1,21 @@
- package com.mboatech.backend.config;
+package com.mboatech.backend.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
-
-    @Value("${cors.allowed.origins:${app.cors.allowed-origins:http://localhost:5173}}")
-    private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -24,40 +23,36 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/register", "/api/public/**").permitAll()
-                .anyRequest().permitAll());
+                .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
+                .anyRequest().permitAll()
+            );
+
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        List<String> origins = Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toList();
-
-        if (!origins.isEmpty()) {
-            configuration.setAllowedOriginPatterns(origins);
-        } else {
-            configuration.setAllowedOriginPatterns(List.of(
-                "https://*.vercel.app",
-                "https://vercel.app",
-                "http://localhost:3000",
-                "http://localhost:5173"
-            ));
-        }
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of(
-            "Content-Type",
-            "Authorization",
-            "X-Requested-With",
-            "Accept"));
-        configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(List.of("Authorization", "X-Auth-Token"));
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
+        return new CorsConfigurationSource() {
+            @Override
+            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
+                CorsConfiguration configuration = new CorsConfiguration();
+                String origin = request.getHeader("Origin");
+                
+                if (origin != null && (origin.endsWith(".vercel.app") || origin.startsWith("http://localhost:"))) {
+                    configuration.setAllowedOrigins(Collections.singletonList(origin));
+                } else {
+                    configuration.setAllowedOrigins(Collections.singletonList("https://vercel.app"));
+                }
+                
+                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+                configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+                
+                configuration.setAllowCredentials(true); 
+                configuration.setMaxAge(3600L);
+                
+                return configuration;
+            }
+        };
     }
 }
